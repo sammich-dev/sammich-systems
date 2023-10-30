@@ -1,0 +1,43 @@
+{
+  "name": "sammich-scene-example",
+  "version": "1.0.0",
+  "description": "SDK7 Template scene",
+  "scripts": {
+    "start": "sdk-commands start",
+    "start:web3": "sdk-commands start --web3",
+    "deploy": "sdk-commands deploy",
+    "build": "sdk-commands build",
+    "upgrade-sdk": "npm install --save-dev @dcl/sdk@latest",
+    "upgrade-sdk:next": "npm install --save-dev @dcl/sdk@next",
+    "backoffice:dev": "ts-node ../backoffice/index.ts"
+  },
+  "devDependencies": {
+    "@dcl/js-runtime": "7.3.25",
+    "@dcl/sdk": "^7.3.25",
+    "@types/node": "^20.7.1",
+    "prisma": "^5.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=6.0.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 120,
+    "trailingComma": "none"
+  },
+  "dependencies": {
+    "@dcl-sdk/utils": "^1.1.1",
+    "@dcl/sdk-commands": "^7.3.15",
+    "@prisma/client": "^5.3.1",
+    "colyseus.js": "^0.15.14",
+    "whatwg-url-without-unicode": "^8.0.0-3",
+    "xmlhttprequest-polyfill": "^1.0.1"
+  },
+  "bundleDependencies": [
+    "colyseus.js"
+  ]
+}

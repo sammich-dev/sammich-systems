@@ -1,0 +1,9 @@
+
+
+
+    #app section section:only-child section[color=white][width="380px"] {
+        visibility: hidden;
+    }
+    #app section section:only-child form {
+        margin-left: -300px;
+    }

@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+      id        Int     @id @default(autoincrement())
+      publicKey         String
+      hasConnectedWeb3 Boolean
+      userId        String
+      version       Int
+      displayName     String
+      created         DateTime @default(now())
+}
+
+
+model RecordedGame {
+      id                Int     @id @default(autoincrement())
+      gameId            Int
+      instanceId        Int
+      frames            String
+      seed              Int
+      playerIndex       Int
+      created         DateTime @default(now())
+}
+
+
+model Game {
+    id              Int     @id @default(autoincrement())
+    name            String
+    created         DateTime @default(now())
+}
