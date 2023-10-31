@@ -10,7 +10,7 @@ import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import argon2 from 'argon2';
+//import argon2 from 'argon2';
 
 const prisma = new PrismaClient()
 AdminJS.registerAdapter({Database, Resource})
