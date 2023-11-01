@@ -25,9 +25,10 @@ function DifferenceGame({game}:any){
     });
 }
 
-SammichGame.definition = {
+DifferenceGame.definition = {
     split:false,
     fps:60,
+    instructions:""
 };
 
 

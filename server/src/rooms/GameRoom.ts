@@ -1,7 +1,7 @@
 // noinspection TypeScriptValidateTypes,JSAnnotator
 //TODO REFACTOR messages from Strings to exported enum
 import {Client, Room} from "colyseus";
-import {GameState, PlayerState} from "./GameState";
+import {GameState, MiniGameResult, PlayerState} from "./GameState";
 
 import { PrismaClient } from '@prisma/client';
 import {createScreenRunner} from "../../../lib/game-runner";
@@ -43,6 +43,14 @@ export class GameRoom extends Room<GameState> {
             });
         });
 
+        this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
+            console.log("INSTRUCTIONS_READY", {playerIndex});
+            this.state.players[playerIndex].instructionsReady = true;
+            if(this.state.players.every(i=>i.instructionsReady)){
+                this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.currentMiniGameIndex]});
+            }
+        });
+
         this.onMessage("CREATE_GAME", (client, {user})=>{
             if(this.state.players.length) return;
 
@@ -81,10 +89,12 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("READY", async (client, {playerIndex})=>{
             this.state.players[playerIndex].ready = true;
+            console.log("READY", this.state.started)
             if(!this.state.started && this.state.players.every((player)=>player.ready)){
                 await this.state.setupNewGame();
-
-                this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.miniGameResults.length]});
+                console.log("broadcast gameTrack")
+                this.broadcast("MINI_GAME_TRACK", this.state.miniGameTrack.toJSON());
+              //  this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.miniGameResults.length]});
 
                 this.screenRunners.forEach(g => g.runtime.start(false));
             }
@@ -99,8 +109,8 @@ export class GameRoom extends Room<GameState> {
         const _winnerInfo = this.checkWinnerFunction(...playersScore);
 
         if(_winnerInfo !== undefined){
-            console.log("WINNER FOUND");
-            this.state.miniGameResults.push(_winnerInfo);
+            console.log("WINNER FOUND", _winnerInfo);
+            this.state.miniGameResults.push(_winnerInfo as MiniGameResult);
             this.screenRunners.forEach(s=> s.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);
             this.broadcast("MINI_GAME_WINNER", _winnerInfo);

@@ -43,6 +43,7 @@ export class SpriteState extends Schema {
 
 export class PlayerState extends Schema {
     @type(UserState) user:any;
+    @type("boolean") instructionsReady:boolean = false;
     @type("number") miniGameScore:any;
     @type([SpriteState]) spriteEntities = new ArraySchema<SpriteState>();//sprites that are shared with network and belong or are related to player
 
@@ -73,7 +74,6 @@ export class MiniGameResult extends Schema {
 
 export class GameState extends Schema {
     @type("number") currentMiniGameIndex:number = 0;
-
     @type("boolean") started = false;
     @type("uint64") created = new Date().getTime();
     @type([PlayerState]) players = new ArraySchema<PlayerState>();

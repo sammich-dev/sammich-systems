@@ -165,8 +165,10 @@ function SammichGame({
 }
 
 SammichGame.definition = {
+    alias:"sammich-game",
     split:true,
     fps:60,
+    instructions:"Perfect sammich is when ingredients\n are aligned with bread.\nMove to sides with <color=#ffff00><b>E - F</b></color> keys"
 };
 
 export {SammichGame}

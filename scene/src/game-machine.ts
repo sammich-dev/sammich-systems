@@ -12,7 +12,8 @@ import {
     MeshCollider,
     ColliderLayer
 } from "@dcl/sdk/ecs";
-import {Color3, Vector3, Color4} from "@dcl/sdk/math";
+
+import {Color3, Vector3, Color4, Quaternion} from "@dcl/sdk/math";
 import {Client} from "colyseus.js";
 import {createSpriteScreen} from "../dcl-lib/sprite-screen";
 import {getInputState, onInputKeyEvent, setupInputController} from "../dcl-lib/input-controller";
@@ -23,6 +24,7 @@ import {timers} from "@dcl-sdk/utils";
 import {SammichGame} from "../../games/sammich-game";
 import {sleep} from "../dcl-lib/sleep";
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
+import {createInstructionScreen} from "./instructions-screen";
 
 const SPRITESHEET_WIDTH = 1024;
 const SPRITESHEET_HEIGHT = 1024;
@@ -37,13 +39,20 @@ const NAME_COLOR = `#e2bf37`;
 const SPLIT_SCREEN_SCALE = Vector3.create(0.5, 1, 1)
 
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
+    const v = eval(`console.log('foo');1`);
+    console.log("v",v)
     setupInputController();
     const callbacks: { onEvent: Function[] } = {
         onEvent: []
     };
+    const state = {
+        showingInstructions:false,
+        playingMiniGame:false
+    };
     const colyseusClient: Client = new Client(`ws://localhost:2567`);
 
     const entity = engine.addEntity();
+
     Transform.create(entity, {
         parent,
         position,
@@ -136,8 +145,48 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         
         //TODO show winnerSprite and loser Sprite
     });
-    
+
+    let instructionsPanel:any;
+
+    const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
+        //TODO use it also to send "INSTRUCTIONS_READY"
+        console.log("KEY", state, inputActionKey, isPressed);
+        if(state.showingInstructions){
+            const playerIndex = getPlayerIndex();
+            console.log("playerIndex-", playerIndex)
+            room.send("INSTRUCTIONS_READY", {playerIndex: getPlayerIndex(), foo:true});
+            instructionsPanel.showWaitingForOtherPlayer();
+        }else if(state.playingMiniGame){
+            getDebugPanel().setState(getInputState());
+            const inputFrame = playerScreenRunner.runtime.pushInputEvent({
+                inputActionKey,
+                isPressed,
+                playerIndex: getPlayerIndex()
+            });
+            room.send("INPUT_FRAME", {frame: inputFrame, playerIndex: getPlayerIndex()});
+        }
+    });
+
+    room.onMessage("MINI_GAME_TRACK", async (miniGameTrack:any)=>{
+       //TODO show instructions of the game 0
+        console.log("MINI_GAME_TRACK",miniGameTrack)
+        state.showingInstructions = true;
+        instructionsPanel = createInstructionScreen({transform:{
+                parent:lobbyScreen.getEntity(),
+                position:Vector3.create(0,0,-0.05),
+                scale:Vector3.One(),
+                rotation:Quaternion.Zero()
+            }, gameAlias:SammichGame.definition.alias, gameInstructions:SammichGame.definition.instructions});
+
+        console.log("miniGameTrack", miniGameTrack);
+    });
+
+
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
+
+        state.playingMiniGame = true;
+        state.showingInstructions = false;
+        instructionsPanel?.destroy();
         console.log("START_GAME", miniGameId);
         lobbyScreen.hide();
 
@@ -198,17 +247,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             isClientPlayer: false
         });
 
-        let disposeInputListener: any;
-
-        disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
-            getDebugPanel().setState(getInputState());
-            const inputFrame = playerScreenRunner.runtime.pushInputEvent({
-                inputActionKey,
-                isPressed,
-                playerIndex: getPlayerIndex()
-            });
-            room.send("INPUT_FRAME", {frame: inputFrame, playerIndex: getPlayerIndex()});
-        });
 
         playerScreenRunner.runtime.start();
         spectatorScreenRunner.runtime.start();
