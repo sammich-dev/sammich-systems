@@ -124,36 +124,19 @@ export const init = ()=>{
                                 isClientPlayer: true,
                                 recordFrames: true,
                                 seed:30,
-                                velocityMultiplier:4
+                                velocityMultiplier:playerIndex
                             });
 
-
                             const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
-                                getDebugPanel().setState(getInputState());
-                                const inputFrame = screenRunner.runtime.pushFrame({
-                                    type: FrameEventType.INPUT,
-                                    data: {
-                                        inputActionKey,
-                                        isPressed,
-                                        playerIndex: 0
-                                    }
+                             //   getDebugPanel().setState(getInputState());
+                                const inputFrame = screenRunner.runtime.pushInputEvent({
+                                    inputActionKey,
+                                    isPressed,
+                                    playerIndex
                                 });
 
                             });
                             screenRunner.runtime.start();
-
-                            /*  await (async () => {
-                                  await screenRunner.waitFrames(120);
-                                  while (true) {
-
-                                      await screenRunner.waitFrames(30);
-                                      const currentFrame = screenRunner.runtime.getCurrentFrameNumber();
-                                      screenRunner.runtime.rollbackToFrame(currentFrame-20);
-                                      screenRunner.runtime.reproduceFramesUntil(currentFrame);
-                                  }
-
-                              })();*/
-//                        screenRunner.runtime.stop();
                         })();
                     });
 

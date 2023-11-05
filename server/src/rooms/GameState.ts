@@ -48,7 +48,9 @@ export class PlayerState extends Schema {
     @type([SpriteState]) spriteEntities = new ArraySchema<SpriteState>();//sprites that are shared with network and belong or are related to player
 
     client:Client;
-    ready:boolean;
+
+    @type("boolean")
+    ready:boolean = false;
 
 
     constructor({user, client}: { user:any, client:Client }) {
@@ -64,11 +66,12 @@ export class ScreenState extends Schema {
 }
 
 export class MiniGameResult extends Schema {
-    score:number;
+    @type("uint8")
     winnerPlayerIndex:number;
 
     constructor({score, winnerPlayerIndex}:any) {
         super();
+        this.winnerPlayerIndex = winnerPlayerIndex;
     }
 }
 
@@ -84,6 +87,13 @@ export class GameState extends Schema {
     miniGameResults:any = new ArraySchema<MiniGameResult>();
 
     async setupNewGame(){
+        this.miniGameResults.splice(0,this.miniGameResults.length);
+        this.currentMiniGameIndex = 0;
+        this.started = false;
+        this.created = new Date().getTime();
+        if(this.players.length > 2 ){
+            throw Error("FIX CODE PLAYERS > 2");
+        }
         //TODO here we load minigames from database
         const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
         this.miniGameTrack.splice(0, this.miniGameTrack.length);

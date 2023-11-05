@@ -2,9 +2,9 @@ import {createSpawner, SpawnerOptions} from "./spawner";
 import {seedGen} from "./seed-gen";
 import {SpriteEntity, SpriteKlass, SpriteKlassParams} from "./game-entities";
 import {createSpriteEntityFactory} from "./sprite-entity-factory";
-import {getDebugPanel} from "../scene/dcl-lib/debug-panel";
 import {Frame, FrameEvent, FrameEventType, InputEventRepresentation} from "./frame-util";
 import {InputAction} from "@dcl/sdk/ecs";
+import {SpriteDefinitionParams} from "./sprite-util";
 
 let _rollbackDone = false; //TODO delete, only dev
 export type GameRunnerCallback = {
@@ -21,6 +21,8 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     const memSeedGenCreate = (seedGen.create);//TODO review to memoize, but caution when several instances, because it should use different seedGen memoizeed based on instance index
     const fps = GameFactory?.definition?.fps || DEFAULT_FPS;
     const frameMs = 1000 / fps / velocityMultiplier;
+    let _debugPanel:any = null;
+
     const callbacks:GameRunnerCallback = {
         onStart:[],
         onInput:[],
@@ -58,7 +60,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
             frameNumber:state.lastReproducedFrame,
             sprites:getSpriteEntities().map((s:SpriteEntity)=>s.toJSON()),
         };
-        getDebugPanel().setState({"lastSnapshotPositions":getSpriteEntities().map((s:SpriteEntity)=>s.toJSON().position[1]) })
+        _debugPanel?.setState({"lastSnapshotPositions":getSpriteEntities().map((s:SpriteEntity)=>s.toJSON().position[1]) })
 
         if(recordFrames) _snapshots.push(snapshot);
 
@@ -137,6 +139,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     };
     let _disposeWinnerFn:any;
     const gameApi = {
+        setScreenSprite:({spriteDefinition}:SpriteDefinitionParams)=>screen.setBackgroundSprite({spriteDefinition}),
         waitFrames:(n:number)=>{
             const waitingFrame = {
                 startedFrame:getFrameNumber(Math.max(0, Date.now() - state.startTime)),
@@ -201,6 +204,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
     const runtimeApi = {
         runtime:{
+            attachDebugPanel:(debugPanel:any)=> _debugPanel = debugPanel,
             rollbackToFrame,
             getState:()=>state,
             getFps:()=>fps,
@@ -221,7 +225,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
                         let currentFrame = getFrameNumber(Date.now() - state.startTime);
 
                         reproduceFramesUntil(currentFrame);
-                        getDebugPanel().setState({
+                        _debugPanel?.setState({
                             spriteEntities:"\n"+getSpriteEntities().map((s:SpriteEntity)=>`${s.klassParams.klass}-${s.ID}-${s.getPixelPosition()[1]}`).join("\n")
                         });
 
@@ -261,7 +265,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
             frames++;
         }
 
-        getDebugPanel().setState({frame:state.lastReproducedFrame});
+        _debugPanel?.setState({frame:state.lastReproducedFrame});
     }
 
     function rollbackToFrame(frameNumber:number){//TODO buggy
@@ -293,7 +297,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
         });
 
-        getDebugPanel().setState({frame:state.lastReproducedFrame});
+        _debugPanel?.setState({frame:state.lastReproducedFrame});
 
         spawners.forEach(s=>s.rollbackToFrame(frameNumber));
 

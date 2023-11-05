@@ -1,8 +1,10 @@
 import {PlayerState, SpriteState} from "../server/src/rooms/GameState";
 import * as net from "net";
+import {SpriteDefinitionParams} from "./sprite-util";
 
 export function createServerSpriteScreen(playerState:PlayerState) {
     return {
+        setBackgroundSprite:(_:SpriteDefinitionParams)=>{},
         addSprite:({ID, pixelPosition, layer, network}: any)=>{
             const spriteState = {
                 pixelPosition,

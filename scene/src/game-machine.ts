@@ -25,23 +25,13 @@ import {SammichGame} from "../../games/sammich-game";
 import {sleep} from "../dcl-lib/sleep";
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
 import {createInstructionScreen} from "./instructions-screen";
+import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
+import {createGlobalScoreTransition} from "./score-transition";
 
-const SPRITESHEET_WIDTH = 1024;
-const SPRITESHEET_HEIGHT = 1024;
-const DEFAULT_SPRITE_DEF = {
-    spriteSheetWidth: SPRITESHEET_WIDTH,
-    spriteSheetHeight: SPRITESHEET_HEIGHT,
-    columns: 1, frames: 1
-};
-const SPLIT_SCREEN_RESOLUTION_WIDTH = 192 / 2;
-const SPLIT_SCREEN_WIDTH = SPLIT_SCREEN_RESOLUTION_WIDTH / 40;
-const NAME_COLOR = `#e2bf37`;
-const SPLIT_SCREEN_SCALE = Vector3.create(0.5, 1, 1)
 
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
-    const v = eval(`console.log('foo');1`);
-    console.log("v",v)
     setupInputController();
+
     const callbacks: { onEvent: Function[] } = {
         onEvent: []
     };
@@ -103,6 +93,9 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         }
     });
 
+    const scoreTransition = createGlobalScoreTransition(lobbyScreen);
+    scoreTransition.hide();
+
     const user: MinUserData = await getMinUserData();
     const room: any = await colyseusClient.join(`GameRoom`, {
         user,
@@ -138,12 +131,25 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     let gameScreen, spectatorScreen, playerScreenRunner:any, spectatorScreenRunner:any;
 
-    room.onMessage("MINI_GAME_WINNER", async ({done, winnerIndex, miniGameIndex}:any) => {
-        console.log("MINI_GAME_WINNER", {done, winnerIndex, miniGameIndex});
-        playerScreenRunner.stop();
-        spectatorScreenRunner.stop();
-        
-        //TODO show winnerSprite and loser Sprite
+
+    room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex }:any) => {
+        console.log("MINI_GAME_WINNER", winnerIndex);
+        lobbyScreen.show();
+        playerScreenRunner.runtime.stop();
+        spectatorScreenRunner.runtime.stop();
+        playerScreenRunner.runtime.destroy();
+        spectatorScreenRunner.runtime.destroy();
+console.log("DESTROYED RUNNERS");
+
+        await scoreTransition.showTransition({
+            winnerIndex,
+            previousScore:room.state.miniGameResults.reduce((acc:number, current:any)=>{
+                return acc + (current.winnerPlayerIndex === winnerIndex ? 1:0);
+            },0)
+        });
+        scoreTransition.hide();
+        console.log("end transition");
+
     });
 
     let instructionsPanel:any;
@@ -247,9 +253,11 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             isClientPlayer: false
         });
 
-
         playerScreenRunner.runtime.start();
         spectatorScreenRunner.runtime.start();
+
+        playerScreenRunner.attachDebugPanel(getDebugPanel());
+        spectatorScreenRunner.attachDebugPanel(getDebugPanel());
 
         playerScreenRunner.onFrame(() => {
             room.send("PLAYER_FRAME", {
@@ -260,19 +268,20 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     });
 
     room.onStateChange((...args: any[]) => {
-        if (room.state.players.length === 2) {
+        if (room.state.players.length === 2 && !room.state.started) {
             const playerIndex = getPlayerIndex();
-            if (playerIndex >= 0) {
+
+            if (playerIndex >= 0 && !room.state.players[getPlayerIndex()].ready) {
                 room.send("READY", {playerIndex});
             }
+
             if (room.state.miniGameResults?.length && room.state.miniGameResults.length === room.state.miniGameTrack.length) {
                 //TODO finished the gamePlay?
-
             }
         }
-
+        
         applyServerState();
-    })
+    });
 
     function applyServerState() {
         if (room?.state?.players?.length === 0) {
@@ -309,9 +318,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         if (playerIndex === -1) return -1;
         return playerIndex === 0 ? 1 : 0;
     }
-
-
-
 
     return {
         onEvent: (fn: Function) => {

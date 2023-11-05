@@ -2,17 +2,15 @@ import {InputAction} from "@dcl/sdk/ecs";//TODO REVIEW if to remove coupling to 
 import {SpriteEntity} from "../lib/game-entities";
 import {getFrameNumber} from "../lib/frame-util";
 import {Color3} from "@dcl/sdk/math";
+import {SPRITE_SHEET_DIMENSION} from "../lib/sprite-constants";
 
 const PIXELS_MOVEMENT = 8;
 const INITIAL_BASE_POSITION_X = (192/2)/2 - (16/2);
 const INGREDIENT_FRAMES = [1,2,3,5,6,7];
 const LEVEL_VELOCITY = [30, 60, 70, 80, 90];
 const LEVEL_SPAWN_DELAY = [2000,1000,600,400, 300];
-const SPRITE_SHEET_SIZE = 1024;
-const SPRITE_SHEET_DIMENSION = {
-    spriteSheetWidth: SPRITE_SHEET_SIZE,
-    spriteSheetHeight: SPRITE_SHEET_SIZE,
-}
+
+
 function SammichGame({
     game
 }:any){
@@ -21,8 +19,8 @@ function SammichGame({
         level:0,
         ingredientsToFall:3
     };
-    const BackgroundSpriteEntity = game.registerSpriteEntity({//TODO can memoize?
-        klass:"SammichBackground",
+
+    game.setScreenSprite({
         spriteDefinition:{
             x:0,
             y:128,
@@ -30,7 +28,8 @@ function SammichGame({
             h:128,
             ...SPRITE_SHEET_DIMENSION
         }
-    });
+    })
+
     const BaseSpriteEntity = game.registerSpriteEntity({
         klass:"SammichBase",
         spriteDefinition:{
@@ -64,14 +63,12 @@ function SammichGame({
     const FRAME_MS = 1000 / game.runtime.getFps();
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
-        if(state.level > 2 && player1Score > player2Score) return {winnerIndex:0};
-        if(state.level > 2 && player1Score < player2Score) return {winnerIndex:1};
+        //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
+        console.log("checkWinner smamich", state.level);
+        if(state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
+        if(state.level > 0 && player1Score < player2Score) return {winnerIndex:1};
     });
 
-    BackgroundSpriteEntity.create({
-        pixelPosition:[0,0],
-        layer:1
-    });
     baseSprite.applyFrame(4);
     game.onFinish(()=>{
         console.log("listened finished mini-game from mini-game code");
@@ -151,6 +148,7 @@ function SammichGame({
                 const [px,py] = spriteEntity.getPixelPosition();
                 spriteEntity.setPixelPosition(px-PIXELS_MOVEMENT,py);
             });
+
         }else if(inputActionKey === InputAction.IA_SECONDARY && px < (INITIAL_BASE_POSITION_X+PIXELS_MOVEMENT)){
             baseSprite.setPixelPosition(px+PIXELS_MOVEMENT, py);
             lockedIngredients.forEach((spriteEntity:SpriteEntity) => {

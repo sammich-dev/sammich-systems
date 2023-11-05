@@ -1,5 +1,6 @@
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
 import {
+    ColliderLayer,
     engine,
     Font,
     InputAction,
@@ -12,10 +13,9 @@ import {
     PointerEventType,
     TextAlignMode,
     TextShape,
-    Transform,
-    ColliderLayer
+    Transform
 } from "@dcl/sdk/ecs";
-import {Color3, Vector3, Color4} from "@dcl/sdk/math";
+import {Color4, Vector3} from "@dcl/sdk/math";
 
 import {
     createSpriteAnimationUVSGetter,
@@ -39,6 +39,7 @@ export function createSpriteScreen({
                                        spriteDefinition//will also define screen resolution, which will affect zoom and click event info with coords
                                    }: SpriteScreenOptions) {
     const screenEntity = createSpritePlane({spriteMaterial, spriteDefinition, transform})
+
     MeshCollider.setPlane(screenEntity);
 
     const screenSpriteDefinition = spriteDefinition;
@@ -55,8 +56,12 @@ export function createSpriteScreen({
                 showFeedback: true
             }
         }]}
-
+    const transformBackup = (JSON.parse(JSON.stringify(transform)));
     return {
+        setBackgroundSprite:({spriteDefinition}:{spriteDefinition:SpriteDefinition})=>{
+            const mutablePlane:any = MeshRenderer.getMutable(screenEntity);
+            if(mutablePlane.mesh) mutablePlane.mesh[mutablePlane.mesh.$case].uvs = getUvsFromSprite({spriteDefinition, back:UVS_BACK.MIRROR});
+        },
         addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText}: any):Sprite => {
             const normalizedPixelPosition = normalizePixelPosition(pixelPosition[0], pixelPosition[1], layer);
             const state = {
@@ -101,8 +106,10 @@ export function createSpriteScreen({
             return {
                 ID,
                 destroy: () => {
+                    console.log("destroy", ID);
                     engine.removeEntity(spriteEntity);
                     state.destroyed = true;
+                    console.log("DESTROYED ", ID)
                     //TODO REVIEW POSSIBLE MEMORY LEAKS
                 },
                 applyFrame:(n:number)=>{
@@ -161,6 +168,13 @@ export function createSpriteScreen({
                     engine.removeEntity(textEntity)
                 },
                 setText: (value:string) => TextShape.getMutable(textEntity).text = value.toString(),
+                setPixelPosition:(px:number,py:number)=>{
+                    const normalizedPosition = normalizePixelPositionForText(px,py, layer);
+                    console.log("text normalizedPosition",px,py,normalizedPosition);
+                    const mutablePosition = Transform.getMutable(textEntity).position;
+                    mutablePosition.x = normalizedPosition[0];
+                    mutablePosition.y = normalizedPosition[1];
+                },
                 hide: () => Transform.getMutable(textEntity).position.y = -10000,
                 show: () => Transform.getMutable(textEntity).position.y = normalizedPosition[1],
             }
@@ -168,7 +182,7 @@ export function createSpriteScreen({
             function normalizePixelPositionForText(xPixels: number, yPixels: number, layer: number) {
                 return [
                    (xPixels - (screenSpriteDefinition.w/2)) * (1 / screenSpriteDefinition.w) ,
-                   (yPixels + (screenSpriteDefinition.h/2)) * (1 / screenSpriteDefinition.h) ,
+                   -(yPixels + (screenSpriteDefinition.h/2)) * (1 / screenSpriteDefinition.h) + 1,
                    -layer * 0.001
                 ];
             }
@@ -178,14 +192,15 @@ export function createSpriteScreen({
             Transform.getMutable(screenEntity).position.y = Number.MIN_SAFE_INTEGER;
         },
         show:()=>{
-            Transform.getMutable(screenEntity).position.y = (transform.position?.y || 0);
+            console.log("show lobby screen", transformBackup.position?.y)
+            Transform.getMutable(screenEntity).position.y = (transformBackup.position?.y || 0);
         },
         destroy:()=>{
-            //TODO
+            engine.removeEntity(screenEntity);
         }
     }
-
 }
+
 
 export function createSpritePlane({spriteDefinition, transform, spriteMaterial}: any) {
     const planeEntity = engine.addEntity();

@@ -105,6 +105,7 @@ console.log("isClientPlayer",isClientPlayer);
                     colliding:false,
                     isKlass:(klass:SpriteKlass)=>spriteEntityKlass === klass,
                     destroy:()=>{
+                        console.log("spriteEntity destroy", klass, ID)
                         sprite.destroy();
                         //@ts-ignore //TODO REVIEW
                         delete spriteEntity.spriteEntityKlass;
