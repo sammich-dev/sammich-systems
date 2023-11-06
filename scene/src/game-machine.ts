@@ -256,8 +256,8 @@ console.log("DESTROYED RUNNERS");
         playerScreenRunner.runtime.start();
         spectatorScreenRunner.runtime.start();
 
-        playerScreenRunner.attachDebugPanel(getDebugPanel());
-        spectatorScreenRunner.attachDebugPanel(getDebugPanel());
+        playerScreenRunner.runtime.attachDebugPanel(getDebugPanel());
+        spectatorScreenRunner.runtime.attachDebugPanel(getDebugPanel());
 
         playerScreenRunner.onFrame(() => {
             room.send("PLAYER_FRAME", {

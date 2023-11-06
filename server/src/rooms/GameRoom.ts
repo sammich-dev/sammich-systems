@@ -66,6 +66,7 @@ export class GameRoom extends Room<GameState> {
                 clientRoom:undefined
             });
         });
+
         this.onMessage("JOIN_GAME", (client, {user})=>{
             if(!this.state.players.length || this.state.players.length === 2) return;
             this.state.players.push(new PlayerState({user, client}));
@@ -79,6 +80,7 @@ export class GameRoom extends Room<GameState> {
                 clientRoom:undefined
             });
         });
+
         this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
             this.screenRunners[playerIndex]?.runtime.reproduceFramesUntil(n);
         });
@@ -104,16 +106,22 @@ export class GameRoom extends Room<GameState> {
     checkWinnerFunction:Function;
 
     checkWinners(){
+        console.log("checkwinners", !!this.state,this.state.miniGameResults[this.state.currentMiniGameIndex] );
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
         const playersScore = this.state.players.map((p:any)=>p.miniGameScore);
+        console.log("playersScore",playersScore);
+
+        //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
+
         const _winnerInfo = this.checkWinnerFunction(...playersScore);
 
         if(_winnerInfo !== undefined){
             console.log("WINNER FOUND", _winnerInfo);
-            this.state.miniGameResults.push(_winnerInfo as MiniGameResult);
+            this.state.miniGameResults.push(new MiniGameResult({_winnerInfo}));
             this.screenRunners.forEach(s=> s.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);
             this.broadcast("MINI_GAME_WINNER", _winnerInfo);
+            console.log("wij",_winnerInfo);
         }
 
         return _winnerInfo;
