@@ -39,7 +39,9 @@ export function createSpriteScreen({
                                        spriteDefinition//will also define screen resolution, which will affect zoom and click event info with coords
                                    }: SpriteScreenOptions) {
     const screenEntity = createSpritePlane({spriteMaterial, spriteDefinition, transform})
-
+    const state:{spriteDefinition:SpriteDefinition} = {
+        spriteDefinition
+    };
     MeshCollider.setPlane(screenEntity);
 
     const screenSpriteDefinition = spriteDefinition;
@@ -60,8 +62,10 @@ export function createSpriteScreen({
     return {
         setBackgroundSprite:({spriteDefinition}:{spriteDefinition:SpriteDefinition})=>{
             const mutablePlane:any = MeshRenderer.getMutable(screenEntity);
+            state.spriteDefinition = spriteDefinition;
             if(mutablePlane.mesh) mutablePlane.mesh[mutablePlane.mesh.$case].uvs = getUvsFromSprite({spriteDefinition, back:UVS_BACK.MIRROR});
         },
+        getSize:()=>[state.spriteDefinition.w, state.spriteDefinition.h],
         addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText}: any):Sprite => {
             const normalizedPixelPosition = normalizePixelPosition(pixelPosition[0], pixelPosition[1], layer);
             const state = {

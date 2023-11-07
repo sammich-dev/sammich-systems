@@ -15,10 +15,11 @@ export type SpawnerOptions = {
     destroyOnStop?:boolean,
     spawnIntervalMs?:number,
     spawnRandomFrame?:number[],
-    autoStart?:boolean
+    autoStart?:boolean,
 }
 
 export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerOptions, game:any) => {
+    const [SCREEN_W, SCREEN_H] = game.runtime.getScreen().getSize();//TODO review leak by reference
     const state = {
         count:0,
         totalDt:0,
@@ -134,12 +135,16 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
                 ];
 
                 spawnedItem.spriteEntity.setPixelPosition(...newPixelPosition);
-                if(spawnedItem.ID === 3){
-                    getDebugPanel().setState({
-                        framesSinceStart3:framesSinceStart,
-                        create3:spawnedItem.spriteEntity.createParams.pixelPosition[1],
-                        sprite3:newPixelPosition[1]
-                    });
+
+                if(
+                    (newPixelPosition[0] > SCREEN_W) ||
+                    (newPixelPosition[1] > SCREEN_H )
+                ) {
+                    spawnedItem.locked = true;
+                    spawnedItem.spriteEntity.destroy();
+                    spawnedItems.splice(spawnedItems.indexOf(spawnedItem), 1);
+                    //TODO we should remove
+
                 }
             });
 

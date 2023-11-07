@@ -55,7 +55,7 @@ export const init = ()=>{
         transparencyMode: MaterialTransparencyMode.MTM_ALPHA_TEST
     };
     const spriteScreenTransform = {
-        position: Vector3.create(2, 2, 8),
+        position: Vector3.create(2, 4, 8),
         scale: Vector3.create(192 / 40, 128 / 40, 1),
         parent: rootEntity
     };
@@ -94,12 +94,13 @@ export const init = ()=>{
                 pixelPosition: [10, 100],
                 layer: 1,
                 onClick: (event: any) => {
+                    lobbyScreen.hide();
                     (new Array(4)).fill(null).forEach((_,playerIndex) => {
                         (async () => {
                             console.log("gameScreen", playerIndex)
                             const gameScreen = createSpriteScreen({
                                 transform: {
-                                    position: Vector3.create(playerIndex*2.4, 2, 8 - 0.1),
+                                    position: Vector3.create(playerIndex*2.4, 4, 8 - 0.1),
                                     scale: Vector3.create(SPLIT_SCREEN_WIDTH, 128 / 40, 1),
                                     parent: rootEntity
                                 },

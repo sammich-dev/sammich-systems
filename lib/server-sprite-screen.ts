@@ -1,10 +1,22 @@
 import {PlayerState, SpriteState} from "../server/src/rooms/GameState";
 import * as net from "net";
-import {SpriteDefinitionParams} from "./sprite-util";
+import {SpriteDefinition, SpriteDefinitionParams} from "./sprite-util";
 
 export function createServerSpriteScreen(playerState:PlayerState) {
+    const state:{spriteDefinition:SpriteDefinition} = {
+        spriteDefinition:{
+            spriteSheetHeight:0,
+            spriteSheetWidth:0,
+            w:0,
+            h:0,
+            x:0,y:0
+        }
+    }
     return {
-        setBackgroundSprite:(_:SpriteDefinitionParams)=>{},
+        getSize:()=>[state.spriteDefinition.w, state.spriteDefinition.h],
+        setBackgroundSprite:({spriteDefinition, back}:SpriteDefinitionParams)=>{
+            state.spriteDefinition = spriteDefinition;
+        },
         addSprite:({ID, pixelPosition, layer, network}: any)=>{
             const spriteState = {
                 pixelPosition,

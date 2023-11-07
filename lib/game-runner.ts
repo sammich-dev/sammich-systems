@@ -235,7 +235,8 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
                 callbacks.onStart.forEach(c=>c({seed}));
             },
             finish:()=>{},
-            stop
+            stop,
+            getScreen:()=>screen
         }
     }
 

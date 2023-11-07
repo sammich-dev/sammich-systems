@@ -1,5 +1,4 @@
-import {init} from "./game";
-
+import {init} from "./only-client";
 init();
 
 
