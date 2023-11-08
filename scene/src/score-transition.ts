@@ -86,7 +86,7 @@ export function createGlobalScoreTransition(screen:any){
                 winnerSumPointsText.hide();
                 player2GlobalScoreBig.setText((previousScore+1).toString());
             }
-
+            await sleep(2000);
         }
     }
 }

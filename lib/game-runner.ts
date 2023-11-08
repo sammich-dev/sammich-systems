@@ -12,6 +12,7 @@ export type GameRunnerCallback = {
     onInput:Function[],
     onFrame:Function[],
     onFinish:Function[],
+    onProposedWinner:Function|null
 };
 const DEFAULT_FPS = 60;
 
@@ -28,6 +29,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         onInput:[],
         onFrame:[],
         onFinish:[],
+        onProposedWinner:null
     };
 
     const state:any = {
@@ -45,7 +47,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         spawners.forEach(s=>s.frame(n));
         callbacks.onFrame.forEach(f=>f(n, dt, frame));
         entityManager.checkColliders();
-        serverRoom?.checkWinners();//TODO REVIEW: this can be executed double due to both screenRunners
+        serverRoom?.checkWinners({playerIndex, n});//TODO REVIEW: this can be executed double due to both screenRunners
 
         if(frame){
             for(let frameEvent of frame.events){
@@ -136,6 +138,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         entityManager.destroy();
         awaitingFrames.splice(0, awaitingFrames.length);
         _disposeWinnerFn && _disposeWinnerFn();
+
     };
     let _disposeWinnerFn:any;
     const gameApi = {
@@ -204,6 +207,10 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
     const runtimeApi = {
         runtime:{
+            onProposedWinner:(fn:Function)=>{
+                callbacks.onProposedWinner = fn;
+                return ()=>callbacks.onProposedWinner = null;
+            },
             attachDebugPanel:(debugPanel:any)=> _debugPanel = debugPanel,
             rollbackToFrame,
             getState:()=>state,

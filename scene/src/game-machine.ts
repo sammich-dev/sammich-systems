@@ -129,16 +129,19 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     joinButton.hide();
     createButton.hide();
 
-    let gameScreen, spectatorScreen, playerScreenRunner:any, spectatorScreenRunner:any;
+    let gameScreen:any, spectatorScreen:any, playerScreenRunner:any, spectatorScreenRunner:any;
 
 
     room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex }:any) => {
         console.log("MINI_GAME_WINNER", winnerIndex);
-        lobbyScreen.show();
+        lobbyScreen.show()
+        gameScreen.destroy();
+        spectatorScreen.destroy();
         playerScreenRunner.runtime.stop();
         spectatorScreenRunner.runtime.stop();
-        playerScreenRunner.runtime.destroy();
+        playerScreenRunner.runtime.destroy();//TODO it's not removing background sprite
         spectatorScreenRunner.runtime.destroy();
+
 console.log("DESTROYED RUNNERS");
 
         await scoreTransition.showTransition({
@@ -240,7 +243,8 @@ console.log("DESTROYED RUNNERS");
             serverRoom: undefined,
             clientRoom: room,
             isClientPlayer: true,
-            recordSnapshots: true
+            recordSnapshots: true,
+            velocityMultiplier:10
         });
 
         spectatorScreenRunner = createScreenRunner({
@@ -250,7 +254,8 @@ console.log("DESTROYED RUNNERS");
             playerIndex: getOtherPlayerIndex(),
             serverRoom: undefined,
             clientRoom: room,
-            isClientPlayer: false
+            isClientPlayer: false,
+            velocityMultiplier:10
         });
 
         playerScreenRunner.runtime.start();
