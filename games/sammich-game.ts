@@ -63,8 +63,6 @@ function SammichGame({
     const FRAME_MS = 1000 / game.runtime.getFps();
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
-        //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
-        console.log("checkWinner smamich", state.level);
         if(state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
         if(state.level > 0 && player1Score < player2Score) return {winnerIndex:1};
     });
@@ -91,6 +89,7 @@ function SammichGame({
         const lockedIngredients = game.getSpriteEntities().filter((i:SpriteEntity)=>spawner.isLocked(i)).length;
 
         if(lockedIngredients > (state.ingredientsToFall + 1)){
+            console.log("SAMMICH COMPLETED")
             /**TODO
              * - wait a delay of 1 second
              * - remove all sprites
@@ -114,9 +113,10 @@ function SammichGame({
             console.log("game.getPlayerScore", game.getPlayerScore());
             const playerScore= game.getPlayerScore();
             scoreText.setText(playerScore || ("--" + Math.random()) );
+            spawner.stop();
             await game.waitFrames( getFrameNumber( 1000, FRAME_MS));
             baseSprite.sprite.show();
-
+            console.log("state.level", state.level, LEVEL_VELOCITY)
             if(state.level < (LEVEL_VELOCITY.length-1)){
                 state.level++;
             }

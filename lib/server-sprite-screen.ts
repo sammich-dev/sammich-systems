@@ -50,13 +50,17 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                 hide:()=>{
                     if(spriteState.network){
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
-                        colyseusSprite.visible = true;
+                        if(!colyseusSprite){
+                            console.trace();
+                            debugger;
+                        }
+                        colyseusSprite.visible = false;
                     }
                 },
                 show:()=>{
                     if(spriteState.network){
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
-                        colyseusSprite.visible = false;
+                        colyseusSprite.visible = true;
                     }
                 },
                 getPixelPosition:()=>spriteState.pixelPosition,
@@ -72,11 +76,8 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                 getNetwork
             }
             function setNetwork(value:boolean){
-                console.log("setNetwork",value);
                 if(!spriteState.network){
-                    console.log("setting network NOW")
                     if(!playerState.spriteEntities.find(sd=>sd.ID === ID)){
-                        console.log("PUSHED NEW SPRITE_STATE")
                         playerState.spriteEntities.push(new SpriteState({
                             ID,
                             frame:spriteState.frame,

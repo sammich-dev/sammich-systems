@@ -14,7 +14,7 @@ export const createInstructionScreen = (
     }) => {
     const {parent, position, rotation, scale} = transform;
     const screenEntity = engine.addEntity();
-
+    let backupPositionY = position.y;
 
     MeshRenderer.setPlane(screenEntity);
 
@@ -51,6 +51,15 @@ export const createInstructionScreen = (
         },
         showWaitingForOtherPlayer:()=>{
             TextShape.getMutable(instructionsTextEntity).text = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nWaiting other player...`;
+        },
+        show:({alias}:any)=>{
+            TextShape.getMutable(instructionsTextEntity).text = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nPress any key when you are ready to play`;
+            Transform.getMutable(screenEntity).position.y = backupPositionY;
+            VideoPlayer.getMutable(screenEntity).playing = true;
+        },
+        hide:()=>{
+            Transform.getMutable(screenEntity).position.y = Number.MIN_SAFE_INTEGER;
+            VideoPlayer.getMutable(screenEntity).playing = false;
         }
     }
 }

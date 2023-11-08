@@ -28,7 +28,6 @@ import {createInstructionScreen} from "./instructions-screen";
 import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
 
-
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
     setupInputController();
 
@@ -133,8 +132,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
 
     room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex }:any) => {
-        console.log("MINI_GAME_WINNER", winnerIndex);
-        lobbyScreen.show()
         gameScreen.destroy();
         spectatorScreen.destroy();
         playerScreenRunner.runtime.stop();
@@ -142,8 +139,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         playerScreenRunner.runtime.destroy();//TODO it's not removing background sprite
         spectatorScreenRunner.runtime.destroy();
 
-console.log("DESTROYED RUNNERS");
-
+        lobbyScreen.show()
         await scoreTransition.showTransition({
             winnerIndex,
             previousScore:room.state.miniGameResults.reduce((acc:number, current:any)=>{
@@ -151,9 +147,11 @@ console.log("DESTROYED RUNNERS");
             },0)
         });
         scoreTransition.hide();
-        console.log("end transition");
-
+        //TODO load new mini-game
+        state.showingInstructions = true;
+        instructionsPanel.show({alias:"sammich-game"});//TODO
     });
+
 
     let instructionsPanel:any;
 
@@ -176,9 +174,9 @@ console.log("DESTROYED RUNNERS");
         }
     });
 
-    room.onMessage("MINI_GAME_TRACK", async (miniGameTrack:any)=>{
+    room.onMessage("MINI_GAME_TRACK", async (miniGameTrack:any) => {
        //TODO show instructions of the game 0
-        console.log("MINI_GAME_TRACK",miniGameTrack)
+        console.log("MINI_GAME_TRACK", miniGameTrack);
         state.showingInstructions = true;
         instructionsPanel = createInstructionScreen({transform:{
                 parent:lobbyScreen.getEntity(),
@@ -190,13 +188,11 @@ console.log("DESTROYED RUNNERS");
         console.log("miniGameTrack", miniGameTrack);
     });
 
-
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
-
+        console.log("START_GAME", miniGameId);
         state.playingMiniGame = true;
         state.showingInstructions = false;
-        instructionsPanel?.destroy();
-        console.log("START_GAME", miniGameId);
+        instructionsPanel.hide();
         lobbyScreen.hide();
 
         gameScreen = createSpriteScreen({
@@ -244,7 +240,7 @@ console.log("DESTROYED RUNNERS");
             clientRoom: room,
             isClientPlayer: true,
             recordSnapshots: true,
-            velocityMultiplier:10
+            velocityMultiplier:4
         });
 
         spectatorScreenRunner = createScreenRunner({
@@ -255,7 +251,7 @@ console.log("DESTROYED RUNNERS");
             serverRoom: undefined,
             clientRoom: room,
             isClientPlayer: false,
-            velocityMultiplier:10
+            velocityMultiplier:4
         });
 
         playerScreenRunner.runtime.start();

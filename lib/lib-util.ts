@@ -38,3 +38,19 @@ export function getRandomFromList(list:any[], exclude?:(()=>any)|any[]|any){
 export function getRandomInt(min:number, max:number) {
     return min + Math.floor(Math.random() * (max - min + 1));
 }
+
+export function waitFor(check:Function, intervalMs:number = 100){
+    return new Promise((resolve, reject)=>{
+        try{
+            let resolved = false;
+            while(!resolved){
+                resolved = check();
+            }
+            resolve(resolved);
+        }catch(error){
+            reject(error)
+        }
+
+
+    })
+}

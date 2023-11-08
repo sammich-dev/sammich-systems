@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import {createScreenRunner} from "../../../lib/game-runner";
 import {SammichGame} from "../../../games/sammich-game";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
+import {waitFor} from "../../../lib/lib-util";
 
 const prisma = new PrismaClient();
 
@@ -23,7 +24,6 @@ const timers = {
 
 export class GameRoom extends Room<GameState> {
     screenRunners:any[] = [];
-
     //TODO when creating a game
 
     onCreate(...args:any[]) {
@@ -45,44 +45,48 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
             console.log("INSTRUCTIONS_READY", {playerIndex});
+            if(this.state.players[playerIndex].instructionsReady) return;
             this.state.players[playerIndex].instructionsReady = true;
             if(this.state.players.every(i=>i.instructionsReady)){
+                this.screenRunners[0] = createScreenRunner({
+                    screen: createServerSpriteScreen(this.state.players[0]),
+                    timers,
+                    GameFactory: SammichGame,
+                    playerIndex:0,
+                    serverRoom:this,
+                    clientRoom:undefined
+                });
+                this.screenRunners[1] = createScreenRunner({
+                    screen: createServerSpriteScreen(this.state.players[1]),
+                    timers,
+                    GameFactory: SammichGame,
+                    playerIndex:1,
+                    serverRoom:this,
+                    clientRoom:undefined
+                });
+
                 this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.currentMiniGameIndex]});
+                this.screenRunners.forEach(g => g.runtime.start(false));
             }
         });
 
         this.onMessage("CREATE_GAME", (client, {user})=>{
+            console.log("CREATE_GAME", user);
             if(this.state.players.length) return;
 
             this.state.players.push(new PlayerState({user, client}));
 
             //TODO we have to create the screen when we know the minigames, not before
-            this.screenRunners[0] = createScreenRunner({
-                screen: createServerSpriteScreen(this.state.players[0]),
-                timers,
-                GameFactory: SammichGame,
-                playerIndex:0,
-                serverRoom:this,
-                clientRoom:undefined
-            });
         });
 
         this.onMessage("JOIN_GAME", (client, {user})=>{
+            console.log("JOIN_GAME");
             if(!this.state.players.length || this.state.players.length === 2) return;
             this.state.players.push(new PlayerState({user, client}));
-
-            this.screenRunners[1] = createScreenRunner({
-                screen: createServerSpriteScreen(this.state.players[1]),
-                timers,
-                GameFactory: SammichGame,
-                playerIndex:1,
-                serverRoom:this,
-                clientRoom:undefined
-            });
         });
 
         this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
-            this.screenRunners[playerIndex]?.runtime.reproduceFramesUntil(n);
+            this.screenRunners[playerIndex]?.runtime.getState().running && this.screenRunners[playerIndex]?.runtime.reproduceFramesUntil(n);
         });
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
@@ -97,36 +101,50 @@ export class GameRoom extends Room<GameState> {
                 console.log("broadcast gameTrack")
                 this.broadcast("MINI_GAME_TRACK", this.state.miniGameTrack.toJSON());
               //  this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.miniGameResults.length]});
-
-                this.screenRunners.forEach(g => g.runtime.start(false));
             }
         });
     }
 
     checkWinnerFunction:Function;
 
-    checkWinners(){
-        console.log("checkwinners", !!this.state,this.state.miniGameResults[this.state.currentMiniGameIndex] );
+    async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
+
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
+        //TODO wait until both runners has reached the amount of frames
         const playersScore = this.state.players.map((p:any)=>p.miniGameScore);
-        console.log("playersScore",playersScore);
 
         //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
 
-        const _winnerInfo = this.checkWinnerFunction(...playersScore);
+        const _winnerInfo = this.checkWinnerFunction && this.checkWinnerFunction(...playersScore) || undefined;
 
         if(_winnerInfo !== undefined){
-            console.log("WINNER FOUND", _winnerInfo);
+            console.log("WINNER FOUND", playerIndex, n,
+                this.screenRunners[playerIndex?0:1].runtime.getCurrentFrameNumber(),
+                this.screenRunners[playerIndex].runtime.getCurrentFrameNumber()
+            );
+            if(this.screenRunners[playerIndex?0:1].runtime.getCurrentFrameNumber() < this.screenRunners[playerIndex].runtime.getCurrentFrameNumber()){
+                this.screenRunners[playerIndex].runtime.stop();
+                return;
+            }
+            console.log("WINNER FOUND AND SETUP NEW GAME");
             this.state.miniGameResults.push(new MiniGameResult({_winnerInfo}));
+            this.screenRunners.forEach(s=> s.runtime.stop());
             this.screenRunners.forEach(s=> s.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);
             this.broadcast("MINI_GAME_WINNER", _winnerInfo);
             console.log("wij",_winnerInfo);
+
+            this.state.currentMiniGameIndex++;
+            this.state.players.forEach((player:PlayerState) => {
+                player.instructionsReady = false;
+                player.miniGameScore = 0;
+            });
         }
 
         return _winnerInfo;
     }
     setWinnerFn(fn:Function){
+        console.log("setWinnerFn", !!fn);
         this.checkWinnerFunction = fn;
         return ():any => this.checkWinnerFunction = null;
     }

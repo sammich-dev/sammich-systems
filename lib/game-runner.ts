@@ -34,6 +34,8 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
     const state:any = {
         frames:[],
+        running:false,
+        destroyed:false,
         startTime:0,
         lastReproducedFrame:-1
     };
@@ -71,6 +73,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
                 const {startedFrame, waitN} = awaitingFrame;
                 if((n-startedFrame) >= waitN){
                     awaitingFrames.splice(awaitingFrames.indexOf(awaitingFrame), 1);
+                    console.log("resolve awaiting frames")
                     awaitingFrame.resolve();
                 }
             });
@@ -132,6 +135,8 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     }
 
     const destroy = () => {
+        state.destroyed = true;
+        console.log("GAME RUNNER DESTROY");
         timers.clearInterval(frameInterval);
         spawners.forEach(s=>s && s.destroy());
         spawners.splice(0,spawners.length)
@@ -144,6 +149,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     const gameApi = {
         setScreenSprite:({spriteDefinition}:SpriteDefinitionParams)=>screen.setBackgroundSprite({spriteDefinition}),
         waitFrames:(n:number)=>{
+            console.log("wait frames")
             const waitingFrame = {
                 startedFrame:getFrameNumber(Math.max(0, Date.now() - state.startTime)),
                 waitN:n,
@@ -193,7 +199,10 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         },
         setPlayerScore:(data:number)=>{
             if(!isClientPlayer && serverRoom){
+                console.log("setPlayerScore", playerIndex, data);
                 serverRoom.state.players[playerIndex].miniGameScore = data;
+            }else{
+                //TODO?
             }
         },
         getPlayerScore:() => {
@@ -207,8 +216,9 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
     const runtimeApi = {
         runtime:{
-            onProposedWinner:(fn:Function)=>{
+            onProposedWinner:(fn:Function):Function=>{
                 callbacks.onProposedWinner = fn;
+                // @ts-ignore
                 return ()=>callbacks.onProposedWinner = null;
             },
             attachDebugPanel:(debugPanel:any)=> _debugPanel = debugPanel,
@@ -224,6 +234,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
             reproduceFramesUntil,
             start: (autoPlay:boolean = true)=>{
                 console.log("START__", playerIndex);
+                state.running = true;
                 state.startTime = Date.now();
                 state.frames.push({index:0, events:[{type:"start", time:0}]});
                 state.lastReproducedFrame = 0;
@@ -257,6 +268,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     return game;
 
     function stop(){
+        state.running = false;
         timers.clearInterval(frameInterval);
     }
 
