@@ -49,7 +49,6 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         spawners.forEach(s=>s.frame(n));
         callbacks.onFrame.forEach(f=>f(n, dt, frame));
         entityManager.checkColliders();
-        serverRoom?.checkWinners({playerIndex, n});//TODO REVIEW: this can be executed double due to both screenRunners
 
         if(frame){
             for(let frameEvent of frame.events){
@@ -189,6 +188,9 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         setWinnerFn:(fn:WinnerFunction) => {
             _disposeWinnerFn = serverRoom?.setWinnerFn(fn);
         },
+        checkWinners:()=>{
+            serverRoom?.checkWinners({playerIndex, n:state.lastReproducedFrame});//TODO REVIEW: this can be executed double due to both screenRunners
+        },
         getSpriteEntities,
         random: () => {
             //TODO should work with rollback
@@ -286,7 +288,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
             frames++;
         }
 
-        _debugPanel?.setState({frame:state.lastReproducedFrame});
+        _debugPanel?.setState({_frame:state.lastReproducedFrame});
     }
 
     function rollbackToFrame(frameNumber:number){//TODO buggy
@@ -318,7 +320,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
         });
 
-        _debugPanel?.setState({frame:state.lastReproducedFrame});
+        _debugPanel?.setState({_frame:state.lastReproducedFrame});
 
         spawners.forEach(s=>s.rollbackToFrame(frameNumber));
 

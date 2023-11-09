@@ -106,10 +106,17 @@ export class GameRoom extends Room<GameState> {
     }
 
     checkWinnerFunction:Function;
-
+    askedToCheckWinners = [0,0];
     async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
 
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
+
+        this.askedToCheckWinners[playerIndex] = n;
+        if(!this.askedToCheckWinners.every(i=>i)){
+            return;
+        }
+        this.askedToCheckWinners[0] = this.askedToCheckWinners[1] = 0;
+
         //TODO wait until both runners has reached the amount of frames
         const playersScore = this.state.players.map((p:any)=>p.miniGameScore);
 
@@ -122,10 +129,7 @@ export class GameRoom extends Room<GameState> {
                 this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame,
                 this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame
             );
-            if(this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame < this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame){
-                this.screenRunners[playerIndex].runtime.stop();
-                return;
-            }
+
             console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
             this.state.miniGameResults.push(_winnerInfo.winnerIndex);
             this.screenRunners.forEach(s=> s.runtime.stop());

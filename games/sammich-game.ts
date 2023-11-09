@@ -10,14 +10,14 @@ const INGREDIENT_FRAMES = [1,2,3,5,6,7];
 const LEVEL_VELOCITY = [30, 60, 70, 80, 90];
 const LEVEL_SPAWN_DELAY = [2000,1000,600,400, 300];
 
-
 function SammichGame({
     game
 }:any){
     const state = {
         score:0,
         level:0,
-        ingredientsToFall:3
+        ingredientsToFall:3,
+        sammichCompleted:false
     };
 
     game.setScreenSprite({
@@ -63,8 +63,8 @@ function SammichGame({
     const FRAME_MS = 1000 / game.runtime.getFps();
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
-        if(state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
-        if(state.level > 0 && player1Score < player2Score) return {winnerIndex:1};
+        if( state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
+        if( state.level > 0 && player1Score < player2Score) return {winnerIndex:1};
     });
 
     baseSprite.applyFrame(4);
@@ -107,7 +107,9 @@ function SammichGame({
             });
             
             game.setPlayerScore(state.score);
+
             await game.waitFrames( getFrameNumber( 1000, FRAME_MS));
+
             spawner.cleanSprites();
             baseSprite.sprite.hide();
             console.log("game.getPlayerScore", game.getPlayerScore());
@@ -127,7 +129,10 @@ function SammichGame({
                 spawnIntervalMs:LEVEL_SPAWN_DELAY[state.level],
                 spawnRandomFrame:INGREDIENT_FRAMES
             });
+
             spawner.start();
+
+            game.checkWinners();
         }
     });
 
