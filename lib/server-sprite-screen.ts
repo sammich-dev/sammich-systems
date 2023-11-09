@@ -67,7 +67,11 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                 setPixelPosition:(px:number,py:number)=>{
                     spriteState.pixelPosition = [ px, py ];
                     if(spriteState.network){
-                        const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID)
+                        const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
+                        if(!colyseusSprite){
+                            console.trace();
+                            debugger;
+                        }
                         colyseusSprite.x = px;
                         colyseusSprite.y = py;
                     }
