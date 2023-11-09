@@ -119,15 +119,15 @@ export class GameRoom extends Room<GameState> {
 
         if(_winnerInfo !== undefined){
             console.log("WINNER FOUND", playerIndex, n,
-                this.screenRunners[playerIndex?0:1].runtime.getCurrentFrameNumber(),
-                this.screenRunners[playerIndex].runtime.getCurrentFrameNumber()
+                this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame,
+                this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame
             );
-            if(this.screenRunners[playerIndex?0:1].runtime.getCurrentFrameNumber() < this.screenRunners[playerIndex].runtime.getCurrentFrameNumber()){
+            if(this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame < this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame){
                 this.screenRunners[playerIndex].runtime.stop();
                 return;
             }
-            console.log("WINNER FOUND AND SETUP NEW GAME");
-            this.state.miniGameResults.push(new MiniGameResult({_winnerInfo}));
+            console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
+            this.state.miniGameResults.push(_winnerInfo.winnerIndex);
             this.screenRunners.forEach(s=> s.runtime.stop());
             this.screenRunners.forEach(s=> s.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);

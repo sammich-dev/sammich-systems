@@ -139,12 +139,14 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         playerScreenRunner.runtime.destroy();//TODO it's not removing background sprite
         spectatorScreenRunner.runtime.destroy();
 
-        lobbyScreen.show()
+        lobbyScreen.show();
+        const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
+            return acc + (current === winnerIndex ? 1:0);
+        },0);
+        console.log("previousScore", previousScore);
         await scoreTransition.showTransition({
             winnerIndex,
-            previousScore:room.state.miniGameResults.reduce((acc:number, current:any)=>{
-                return acc + (current.winnerPlayerIndex === winnerIndex ? 1:0);
-            },0)
+            previousScore
         });
         scoreTransition.hide();
         //TODO load new mini-game

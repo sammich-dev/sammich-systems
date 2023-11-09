@@ -229,6 +229,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
             pushInputEvent,
             pushFrame,
             getCurrentFrameNumber: () => {
+                //TODO REVIEW ALL USES Date.now() doesnt work well when there is not autoplay and/or frames are reproduced programmatically
                 return Math.floor((Date.now() - state.startTime)/frameMs);
             },
             reproduceFramesUntil,

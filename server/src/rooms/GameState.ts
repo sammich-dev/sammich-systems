@@ -83,11 +83,11 @@ export class GameState extends Schema {
     @type([PlayerState]) users = new ArraySchema<PlayerState>();
     @type(["uint8"]) miniGameTrack = new ArraySchema<number>();
 
-    @type([MiniGameResult])
-    miniGameResults:any = new ArraySchema<MiniGameResult>();
+    @type(["uint8"])
+    miniGameResults:number[] = new ArraySchema<number>();
 
     async setupNewGame(){
-        this.miniGameResults.splice(0,this.miniGameResults.length);
+        this.miniGameResults.splice(0, this.miniGameResults.length);
         this.currentMiniGameIndex = 0;
         this.started = false;
         this.created = new Date().getTime();
