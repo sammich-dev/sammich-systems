@@ -27,7 +27,7 @@ import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transf
 import {createInstructionScreen} from "./instructions-screen";
 import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
-
+const INSTRUCTION_READY_TIMEOUT = 5000;
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
     setupInputController();
 
@@ -36,7 +36,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     };
     const state = {
         showingInstructions:false,
-        playingMiniGame:false
+        playingMiniGame:false,
+        sentInstructionsReady:false
     };
     const colyseusClient: Client = new Client(`ws://localhost:2567`);
 
@@ -151,9 +152,9 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         scoreTransition.hide();
         //TODO load new mini-game
         state.showingInstructions = true;
+
         instructionsPanel.show({alias:"sammich-game"});//TODO
     });
-
 
     let instructionsPanel:any;
 
@@ -161,10 +162,11 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         //TODO use it also to send "INSTRUCTIONS_READY"
         console.log("KEY", state, inputActionKey, isPressed);
         if(state.showingInstructions){
+            state.sentInstructionsReady = true;
             const playerIndex = getPlayerIndex();
-            console.log("playerIndex-", playerIndex)
+            console.log("playerIndex-", playerIndex);
             room.send("INSTRUCTIONS_READY", {playerIndex: getPlayerIndex(), foo:true});
-            instructionsPanel.showWaitingForOtherPlayer();
+            instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
         }else if(state.playingMiniGame){
             getDebugPanel().setState(getInputState());
             const inputFrame = playerScreenRunner.runtime.pushInputEvent({
@@ -192,6 +194,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
         console.log("START_GAME", miniGameId);
+        state.sentInstructionsReady = false;
         state.playingMiniGame = true;
         state.showingInstructions = false;
         instructionsPanel.hide();
@@ -280,6 +283,17 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
             if (room.state.miniGameResults?.length && room.state.miniGameResults.length === room.state.miniGameTrack.length) {
                 //TODO finished the gamePlay?
+            }
+        }
+
+        if(room.state.players.filter((p:any)=>p.instructionsReady).length === 1){
+            instructionsPanel.setTimeout(INSTRUCTION_READY_TIMEOUT);
+            if(!room.state.players[getPlayerIndex()].instructionsReady){
+                timers.setTimeout(() => {
+                    if(!state.sentInstructionsReady){
+                        room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: true });
+                    }
+                }, INSTRUCTION_READY_TIMEOUT);
             }
         }
         

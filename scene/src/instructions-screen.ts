@@ -1,6 +1,7 @@
 import {engine, Material, MeshRenderer, TextAlignMode, TextShape, Transform, VideoPlayer} from "@dcl/sdk/ecs";
 import {TransformType} from "@dcl/ecs/dist/components/manual/Transform";
 import {Vector3, Color3} from "@dcl/sdk/math";
+import {timers} from "@dcl-sdk/utils";
 
 export const createInstructionScreen = (
     {
@@ -12,8 +13,14 @@ export const createInstructionScreen = (
         gameAlias: string,
         gameInstructions: string
     }) => {
+    const state = {
+        timeoutStartedTime:0,
+        waitingOther:false
+    }
     const {parent, position, rotation, scale} = transform;
     const screenEntity = engine.addEntity();
+    const WAITING_BOTH_PLAYERS_TEXT = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nPress any key when you are ready to play`;
+    const WAITING_ONE_PLAYER_TEXT = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nWaiting other player...`;
     let backupPositionY = position.y;
 
     MeshRenderer.setPlane(screenEntity);
@@ -43,23 +50,50 @@ export const createInstructionScreen = (
         shadowBlur:10
     });
     Transform.create(instructionsTextEntity, {parent:screenEntity, position:Vector3.create(0, 0.45,-0.001)});
-
+    let countdownInterval:number = 0;
     return {
         destroy: () => {
-            engine.removeEntity(screenEntity)
+            engine.removeEntity(screenEntity);
+            timers.clearInterval(countdownInterval);
+            countdownInterval = 0;
             console.log("video screen destroy")
         },
-        showWaitingForOtherPlayer:()=>{
-            TextShape.getMutable(instructionsTextEntity).text = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nWaiting other player...`;
+        getState:()=>state,
+        showWaitingForOtherPlayer:({timeout = 20000})=>{
+            state.waitingOther = true;
+            TextShape.getMutable(instructionsTextEntity).text = WAITING_ONE_PLAYER_TEXT;
         },
-        show:({alias}:any)=>{
-            TextShape.getMutable(instructionsTextEntity).text = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nPress any key when you are ready to play`;
+        setTimeout:(timeout:number)=> {
+            if(countdownInterval) return;
+            if(state.timeoutStartedTime) return;
+            state.timeoutStartedTime = Date.now();
+            countdownInterval = timers.setInterval(()=>{
+                if(state.waitingOther){
+                    TextShape.getMutable(instructionsTextEntity).text = WAITING_ONE_PLAYER_TEXT + `\n\n${formatTimeout(timeout - (Date.now() - state.timeoutStartedTime))}`;
+                }else{
+                    TextShape.getMutable(instructionsTextEntity).text = WAITING_BOTH_PLAYERS_TEXT+ `\n\n${formatTimeout(timeout - (Date.now() - state.timeoutStartedTime))}`;
+                }
+
+            }, 300);
+        },
+        show:({alias}:any) =>{
+            TextShape.getMutable(instructionsTextEntity).text = WAITING_BOTH_PLAYERS_TEXT;
             Transform.getMutable(screenEntity).position.y = backupPositionY;
             VideoPlayer.getMutable(screenEntity).playing = true;
         },
         hide:()=>{
+            Object.assign(state, {
+                timeoutStartedTime:0,
+                waitingOther:false
+            })
             Transform.getMutable(screenEntity).position.y = Number.MIN_SAFE_INTEGER;
             VideoPlayer.getMutable(screenEntity).playing = false;
+            timers.clearInterval(countdownInterval);
+            countdownInterval = 0;
         }
     }
+}
+
+function formatTimeout(ms:number){
+    return `<b>${Math.max(0,Math.floor(ms/1000))}</b>`;
 }
