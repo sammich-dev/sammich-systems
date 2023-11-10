@@ -19,6 +19,8 @@ export type SpawnerOptions = {
 }
 
 export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerOptions, game:any) => {
+    console.log("createSpawner", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
+
     const [SCREEN_W, SCREEN_H] = game.runtime.getScreen().getSize();//TODO review leak by reference
     const state = {
         count:0,
@@ -45,8 +47,6 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
         ID: number;
         spriteEntity:SpriteEntity, locked:boolean, startFrame:number,detectCollisions:boolean, toJSON:Function }[] = [];
 
-    const endPositions = [];
-
     const frameMs = 1000/game.runtime.getFps();//TODO
 
     const isLocked = (spriteEntity:SpriteEntity)=>{
@@ -56,6 +56,7 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
         return spawnedItems.find(spawnedItem => spawnedItem.spriteEntity === spriteEntity);
     };
     const spawn =({offsetPixelPosition = [0,0], layer}:any) => {
+        console.log("SPAWN", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
         const {pixelPosition} = options;
         const position = [pixelPosition[0] + offsetPixelPosition[0], pixelPosition[1] + offsetPixelPosition[1]];
         const spriteEntity:SpriteEntity = spriteEntityFactory.create({
@@ -92,8 +93,10 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
 
     function getCollisionListener({spawnedItem, spriteEntity}:any){
         return ({otherSprite}:any)=>{
+
             spawnedItem.locked = true;
 
+            console.log("Collision calling onStop", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
             // spawnedItem.spriteEntity.detectCollisions = false;
             callbacks.onStop.forEach(f=>f(spriteEntity));
         }
@@ -108,11 +111,15 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
             Object.assign(options, _options);
         },
         stop: () =>{
-            console.log("STOP!!")
+            console.log("STOP!!", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
+
             state.stopped = true;
             spawnedItems.forEach((_,index)=>(_.locked = true))
         },
-        start: () => (state.stopped = false, state.startedFrame = state.frame),
+        start: () => {
+            console.log("SPAWNER START", {...state}, game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
+            return (state.stopped = false, state.startedFrame = state.frame);
+        },
         frame: (n:number) => {
             state.frame = n;
 

@@ -110,10 +110,8 @@ export function createSpriteScreen({
             return {
                 ID,
                 destroy: () => {
-                    console.log("destroy", ID);
                     engine.removeEntity(spriteEntity);
                     state.destroyed = true;
-                    console.log("DESTROYED ", ID)
                     //TODO REVIEW POSSIBLE MEMORY LEAKS
                 },
                 applyFrame:(n:number)=>{

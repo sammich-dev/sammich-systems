@@ -19,7 +19,7 @@ function SammichGame({
         ingredientsToFall:3,
         sammichCompleted:false
     };
-
+    console.log("SammichGame", game.runtime.getPlayerIndex() ,game.runtime.getState().lastReproducedFrame);
     game.setScreenSprite({
         spriteDefinition:{
             x:0,
@@ -61,6 +61,7 @@ function SammichGame({
         }
     );
     const FRAME_MS = 1000 / game.runtime.getFps();
+    const FRAMES_TO_WAIT_A_SECONDS = getFrameNumber( 1000, FRAME_MS);
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
         if( state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
@@ -108,15 +109,18 @@ function SammichGame({
             
             game.setPlayerScore(state.score);
 
-            await game.waitFrames( getFrameNumber( 1000, FRAME_MS));
+            console.log("wait frames",game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame, FRAMES_TO_WAIT_A_SECONDS);
 
+            await game.waitFrames(FRAMES_TO_WAIT_A_SECONDS );//TODO dont use await, it should be synchronous?
+            console.log("AFTER WAIT-A", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame,FRAMES_TO_WAIT_A_SECONDS)
             spawner.cleanSprites();
             baseSprite.sprite.hide();
             console.log("game.getPlayerScore", game.getPlayerScore());
-            const playerScore= game.getPlayerScore();
-            scoreText.setText(playerScore || ("--" + Math.random()) );
+
             spawner.stop();
-            await game.waitFrames( getFrameNumber( 1000, FRAME_MS));
+            console.log("wait frames.",game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame,FRAMES_TO_WAIT_A_SECONDS)
+            await game.waitFrames( FRAMES_TO_WAIT_A_SECONDS );
+            console.log("AFTER WAIT-B", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame,FRAMES_TO_WAIT_A_SECONDS)
             baseSprite.sprite.show();
             console.log("state.level", state.level, LEVEL_VELOCITY)
             if(state.level < (LEVEL_VELOCITY.length-1)){
@@ -162,7 +166,9 @@ function SammichGame({
             });
         }
     });
+
     game.onFrame((frameNumber:number, dt:number, frame:any)=>{
+        scoreText.setText((game.getPlayerScore() || ("--" + Math.random())) + `            ${frameNumber} ${game.runtime.getState().lastReproducedFrame}`);
      //   frame && console.log("frame-->--->-->", frameNumber, dt, frame);
     });
 }

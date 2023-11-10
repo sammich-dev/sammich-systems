@@ -5,6 +5,7 @@ import {createSpriteEntityFactory} from "./sprite-entity-factory";
 import {Frame, FrameEvent, FrameEventType, InputEventRepresentation} from "./frame-util";
 import {InputAction} from "@dcl/sdk/ecs";
 import {SpriteDefinitionParams} from "./sprite-util";
+import {sleep} from "../scene/dcl-lib/sleep";
 
 let _rollbackDone = false; //TODO delete, only dev
 export type GameRunnerCallback = {
@@ -45,9 +46,9 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     const spawners:any[] = [];
     const awaitingFrames:any[] = [];
 
-    const triggerFrame = (n:number, dt:number, frame:any) => {
+    const triggerFrame = (n:number, frame:any) => {
         spawners.forEach(s=>s.frame(n));
-        callbacks.onFrame.forEach(f=>f(n, dt, frame));
+        callbacks.onFrame.forEach(f=>f(n, frame));
         entityManager.checkColliders();
 
         if(frame){
@@ -66,17 +67,20 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         _debugPanel?.setState({"lastSnapshotPositions":getSpriteEntities().map((s:SpriteEntity)=>s.toJSON().position[1]) })
 
         if(recordFrames) _snapshots.push(snapshot);
-
+        let shouldSplitAwait = false;
         if(awaitingFrames?.length){
-            awaitingFrames.forEach(awaitingFrame => {
+
+            awaitingFrames.forEach(awaitingFrame => {//TODO FIX IT
                 const {startedFrame, waitN} = awaitingFrame;
                 if((n-startedFrame) >= waitN){
                     awaitingFrames.splice(awaitingFrames.indexOf(awaitingFrame), 1);
-                    console.log("resolve awaiting frames")
+                    console.log("RESOLVE awaiting frame", playerIndex, state.lastReproducedFrame, awaitingFrame.waitN, awaitingFrame.startedFrame, awaitingFrames.length);
+                    shouldSplitAwait = true;
                     awaitingFrame.resolve();
                 }
             });
         }
+        return shouldSplitAwait;
     };
 
     const triggerInput = (inputActionKey:number, isPressed:false|number, time?:number) => {
@@ -148,9 +152,9 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     const gameApi = {
         setScreenSprite:({spriteDefinition}:SpriteDefinitionParams)=>screen.setBackgroundSprite({spriteDefinition}),
         waitFrames:(n:number)=>{
-            console.log("wait frames")
+            console.log("wait frames", playerIndex, n);
             const waitingFrame = {
-                startedFrame:getFrameNumber(Math.max(0, Date.now() - state.startTime)),
+                startedFrame:state.lastReproducedFrame,
                 waitN:n,
             };
             const promise = new Promise((resolve, reject)=>{
@@ -218,6 +222,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
     const runtimeApi = {
         runtime:{
+            getPlayerIndex:()=>playerIndex,
             onProposedWinner:(fn:Function):Function=>{
                 callbacks.onProposedWinner = fn;
                 // @ts-ignore
@@ -275,17 +280,15 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         timers.clearInterval(frameInterval);
     }
 
-    function reproduceFramesUntil(frameNumber:number){
-        let frames = 0;
-
+    async function reproduceFramesUntil(frameNumber:number){
+        console.log("reproduceFramesUntil", playerIndex, state.lastReproducedFrame, frameNumber);
         while(frameNumber > state.lastReproducedFrame) {
             state.lastReproducedFrame++;
-            const dt = Date.now() - state.startTime + (frames*frameMs);
             const frame = findFrame(state.lastReproducedFrame);
 
-            triggerFrame(state.lastReproducedFrame, dt, frame);
-
-            frames++;
+            if(triggerFrame(state.lastReproducedFrame, frame)){
+                await sleep(0);
+            }
         }
 
         _debugPanel?.setState({_frame:state.lastReproducedFrame});

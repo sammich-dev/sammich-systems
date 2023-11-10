@@ -107,29 +107,40 @@ export class GameRoom extends Room<GameState> {
 
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
-    async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
 
+    async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
+        console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore);
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
 
         this.askedToCheckWinners[playerIndex] = n;
         if(!this.askedToCheckWinners.every(i=>i)){
             return;
         }
+        //TODO reproduce
+        if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
+            console.log("lastReproducedFrame 0 > 1");
+            this.screenRunners[1].runtime.reproduceFramesUntil(this.screenRunners[0].runtime.getState().lastReproducedFrame);
+        }
+        if(this.screenRunners[1].runtime.getState().lastReproducedFrame > this.screenRunners[0].runtime.getState().lastReproducedFrame){
+            console.log("lastReproducedFrame 1 > 0");
+            this.screenRunners[0].runtime.reproduceFramesUntil(this.screenRunners[1].runtime.getState().lastReproducedFrame);
+        }
+
         this.askedToCheckWinners[0] = this.askedToCheckWinners[1] = 0;
 
         //TODO wait until both runners has reached the amount of frames
         const playersScore = this.state.players.map((p:any)=>p.miniGameScore);
-
+        console.log("miniGameScore", playersScore);
         //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
 
         const _winnerInfo = this.checkWinnerFunction && this.checkWinnerFunction(...playersScore) || undefined;
+        console.log("WINNER FOUND", playerIndex, n,
+            _winnerInfo,
+            this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame,
+            this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame
+        );
 
         if(_winnerInfo !== undefined){
-            console.log("WINNER FOUND", playerIndex, n,
-                this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame,
-                this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame
-            );
-
             console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
             this.state.miniGameResults.push(_winnerInfo.winnerIndex);
             this.screenRunners.forEach(s=> s.runtime.stop());
@@ -137,6 +148,8 @@ export class GameRoom extends Room<GameState> {
             this.screenRunners.splice(0,this.screenRunners.length);
             this.broadcast("MINI_GAME_WINNER", _winnerInfo);
             console.log("wij",_winnerInfo);
+
+            console.log("miniGameScore",  this.state.players.map((p:any)=>p.miniGameScore).join("-"));
 
             this.state.currentMiniGameIndex++;
             this.state.players.forEach((player:PlayerState) => {
