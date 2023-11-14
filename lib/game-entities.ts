@@ -12,7 +12,10 @@ export type SpriteKlass = SpriteKlassParams & {
 }
 export type SpriteEntityCreationParams = {
     pixelPosition:number[],
-    layer:number
+    layer:number,
+    ID?:number,
+    network:boolean,
+    frame?:number,
 }
 export type SpriteEntity = {
     ID:number,

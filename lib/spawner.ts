@@ -56,12 +56,13 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
         return spawnedItems.find(spawnedItem => spawnedItem.spriteEntity === spriteEntity);
     };
     const spawn =({offsetPixelPosition = [0,0], layer}:any) => {
-        console.log("SPAWN", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
+
         const {pixelPosition} = options;
         const position = [pixelPosition[0] + offsetPixelPosition[0], pixelPosition[1] + offsetPixelPosition[1]];
         const spriteEntity:SpriteEntity = spriteEntityFactory.create({
             pixelPosition:position,
-            layer:layer || options.layer
+            layer:layer || options.layer,
+            network:true
         });
         state.stopped = false
         if(options.spawnRandomFrame?.length){

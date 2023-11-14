@@ -17,7 +17,7 @@ export function createServerSpriteScreen(playerState:PlayerState) {
         setBackgroundSprite:({spriteDefinition, back}:SpriteDefinitionParams)=>{
             state.spriteDefinition = spriteDefinition;
         },
-        addSprite:({ID, pixelPosition, layer, network}: any)=>{
+        addSprite:({ID, pixelPosition, layer, network, klass}: any)=>{
             const spriteState = {
                 pixelPosition,
                 network,
@@ -26,7 +26,16 @@ export function createServerSpriteScreen(playerState:PlayerState) {
             };
 
             if(getNetwork()){
-                playerState.spriteEntities.push(new SpriteState({ID, frame:1, x:pixelPosition[0], y:pixelPosition[1], layer}));
+                playerState.spriteEntities.push(
+                    new SpriteState({
+                        ID,
+                        frame:1,
+                        x:pixelPosition[0],
+                        y:pixelPosition[1],
+                        layer,
+                        playerIndex:playerState.playerIndex,
+                        klass
+                    }));
             }
 
             return {
@@ -42,7 +51,7 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                     spriteState.frame = n;
                     if(spriteState.network){
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
-                        colyseusSprite.frame = n;
+                        if(colyseusSprite) colyseusSprite.frame = n;
                     }
                 },
                 getFrame:()=>spriteState.frame,
@@ -54,13 +63,13 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                             console.trace();
                             debugger;
                         }
-                        colyseusSprite.visible = false;
+                        if(colyseusSprite) colyseusSprite.visible = false;
                     }
                 },
                 show:()=>{
                     if(spriteState.network){
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
-                        colyseusSprite.visible = true;
+                        if(colyseusSprite) colyseusSprite.visible = true;
                     }
                 },
                 getPixelPosition:()=>spriteState.pixelPosition,
@@ -68,12 +77,8 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                     spriteState.pixelPosition = [ px, py ];
                     if(spriteState.network){
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
-                        if(!colyseusSprite){
-                            console.trace();
-                            debugger;
-                        }
-                        colyseusSprite.x = px;
-                        colyseusSprite.y = py;
+                        if(colyseusSprite) colyseusSprite.x = px;
+                        if(colyseusSprite) colyseusSprite.y = py;
                     }
                 },
                 setNetwork,

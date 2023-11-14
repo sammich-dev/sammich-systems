@@ -27,7 +27,9 @@ import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transf
 import {createInstructionScreen} from "./instructions-screen";
 import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
+import {throttle} from "../dcl-lib/throttle";
 const INSTRUCTION_READY_TIMEOUT = 5000;
+
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
     setupInputController();
 
@@ -111,7 +113,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         pixelPosition: [10, 60],
         layer: 20,
         onClick: onClickCreate,
-        hoverText: "Start new game"
+        hoverText: "Start new game",
+        klass:"CreateButton"
     });
 
     const joinButton = lobbyScreen.addSprite({
@@ -123,7 +126,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         pixelPosition: [192 - 10 - 47, 60],
         layer: 20,
         onClick: onClickJoin,
-        hoverText: "Join game"
+        hoverText: "Join game",
+        klass:"JoinButton"
     });
 
     joinButton.hide();
@@ -144,7 +148,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
             return acc + (current === winnerIndex ? 1:0);
         },0);
-        console.log("previousScore", previousScore);
+
         await scoreTransition.showTransition({
             winnerIndex,
             previousScore
@@ -160,7 +164,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
         //TODO use it also to send "INSTRUCTIONS_READY"
-        console.log("KEY", state, inputActionKey, isPressed);
         if(state.showingInstructions){
             state.sentInstructionsReady = true;
             const playerIndex = getPlayerIndex();
@@ -188,8 +191,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 scale:Vector3.One(),
                 rotation:Quaternion.Zero()
             }, gameAlias:SammichGame.definition.alias, gameInstructions:SammichGame.definition.instructions});
-
-        console.log("miniGameTrack", miniGameTrack);
     });
 
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
@@ -203,7 +204,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         gameScreen = createSpriteScreen({
             transform: {
                 position: Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0),
-                //  position: Vector3.create(0.5+(SPLIT_SCREEN_WIDTH*getPlayerIndex())-SPLIT_SCREEN_WIDTH/0.5, 0,0),
                 scale: SPLIT_SCREEN_SCALE,
                 parent: entity
             },
@@ -221,7 +221,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         spectatorScreen = createSpriteScreen({
             transform: {
                 position: Vector3.create(getOtherPlayerIndex() ? 0.25 : -0.25, 0, 0),
-                //    position: Vector3.create(2+(SPLIT_SCREEN_WIDTH*getOtherPlayerIndex())-SPLIT_SCREEN_WIDTH/2, 2,0),
                 scale: SPLIT_SCREEN_SCALE,
                 parent: entity
             },
@@ -235,6 +234,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             },
             playerIndex: getOtherPlayerIndex()
         });
+
 
         playerScreenRunner = createScreenRunner({
             screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
@@ -260,17 +260,17 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         });
 
         playerScreenRunner.runtime.start();
-        spectatorScreenRunner.runtime.start();
+        spectatorScreenRunner.runtime.start(false);
 
         playerScreenRunner.runtime.attachDebugPanel(getDebugPanel());
         spectatorScreenRunner.runtime.attachDebugPanel(getDebugPanel());
-
-        playerScreenRunner.onFrame(() => {
+        const throttleSendPlayerFrame = throttle(() => {
             room.send("PLAYER_FRAME", {
                 playerIndex: getPlayerIndex(),
-                n: playerScreenRunner.runtime.getCurrentFrameNumber()
+                n: playerScreenRunner.runtime.getState().lastReproducedFrame
             });
-        });
+        },100);
+        playerScreenRunner.onFrame(throttleSendPlayerFrame);
     });
 
     room.onStateChange((...args: any[]) => {

@@ -16,35 +16,44 @@ export enum GAME_STATE {
 }
 
 export class UserState extends Schema {
-    @type("string") publicKey: string;
-    @type("boolean") hasConnectedWeb3: boolean;
-    @type("string") userId: string;
-    @type("int8") version: number;
-    @type("string") displayName: string;
+    @type("string") publicKey: string = "";
+    @type("boolean") hasConnectedWeb3: boolean = false;
+    @type("string") userId: string = "";
+    @type("int8") version: number = 0;
+    @type("string") displayName: string = "";
 
     constructor({publicKey, hasConnectedWeb3, userId, version, displayName}:any) {
         super();
-        Object.assign(this,{publicKey, hasConnectedWeb3, userId, version, displayName});
+        Object.assign(this,{publicKey:publicKey||this.publicKey, hasConnectedWeb3, userId, version, displayName});
     }
 }
 
 export class SpriteState extends Schema {
     @type("number") ID:number;
-    @type("uint8") x: number;
-    @type("uint8") y: number;
-    @type("uint16") frame:number;
-    @type("boolean") visible:boolean;
+    @type("string") klass:string;
+    @type("uint8") playerIndex: number = -1;
+    @type("uint8") x: number = 0;
+    @type("uint8") y: number = 0;
+    @type("uint8") layer: number = 1;
+    @type("uint16") frame:number = 0;
+    @type("boolean") visible:boolean = false;
 
-    constructor({ID,frame,x,y}:any){
+
+    constructor({ID,frame,x,y, playerIndex, klass, layer}:any){
         super();
-        Object.assign(this, {ID, frame, x, y, visible:true});
+        this.klass = klass;
+        this.ID = ID;
+        this.layer = layer;
+        Object.assign(this, {ID, frame, x, y, visible:true, playerIndex});
     }
 }
 
 export class PlayerState extends Schema {
     @type(UserState) user:any;
+    @type("uint8") playerIndex:number = -1;
     @type("boolean") instructionsReady:boolean = false;
-    @type("number") miniGameScore:any;
+    @type("number") miniGameScore:any = 0;
+    @type("uint32") lastReproducedFrame:number = -1;
     @type([SpriteState]) spriteEntities = new ArraySchema<SpriteState>();//sprites that are shared with network and belong or are related to player
 
     client:Client;
@@ -53,8 +62,9 @@ export class PlayerState extends Schema {
     ready:boolean = false;
 
 
-    constructor({user, client}: { user:any, client:Client }) {
+    constructor({user, client, playerIndex}: { user:any, client:Client, playerIndex:number }) {
         super();
+        this.playerIndex = playerIndex;
         this.user =  new UserState(user);
         this.client = client;
     }

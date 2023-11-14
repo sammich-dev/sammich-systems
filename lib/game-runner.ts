@@ -48,7 +48,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
 
     const triggerFrame = (n:number, frame:any) => {
         spawners.forEach(s=>s.frame(n));
-        callbacks.onFrame.forEach(f=>f(n, frame));
+        callbacks.onFrame.forEach(f => f(n, frame));
         entityManager.checkColliders();
 
         if(frame){
@@ -69,12 +69,11 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
         if(recordFrames) _snapshots.push(snapshot);
         let shouldSplitAwait = false;
         if(awaitingFrames?.length){
-
             awaitingFrames.forEach(awaitingFrame => {//TODO FIX IT
                 const {startedFrame, waitN} = awaitingFrame;
                 if((n-startedFrame) >= waitN){
+                    console.log("RESOLVE awaiting frame", playerIndex, state.lastReproducedFrame, awaitingFrame.waitN, awaitingFrame.startedFrame, awaitingFrames.length,awaitingFrames.indexOf(awaitingFrame));
                     awaitingFrames.splice(awaitingFrames.indexOf(awaitingFrame), 1);
-                    console.log("RESOLVE awaiting frame", playerIndex, state.lastReproducedFrame, awaitingFrame.waitN, awaitingFrame.startedFrame, awaitingFrames.length);
                     shouldSplitAwait = true;
                     awaitingFrame.resolve();
                 }
@@ -281,7 +280,6 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
     }
 
     async function reproduceFramesUntil(frameNumber:number){
-        console.log("reproduceFramesUntil", playerIndex, state.lastReproducedFrame, frameNumber);
         while(frameNumber > state.lastReproducedFrame) {
             state.lastReproducedFrame++;
             const frame = findFrame(state.lastReproducedFrame);
@@ -290,6 +288,7 @@ export const createScreenRunner = ({screen, timers, seed = 1, GameFactory, onFin
                 await sleep(0);
             }
         }
+        if(serverRoom && !isClientPlayer) serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
 
         _debugPanel?.setState({_frame:state.lastReproducedFrame});
     }

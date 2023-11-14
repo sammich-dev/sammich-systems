@@ -64,6 +64,7 @@ function SammichGame({
     const FRAMES_TO_WAIT_A_SECONDS = getFrameNumber( 1000, FRAME_MS);
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
+        console.log("winnerFn", state.level, player1Score, player2Score);
         if( state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
         if( state.level > 0 && player1Score < player2Score) return {winnerIndex:1};
     });
@@ -89,6 +90,12 @@ function SammichGame({
         spriteEntity.setNetwork(true);
         const lockedIngredients = game.getSpriteEntities().filter((i:SpriteEntity)=>spawner.isLocked(i)).length;
 
+        if(baseSprite.getPixelPosition()[0] === spriteEntity.getPixelPosition()[0]){
+            state.score++;
+            game.setPlayerScore(state.score);
+        }
+
+
         if(lockedIngredients > (state.ingredientsToFall + 1)){
             console.log("SAMMICH COMPLETED")
             /**TODO
@@ -100,14 +107,6 @@ function SammichGame({
             //await game.sleep(1000);
 
             //TODO count scores, count all the spawned sprites which are at the same position than base
-            const basePosition = baseSprite.getPixelPosition()[0];
-            spawner.getSpawnedSprites().forEach((spawnedSprite:SpriteEntity)=>{
-                if(basePosition === spawnedSprite.getPixelPosition()[0]){
-                    state.score++;
-                }
-            });
-            
-            game.setPlayerScore(state.score);
 
             console.log("wait frames",game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame, FRAMES_TO_WAIT_A_SECONDS);
 

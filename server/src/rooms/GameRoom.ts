@@ -74,15 +74,14 @@ export class GameRoom extends Room<GameState> {
             console.log("CREATE_GAME", user);
             if(this.state.players.length) return;
 
-            this.state.players.push(new PlayerState({user, client}));
-
+            this.state.players.push(new PlayerState({user, client, playerIndex:0}));
             //TODO we have to create the screen when we know the minigames, not before
         });
 
         this.onMessage("JOIN_GAME", (client, {user})=>{
             console.log("JOIN_GAME");
             if(!this.state.players.length || this.state.players.length === 2) return;
-            this.state.players.push(new PlayerState({user, client}));
+            this.state.players.push(new PlayerState({user, client, playerIndex:1}));
         });
 
         this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
@@ -108,7 +107,7 @@ export class GameRoom extends Room<GameState> {
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
 
-    async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
+     checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
         console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore);
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
 
@@ -117,12 +116,14 @@ export class GameRoom extends Room<GameState> {
             return;
         }
         //TODO reproduce
+         console.log("miniGameScoreA", this.state.players.map((p:any)=>p.miniGameScore));
         if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
-            console.log("lastReproducedFrame 0 > 1");
+            console.log("lastReproducedFrame 0 > 1", this.screenRunners[1].runtime.getState().lastReproducedFrame);
             this.screenRunners[1].runtime.reproduceFramesUntil(this.screenRunners[0].runtime.getState().lastReproducedFrame);
         }
+         console.log("miniGameScoreB", this.state.players.map((p:any)=>p.miniGameScore));
         if(this.screenRunners[1].runtime.getState().lastReproducedFrame > this.screenRunners[0].runtime.getState().lastReproducedFrame){
-            console.log("lastReproducedFrame 1 > 0");
+            console.log("lastReproducedFrame 1 > 0", this.screenRunners[0].runtime.getState().lastReproducedFrame);
             this.screenRunners[0].runtime.reproduceFramesUntil(this.screenRunners[1].runtime.getState().lastReproducedFrame);
         }
 
@@ -130,7 +131,8 @@ export class GameRoom extends Room<GameState> {
 
         //TODO wait until both runners has reached the amount of frames
         const playersScore = this.state.players.map((p:any)=>p.miniGameScore);
-        console.log("miniGameScore", playersScore);
+
+        console.log("miniGameScoreC", this.state.players.map((p:any)=>p.miniGameScore));
         //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
 
         const _winnerInfo = this.checkWinnerFunction && this.checkWinnerFunction(...playersScore) || undefined;
@@ -171,7 +173,7 @@ export class GameRoom extends Room<GameState> {
 
     onJoin(client: Client, {user}:any) {
         console.log("onJoin", user)
-        this.state.users.push(new PlayerState({user, client}));
+        this.state.users.push(new PlayerState({user, client, playerIndex:-1}));
         //TODO only when it's player, not when it's user
     }
 

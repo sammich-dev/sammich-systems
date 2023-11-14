@@ -1,33 +1,57 @@
-import {SpriteEntity, SpriteKlass, SpriteKlassParams} from "./game-entities";
+import {SpriteEntity, SpriteEntityCreationParams, SpriteKlass, SpriteKlassParams} from "./game-entities";
 import {Sprite} from "./sprite-util";
 import {checkBoxesContact, getAbsoluteCollisionBoxFromSprite} from "./math-util";
+import {SpriteState} from "../server/src/rooms/GameState";
 type KlassAlias = string;
 
-//TODO REVIEW IF decouple screen (probably dcl related)
 export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClientPlayer,playerIndex}:any):any => {
     let IDCount = 1;
     const spriteEntityKlasses:Map<KlassAlias, SpriteKlass> = new Map();
     const spriteEntities:SpriteEntity[] = [];
     const collisionListeners:Map<SpriteEntity, Function> = new Map()
-console.log("isClientPlayer",isClientPlayer);
-    if(clientRoom){
+
+    let spritesStateInitialized = false;
+
+    if(clientRoom && !isClientPlayer){//TODO REVIEW REFACTOR IF THIS SHOULD BE OUT, THE RESPONSIBILITY SHOULD NOT BE HERE
         clientRoom.onStateChange((...args:any[]) => {
-            if(!isClientPlayer){
+           if(!spritesStateInitialized && clientRoom.state.players[playerIndex].spriteEntities){
+               clientRoom.state.players[playerIndex].spriteEntities.onAdd((spriteState:SpriteState, index:number)=>{
+                   const klass = spriteState.klass;
+                   const SpriteKlass = spriteEntityKlasses.get(klass);
+                   const localSprite:SpriteEntity = spriteEntities.find(i=>i.ID === spriteState.ID) as SpriteEntity;
+                   if(!localSprite){
+                       const {ID, layer, frame} = spriteState;
+                       SpriteKlass?.create({
+                           ID,
+                           pixelPosition:[spriteState.x, spriteState.y],
+                           layer,
+                           network:true,
+                           frame
+                       })
+                   }
 
-                //TODO !IMPORTANT OPTIMIZE
-                const state = clientRoom.state.toJSON();
+                   spriteState.onChange((changes)=>{
+                       const spriteStateJSON:SpriteState = spriteState.toJSON() as SpriteState;
+                       const localSprite:SpriteEntity = spriteEntities.find(i=>i.ID === spriteStateJSON.ID) as SpriteEntity;
+                       if(localSprite.sprite.getPixelPosition()[0] !== spriteStateJSON.x || localSprite.sprite.getPixelPosition()[1] !== spriteStateJSON.y){
+                           localSprite.setPixelPosition(spriteStateJSON.x,spriteStateJSON.y);
+                       }
+                       if(localSprite.sprite.getFrame() !== spriteStateJSON.frame){
+                           localSprite.applyFrame(spriteStateJSON.frame);
+                       }
+                   })
+               });
 
-                state.players[playerIndex].spriteEntities.forEach((spriteData:any) => {
-                    spriteEntities.forEach(spriteEntity => {
-                        if(spriteEntity.ID === spriteData.ID){
-                            spriteEntity.setPixelPosition(spriteData.x, spriteData.y)
-                            spriteEntity.applyFrame(spriteData.frame);
-                        }
-                    })
-                });
-            }
+               clientRoom.state.players[playerIndex].spriteEntities.onRemove((spriteState:SpriteState)=>{
+                   const localSprite:SpriteEntity = spriteEntities.find(i=>i.ID === spriteState.ID) as SpriteEntity;
+                   localSprite?.destroy();
+               });
+
+               spritesStateInitialized = true;
+           }
         });
     }
+
     return {
         registerSpriteEntity,
         checkColliders,
@@ -66,22 +90,24 @@ console.log("isClientPlayer",isClientPlayer);
     }
     function registerSpriteEntity({klass, spriteDefinition, collisionBox}:SpriteKlassParams):SpriteKlass{
         const spriteEntityKlass:SpriteKlass = {
-            create:({pixelPosition, layer, network, ID, frame, createParams}:any):SpriteEntity => {
+            create:({pixelPosition, layer, network, ID, frame}:SpriteEntityCreationParams):SpriteEntity => {
                 const _ID = ID || IDCount++;
                 const sprite:Sprite = screen.addSprite({
                     ID:_ID,
                     spriteDefinition,
                     pixelPosition,
                     layer,
-                    network
+                    network,
+                    klass
                 });
                 if(frame!==undefined){
                     sprite.applyFrame(frame);
                 }
 
-                const _createParams = createParams || {
+                const _createParams = {
                     pixelPosition,
                     layer,
+                    network
                 }
                 const spriteEntity:SpriteEntity = {
                     ID:_ID,
