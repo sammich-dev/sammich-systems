@@ -87,7 +87,6 @@ function SammichGame({
     });
 
     spawner.onStop(async (spriteEntity:SpriteEntity) => {
-        spriteEntity.setNetwork(true);
         const lockedIngredients = game.getSpriteEntities().filter((i:SpriteEntity)=>spawner.isLocked(i)).length;
 
         if(baseSprite.getPixelPosition()[0] === spriteEntity.getPixelPosition()[0]){

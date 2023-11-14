@@ -26,10 +26,11 @@ import {sleep} from "../dcl-lib/sleep";
 import {FrameEventType} from "../../lib/frame-util";
 
 
-export const init = ()=>{
+export const init = () => {
     const SPRITESHEET_WIDTH = 1024;
     const SPRITESHEET_HEIGHT = 1024;
-
+    const SCREEN_RESOLUTION_WIDTH = 192;
+    const SCREEN_WIDTH = SCREEN_RESOLUTION_WIDTH/40;
     const SPLIT_SCREEN_RESOLUTION_WIDTH = 192 / 2;
     const SPLIT_SCREEN_WIDTH = SPLIT_SCREEN_RESOLUTION_WIDTH / 40;
 
@@ -85,65 +86,76 @@ export const init = ()=>{
     (async () => {
 
 
+/*        const createButton = lobbyScreen.addSprite({
+            spriteDefinition: {
+                ...DEFAULT_SPRITE_DEF,
+                x: 0, y: 387, w: 47, h: 25
+            },
+            pixelPosition: [10, 100],
+            layer: 1,
+            onClick
+        });
+        createButton.show();*/
+        onClick();
+    })();
 
-        const createButton = lobbyScreen.addSprite({
-                spriteDefinition: {
-                    ...DEFAULT_SPRITE_DEF,
-                    x: 0, y: 387, w: 47, h: 25
-                },
-                pixelPosition: [10, 100],
-                layer: 1,
-                onClick: (event: any) => {
-                    lobbyScreen.hide();
-                    (new Array(4)).fill(null).forEach((_,playerIndex) => {
-                        (async () => {
-                            console.log("gameScreen", playerIndex)
-                            const gameScreen = createSpriteScreen({
-                                transform: {
-                                    position: Vector3.create(playerIndex*2.4, 4, 8 - 0.1),
-                                    scale: Vector3.create(SPLIT_SCREEN_WIDTH, 128 / 40, 1),
-                                    parent: rootEntity
-                                },
-                                spriteMaterial,
-                                spriteDefinition: {
-                                    ...DEFAULT_SPRITE_DEF,
-                                    x: 576,
-                                    y: 128,
-                                    w: 192 / 2,
-                                    h: 128,
-                                },
-                                playerIndex
-                            });
+    function onClick() {
 
-                            const screenRunner = createScreenRunner({
-                                screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
-                                timers,
-                                GameFactory: SammichGame,
-                                serverRoom: undefined,
-                                playerIndex,
-                                clientRoom: undefined,
-                                isClientPlayer: true,
-                                recordFrames: true,
-                                seed:30,
-                                velocityMultiplier:playerIndex
-                            });
+        lobbyScreen.hide();
+        (new Array(1)).fill(null).forEach((_, playerIndex) => {
+            (async () => {
+                console.log("gameScreen", playerIndex)
+                const gameScreen = createSpriteScreen({
+                    transform: {
+                        position: Vector3.create(playerIndex * 2.4, 2, 8 - 0.1),
+                        scale: Vector3.create(SCREEN_WIDTH, 128 / 40, 1),
+                        parent: rootEntity
+                    },
+                    spriteMaterial,
+                    spriteDefinition: {
+                        ...DEFAULT_SPRITE_DEF,
+                        x: 576,
+                        y: 128,
+                        w: 192,
+                        h: 128,
+                    }
+                });
 
-                            const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
-                             //   getDebugPanel().setState(getInputState());
-                                const inputFrame = screenRunner.runtime.pushInputEvent({
-                                    inputActionKey,
-                                    isPressed,
-                                    playerIndex
-                                });
+                const screenRunner = createScreenRunner({
+                    screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
+                    timers,
+                    GameFactory: DifferenceGame,
+                    serverRoom: undefined,
+                    playerIndex:1,
+                    clientRoom: undefined,
+                    isClientPlayer: true,
+                    recordFrames: true,
+                    seed: 30,
+                    velocityMultiplier: 1,
+                    autoPlay:true
+                });
+                screenRunner.runtime.onWinner(()=>{
+                    screenRunner.runtime.destroy();
+                    gameScreen.destroy();
+                })
+console.log("onInputKeyEvent init")
+                const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
+                    console.log("onInputKeyEvent", inputActionKey, isPressed);
+                    //   getDebugPanel().setState(getInputState());
 
-                            });
-                            screenRunner.runtime.start();
-                        })();
+                    const inputFrame = screenRunner.runtime.pushInputEvent({
+                        inputActionKey,
+                        isPressed,
+                        playerIndex
                     });
 
-                }
-            });
-        createButton.show();
-    })();
+                });
+
+                screenRunner.runtime.start();
+            })();
+        });
+
+    }
+
 }
 

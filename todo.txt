@@ -1,0 +1,11 @@
+(A) 2023-11-14 Add shared screen game ( fast-attack game ) +game @mini-game
+2023-11-14 Finish Design/Analysis tournament API + web-app +web @api @web
+2023-11-14 Add sounds +game
+2023-11-14 Refactor: reusable cursor feature +game @refactor
+2023-11-14 Use remote spritesheets
+2023-11-14 Use remote instructions
+2023-11-14 Implement ads (out of machine, machine should keep most simple as possible)
+2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
+
+
+

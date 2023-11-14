@@ -21,18 +21,18 @@ import {getDebugPanel} from "../dcl-lib/debug-panel";
 import {getMinUserData, MinUserData} from "../dcl-lib/min-user-data";
 import {createScreenRunner} from "../../lib/game-runner";
 import {timers} from "@dcl-sdk/utils";
-import {SammichGame} from "../../games/sammich-game";
-import {sleep} from "../dcl-lib/sleep";
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
 import {createInstructionScreen} from "./instructions-screen";
-import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
+import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE, SHARED_SCREEN_SCALE} from "../../lib/sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
 import {throttle} from "../dcl-lib/throttle";
+import {getGame, setupGameRepository} from "../../lib/game-repository";
+import {DifferenceGame} from "../../games/difference-game";
 const INSTRUCTION_READY_TIMEOUT = 5000;
 
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
     setupInputController();
-
+    setupGameRepository();
     const callbacks: { onEvent: Function[] } = {
         onEvent: []
     };
@@ -157,7 +157,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         //TODO load new mini-game
         state.showingInstructions = true;
 
-        instructionsPanel.show({alias:"sammich-game"});//TODO
+        instructionsPanel.show({alias:"difference-game"});//TODO
     });
 
     let instructionsPanel:any;
@@ -185,12 +185,16 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
        //TODO show instructions of the game 0
         console.log("MINI_GAME_TRACK", miniGameTrack);
         state.showingInstructions = true;
-        instructionsPanel = createInstructionScreen({transform:{
-                parent:lobbyScreen.getEntity(),
-                position:Vector3.create(0,0,-0.05),
-                scale:Vector3.One(),
-                rotation:Quaternion.Zero()
-            }, gameAlias:SammichGame.definition.alias, gameInstructions:SammichGame.definition.instructions});
+        instructionsPanel = createInstructionScreen({
+            transform: {
+                parent: lobbyScreen.getEntity(),
+                position: Vector3.create(0, 0, -0.05),
+                scale: Vector3.One(),
+                rotation: Quaternion.Zero()
+            },
+            gameAlias: getGame(miniGameTrack[0]).definition.alias,
+            gameInstructions: getGame(miniGameTrack[0]).definition.instructions,
+        });
     });
 
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
@@ -200,11 +204,12 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         state.showingInstructions = false;
         instructionsPanel.hide();
         lobbyScreen.hide();
-
+        const GameFactory = getGame(miniGameId);
+console.log("GameFactory",typeof GameFactory,GameFactory.definition);
         gameScreen = createSpriteScreen({
             transform: {
                 position: Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0),
-                scale: SPLIT_SCREEN_SCALE,
+                scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
                 parent: entity
             },
             spriteMaterial,
@@ -212,58 +217,60 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 ...DEFAULT_SPRITE_DEF,
                 x: 576,
                 y: 128,
-                w: 192 / 2,
+                w: (GameFactory.definition.split ? 192 / 2 : 192),
                 h: 128,
-            },
-            playerIndex: getPlayerIndex()
+            }
         });
-
-        spectatorScreen = createSpriteScreen({
-            transform: {
-                position: Vector3.create(getOtherPlayerIndex() ? 0.25 : -0.25, 0, 0),
-                scale: SPLIT_SCREEN_SCALE,
-                parent: entity
-            },
-            spriteMaterial,
-            spriteDefinition: {
-                ...DEFAULT_SPRITE_DEF,
-                x: 576,
-                y: 128,
-                w: 192 / 2,
-                h: 128
-            },
-            playerIndex: getOtherPlayerIndex()
-        });
-
-
         playerScreenRunner = createScreenRunner({
             screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
             timers,
-            GameFactory: SammichGame,
+            GameFactory,
             playerIndex: getPlayerIndex(),
             serverRoom: undefined,
             clientRoom: room,
             isClientPlayer: true,
             recordSnapshots: true,
-            velocityMultiplier:4
+            velocityMultiplier:1
         });
-
-        spectatorScreenRunner = createScreenRunner({
-            screen: spectatorScreen, //TODO REVIEW; we really should use aanother screen, and decouple the lobby screen from the game
-            timers,
-            GameFactory: SammichGame,
-            playerIndex: getOtherPlayerIndex(),
-            serverRoom: undefined,
-            clientRoom: room,
-            isClientPlayer: false,
-            velocityMultiplier:4
-        });
-
-        playerScreenRunner.runtime.start();
-        spectatorScreenRunner.runtime.start(false);
-
+        playerScreenRunner.runtime.start(true);
         playerScreenRunner.runtime.attachDebugPanel(getDebugPanel());
-        spectatorScreenRunner.runtime.attachDebugPanel(getDebugPanel());
+
+        if(GameFactory.definition.split){
+            spectatorScreen = createSpriteScreen({
+                transform: {
+                    position: Vector3.create(getOtherPlayerIndex() ? 0.25 : -0.25, 0, 0),
+                    scale: SPLIT_SCREEN_SCALE,
+                    parent: entity
+                },
+                spriteMaterial,
+                spriteDefinition: {
+                    ...DEFAULT_SPRITE_DEF,
+                    x: 576,
+                    y: 128,
+                    w: 192 / 2,
+                    h: 128
+                }
+            });
+            spectatorScreenRunner = createScreenRunner({
+                screen: spectatorScreen, //TODO REVIEW; we really should use aanother screen, and decouple the lobby screen from the game
+                timers,
+                GameFactory: getGame(miniGameId),
+                playerIndex: getOtherPlayerIndex(),
+                serverRoom: undefined,
+                clientRoom: room,
+                isClientPlayer: false,
+                velocityMultiplier:1
+            });
+            spectatorScreenRunner.runtime.start(false);
+            spectatorScreenRunner.runtime.attachDebugPanel(getDebugPanel());
+        }else{
+            if(spectatorScreen){
+                spectatorScreen.destroy();
+                spectatorScreenRunner.destroy();
+                spectatorScreen = spectatorScreenRunner = null;
+            }
+        }
+        console.log("screen created")
         const throttleSendPlayerFrame = throttle(() => {
             room.send("PLAYER_FRAME", {
                 playerIndex: getPlayerIndex(),

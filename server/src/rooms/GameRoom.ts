@@ -2,12 +2,10 @@
 //TODO REFACTOR messages from Strings to exported enum
 import {Client, Room} from "colyseus";
 import {GameState, MiniGameResult, PlayerState} from "./GameState";
-
 import { PrismaClient } from '@prisma/client';
 import {createScreenRunner} from "../../../lib/game-runner";
-import {SammichGame} from "../../../games/sammich-game";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
-import {waitFor} from "../../../lib/lib-util";
+import {getGame, setupGameRepository} from "../../../lib/game-repository";
 
 const prisma = new PrismaClient();
 
@@ -21,6 +19,8 @@ const timers = {
     clearInterval,
     clearTimeout
 }
+
+setupGameRepository();
 
 export class GameRoom extends Room<GameState> {
     screenRunners:any[] = [];
@@ -48,22 +48,34 @@ export class GameRoom extends Room<GameState> {
             if(this.state.players[playerIndex].instructionsReady) return;
             this.state.players[playerIndex].instructionsReady = true;
             if(this.state.players.every(i=>i.instructionsReady)){
-                this.screenRunners[0] = createScreenRunner({
-                    screen: createServerSpriteScreen(this.state.players[0]),
-                    timers,
-                    GameFactory: SammichGame,
-                    playerIndex:0,
-                    serverRoom:this,
-                    clientRoom:undefined
-                });
-                this.screenRunners[1] = createScreenRunner({
-                    screen: createServerSpriteScreen(this.state.players[1]),
-                    timers,
-                    GameFactory: SammichGame,
-                    playerIndex:1,
-                    serverRoom:this,
-                    clientRoom:undefined
-                });
+                const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
+                if(GameFactory.split){
+                    this.screenRunners[0] = createScreenRunner({
+                        screen: createServerSpriteScreen(this.state.players[0]),
+                        timers,
+                        GameFactory,
+                        playerIndex:0,
+                        serverRoom:this,
+                        clientRoom:undefined
+                    });
+                    this.screenRunners[1] = createScreenRunner({
+                        screen: createServerSpriteScreen(this.state.players[1]),
+                        timers,
+                        GameFactory,
+                        playerIndex:1,
+                        serverRoom:this,
+                        clientRoom:undefined
+                    });
+                } else {
+                    this.screenRunners[0] = createScreenRunner({
+                        screen: createServerSpriteScreen(this.state.players[0]),
+                        timers,
+                        GameFactory,
+                        playerIndex:0,
+                        serverRoom:this,
+                        clientRoom:undefined
+                    });
+                }
 
                 this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.currentMiniGameIndex]});
                 this.screenRunners.forEach(g => g.runtime.start(false));

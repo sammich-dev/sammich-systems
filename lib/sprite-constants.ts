@@ -13,4 +13,5 @@ export const DEFAULT_SPRITE_DEF = {
 export const SPLIT_SCREEN_RESOLUTION_WIDTH = 192 / 2;
 export const SPLIT_SCREEN_WIDTH = SPLIT_SCREEN_RESOLUTION_WIDTH / 40;
 export const SPLIT_SCREEN_SCALE = Vector3.create(0.5, 1, 1);
+export const SHARED_SCREEN_SCALE = Vector3.create(1, 1, 1);
 export const NAME_COLOR = `#e2bf37`;

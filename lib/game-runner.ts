@@ -13,6 +13,7 @@ export type GameRunnerCallback = {
     onInput: Function[],
     onFrame: Function[],
     onFinish: Function[],
+    onWinner:Function|null,
     onProposedWinner: Function | null
 };
 const DEFAULT_FPS = 60;
@@ -24,13 +25,35 @@ export const createScreenRunner = ({
                                        GameFactory,
                                        onFinish,
                                        clientRoom,
-                                       serverRoom,
+                                       serverRoom: _serverRoom,
                                        isClientPlayer,
                                        playerIndex,
                                        recordFrames,
                                        velocityMultiplier = 1
                                    }: any) => {
-    if (serverRoom && clientRoom) throw Error("NOT CORRECT");
+    if (_serverRoom && clientRoom) throw Error("NOT CORRECT");
+console.log("GameFactory",GameFactory)
+    let serverRoom = _serverRoom;
+
+    if(!_serverRoom && !clientRoom){
+        let checkWinnersFn:Function = ()=>{};
+
+        console.log("THIS IS ONLY-CLIENT GAME");
+        serverRoom = {
+            state:{players:[{miniGameScore:0},{miniGameScore:0}]}, checkWinners:(...args:any[])=>{
+                console.log("checkWinners",args);
+                const winnerInfo =  checkWinnersFn(serverRoom.state.players[0].miniGameScore, serverRoom.state.players[1].miniGameScore);
+                console.log("serverRoom.checkWinners",winnerInfo )
+                if(winnerInfo?.winnerIndex !== undefined){
+                    callbacks.onWinner && callbacks.onWinner(winnerInfo);
+                }
+            },
+            setWinnerFn:(fn:Function)=>{
+                console.log("checkWinnersFn = fn", checkWinnersFn = fn);
+                return () => checkWinnersFn = ()=>{};
+            }
+        }
+    }
     const memoize = (fn:Function) => {
         const cache:any = {};
         return (...args:any[]) => {
@@ -54,6 +77,7 @@ export const createScreenRunner = ({
         onInput: [],
         onFrame: [],
         onFinish: [],
+        onWinner: null,
         onProposedWinner: null
     };
 
@@ -107,12 +131,12 @@ export const createScreenRunner = ({
     };
 
     const triggerInput = (inputActionKey: number, isPressed: false | number, time?: number) => {
-        callbacks.onInput.forEach(i => i({inputActionKey, isPressed, time}));
+        callbacks.onInput.forEach(i => i({inputActionKey, isPressed, time, playerIndex}));
     }
 
     const entityManager = createSpriteEntityFactory({
         screen,
-        serverRoom,
+        serverRoom: _serverRoom,
         clientRoom,
         isClientPlayer,
         playerIndex
@@ -243,21 +267,31 @@ export const createScreenRunner = ({
 
             return result;
         },
-        setPlayerScore: (data: number) => {
-            if (!isClientPlayer && serverRoom) {
+        players: [{//TODO only for use with shared screen, should not be implemented here, but in shared-screen-runner ?
+            setPlayerScore:(data:number)=>{
+                if (serverRoom){
+                    return serverRoom.state.players[0].miniGameScore = data;
+                }
+            },
+            getPlayerScore:()=>(serverRoom||clientRoom).state.players[1].miniGameScore
+        },{
+            setPlayerScore:(data:number)=>{
+                if (serverRoom){
+                    return serverRoom.state.players[1].miniGameScore = data;
+                }
+            },
+            getPlayerScore:()=> serverRoom.state.players[1].miniGameScore
+        }],
+        setPlayerScore: (data: number) => {//TODO this smells, should not be used by shared-screen, should not be implemented here, but in shared-screen-runner ?
+            console.log("setPlayerScore split", playerIndex);
+            if (!isClientPlayer && _serverRoom) {
                 console.log("setPlayerScore", playerIndex, data);
-                serverRoom.state.players[playerIndex].miniGameScore = data;
+                _serverRoom.state.players[playerIndex].miniGameScore = data;
             } else {
                 //TODO?
             }
         },
-        getPlayerScore: () => {
-            if (serverRoom) {
-                return serverRoom.state.players[playerIndex].miniGameScore;
-            } else if (clientRoom) {
-                return clientRoom.state.players[playerIndex].miniGameScore;
-            }
-        }
+        getPlayerScore: () => (serverRoom||clientRoom).state.players[playerIndex].miniGameScore
     };
 
     function random() {
@@ -279,6 +313,11 @@ export const createScreenRunner = ({
                 callbacks.onProposedWinner = fn;
                 // @ts-ignore
                 return () => callbacks.onProposedWinner = null;
+            },
+            onWinner: (fn: Function): Function => {
+                callbacks.onWinner = fn;
+                // @ts-ignore
+                return () => callbacks.onWinner = null;
             },
             attachDebugPanel: (debugPanel: any) => _debugPanel = debugPanel,
             rollbackToFrame,
@@ -342,7 +381,7 @@ export const createScreenRunner = ({
                 await sleep(0);
             }
         }
-        if (serverRoom && !isClientPlayer) serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
+        if (_serverRoom && !isClientPlayer) _serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
 
         _debugPanel?.setState({_frame: state.lastReproducedFrame});
     }

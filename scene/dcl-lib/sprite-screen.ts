@@ -28,12 +28,10 @@ import {
 export type SpriteScreenOptions = {
     transform: TransformTypeWithOptionals,
     spriteMaterial: PBMaterial_PbrMaterial,
-    spriteDefinition: SpriteDefinition,
-    playerIndex?:number
+    spriteDefinition: SpriteDefinition
 };
 
 export function createSpriteScreen({
-                                       playerIndex = -1,
                                        transform,
                                        spriteMaterial,
                                        spriteDefinition//will also define screen resolution, which will affect zoom and click event info with coords
@@ -67,6 +65,7 @@ export function createSpriteScreen({
         },
         getSize:()=>[state.spriteDefinition.w, state.spriteDefinition.h],
         addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText}: any):Sprite => {
+            console.log("addSprite", spriteDefinition, spriteDefinition.klass);
             const normalizedPixelPosition = normalizePixelPosition(pixelPosition[0], pixelPosition[1], layer);
             const state = {
                 pixelPosition,

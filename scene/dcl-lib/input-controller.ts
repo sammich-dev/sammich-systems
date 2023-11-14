@@ -6,6 +6,10 @@ const DEFAULT_KEYS_STATE = {
     [InputAction.IA_PRIMARY]: false,
     [InputAction.IA_SECONDARY]: false,
     [InputAction.IA_POINTER]: false,
+    [InputAction.IA_ACTION_3]: false,
+    [InputAction.IA_ACTION_4]: false,
+    [InputAction.IA_ACTION_5]: false,
+    [InputAction.IA_ACTION_6]: false,
 };
 
 const state: any = {
