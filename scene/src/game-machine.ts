@@ -137,12 +137,14 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
 
     room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex }:any) => {
-        gameScreen.destroy();
-        spectatorScreen.destroy();
-        playerScreenRunner.runtime.stop();
-        spectatorScreenRunner.runtime.stop();
-        playerScreenRunner.runtime.destroy();//TODO it's not removing background sprite
-        spectatorScreenRunner.runtime.destroy();
+        console.log("MINI_GAME_WINNER",winnerIndex);
+
+        gameScreen?.destroy();
+        spectatorScreen?.destroy();
+        playerScreenRunner?.runtime?.stop();
+        spectatorScreenRunner?.runtime?.stop();
+        playerScreenRunner?.runtime?.destroy();//TODO it's not removing background sprite
+        spectatorScreenRunner?.runtime?.destroy();
 
         lobbyScreen.show();
         const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
@@ -164,10 +166,9 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
         //TODO use it also to send "INSTRUCTIONS_READY"
-        if(state.showingInstructions){
+        if(state.showingInstructions && !state.sentInstructionsReady){
             state.sentInstructionsReady = true;
             const playerIndex = getPlayerIndex();
-            console.log("playerIndex-", playerIndex);
             room.send("INSTRUCTIONS_READY", {playerIndex: getPlayerIndex(), foo:true});
             instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
         }else if(state.playingMiniGame){
@@ -205,7 +206,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         instructionsPanel.hide();
         lobbyScreen.hide();
         const GameFactory = getGame(miniGameId);
-console.log("GameFactory",typeof GameFactory,GameFactory.definition);
         gameScreen = createSpriteScreen({
             transform: {
                 position: Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0),

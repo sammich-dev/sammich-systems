@@ -90,7 +90,9 @@ function DifferenceGame({game}:any){
 
     game.onInput(async ({inputActionKey, isPressed, time, playerIndex}:any) => {
         if(!isPressed) return;
-        if(state.playersSelectedState[playerIndex]) return;
+        console.log("state.playersSelectedState",state.playersSelectedState)
+        if(state.playersSelectedState.some(i=>i)) return;
+        console.log("selecting ...")
         const cursorSprite = playerIndex ? cursor2 : cursor1;
         const cursorPositions = playerIndex? player2PixelPositions:player1PixelPositions;
         const currentCursorPosition = cursorPositions.indexOf(cursorSprite.getPixelPosition()[0]);
@@ -163,7 +165,6 @@ function DifferenceGame({game}:any){
     });
 
     //TODO select 2 sprites from the list
-
 }
 
 DifferenceGame.definition = {

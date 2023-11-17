@@ -25,7 +25,12 @@ setupGameRepository();
 export class GameRoom extends Room<GameState> {
     screenRunners:any[] = [];
     //TODO when creating a game
-
+    currentGameDefinition:{
+        alias:string,
+        split:boolean,
+        fps:number,
+        instructions:string
+    };
     onCreate(...args:any[]) {
         this.autoDispose = false;
 
@@ -49,7 +54,8 @@ export class GameRoom extends Room<GameState> {
             this.state.players[playerIndex].instructionsReady = true;
             if(this.state.players.every(i=>i.instructionsReady)){
                 const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
-                if(GameFactory.split){
+                this.currentGameDefinition = GameFactory.definition;
+                if(GameFactory.definition.split){
                     this.screenRunners[0] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[0]),
                         timers,
@@ -97,11 +103,12 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
-            this.screenRunners[playerIndex]?.runtime.getState().running && this.screenRunners[playerIndex]?.runtime.reproduceFramesUntil(n);
+            this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.getState().running && this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.reproduceFramesUntil(n);
         });
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
-             this.screenRunners[playerIndex]?.runtime.pushFrame(frame);
+            console.log("INPUT_FRAME", playerIndex, frame);
+             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
         });
 
         this.onMessage("READY", async (client, {playerIndex})=>{
@@ -120,23 +127,26 @@ export class GameRoom extends Room<GameState> {
     askedToCheckWinners = [0,0];
 
      checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
-        console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore);
+        console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore, this.state.miniGameResults, );
+         const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
-
+         console.log("this.askedToCheckWinners",this.askedToCheckWinners);
         this.askedToCheckWinners[playerIndex] = n;
-        if(!this.askedToCheckWinners.every(i=>i)){
+        if(!this.askedToCheckWinners.every(i=>i) && GameFactory.definition.split){ //TODO we should only return if its not sharedScreen
             return;
         }
         //TODO reproduce
          console.log("miniGameScoreA", this.state.players.map((p:any)=>p.miniGameScore));
-        if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
-            console.log("lastReproducedFrame 0 > 1", this.screenRunners[1].runtime.getState().lastReproducedFrame);
-            this.screenRunners[1].runtime.reproduceFramesUntil(this.screenRunners[0].runtime.getState().lastReproducedFrame);
-        }
-         console.log("miniGameScoreB", this.state.players.map((p:any)=>p.miniGameScore));
-        if(this.screenRunners[1].runtime.getState().lastReproducedFrame > this.screenRunners[0].runtime.getState().lastReproducedFrame){
-            console.log("lastReproducedFrame 1 > 0", this.screenRunners[0].runtime.getState().lastReproducedFrame);
-            this.screenRunners[0].runtime.reproduceFramesUntil(this.screenRunners[1].runtime.getState().lastReproducedFrame);
+        if(GameFactory.definition.split){
+            if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
+                console.log("lastReproducedFrame 0 > 1", this.screenRunners[1].runtime.getState().lastReproducedFrame);
+                this.screenRunners[1].runtime.reproduceFramesUntil(this.screenRunners[0].runtime.getState().lastReproducedFrame);
+            }
+            console.log("miniGameScoreB", this.state.players.map((p:any)=>p.miniGameScore));
+            if(this.screenRunners[1].runtime.getState().lastReproducedFrame > this.screenRunners[0].runtime.getState().lastReproducedFrame){
+                console.log("lastReproducedFrame 1 > 0", this.screenRunners[0].runtime.getState().lastReproducedFrame);
+                this.screenRunners[0].runtime.reproduceFramesUntil(this.screenRunners[1].runtime.getState().lastReproducedFrame);
+            }
         }
 
         this.askedToCheckWinners[0] = this.askedToCheckWinners[1] = 0;
@@ -150,15 +160,15 @@ export class GameRoom extends Room<GameState> {
         const _winnerInfo = this.checkWinnerFunction && this.checkWinnerFunction(...playersScore) || undefined;
         console.log("WINNER FOUND", playerIndex, n,
             _winnerInfo,
-            this.screenRunners[playerIndex?0:1].runtime.getState().lastReproducedFrame,
-            this.screenRunners[playerIndex].runtime.getState().lastReproducedFrame
+            this.screenRunners[playerIndex?0:1]?.runtime.getState().lastReproducedFrame,
+            this.screenRunners[playerIndex]?.runtime.getState().lastReproducedFrame
         );
 
         if(_winnerInfo !== undefined){
             console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
             this.state.miniGameResults.push(_winnerInfo.winnerIndex);
-            this.screenRunners.forEach(s=> s.runtime.stop());
-            this.screenRunners.forEach(s=> s.runtime.destroy());
+            this.screenRunners.forEach(s=> s?.runtime.stop());
+            this.screenRunners.forEach(s=> s?.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);
             this.broadcast("MINI_GAME_WINNER", _winnerInfo);
             console.log("wij",_winnerInfo);

@@ -32,7 +32,6 @@ export const createScreenRunner = ({
                                        velocityMultiplier = 1
                                    }: any) => {
     if (_serverRoom && clientRoom) throw Error("NOT CORRECT");
-console.log("GameFactory",GameFactory)
     let serverRoom = _serverRoom;
 
     if(!_serverRoom && !clientRoom){
@@ -245,6 +244,7 @@ console.log("GameFactory",GameFactory)
             _disposeWinnerFn = serverRoom?.setWinnerFn(fn);
         },
         checkWinners: () => {
+            console.log("checkWinners", !!serverRoom, !!clientRoom, playerIndex, state.lastReproducedFrame)
             serverRoom?.checkWinners({playerIndex, n: state.lastReproducedFrame});//TODO REVIEW: this can be executed double due to both screenRunners
         },
         getSpriteEntities,
