@@ -266,11 +266,11 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         }else{
             if(spectatorScreen){
                 spectatorScreen.destroy();
-                spectatorScreenRunner.destroy();
+                spectatorScreenRunner?.destroy();
                 spectatorScreen = spectatorScreenRunner = null;
             }
         }
-        console.log("screen created")
+        console.log("screen created");
         const throttleSendPlayerFrame = throttle(() => {
             room.send("PLAYER_FRAME", {
                 playerIndex: getPlayerIndex(),

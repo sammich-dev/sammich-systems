@@ -1,10 +1,16 @@
-(A) 2023-11-14 Add shared screen game ( fast-attack game ) +game @mini-game
-2023-11-14 Finish Design/Analysis tournament API + web-app +web @api @web
-2023-11-14 Add sounds +game
-2023-11-14 Refactor: reusable cursor feature +game @refactor
-2023-11-14 Use remote spritesheets
-2023-11-14 Use remote instructions
-2023-11-14 Implement ads (out of machine, machine should keep most simple as possible)
+(A) 2023-11-14 +game Add shared screen game @mini-game
+(B) 2023-11-18 +game Add frog mini-game
+(B) 2023-11-18 +game Add invaders mini-game
+(B) 2023-11-18 +game Add 
+(B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
+(C) 2023-11-18 limit gameplay to best of 5 mini-games
+(C) 2023-11-18 Send results to tournament API
+(D) 2023-11-14 Add sounds +game
+(D) 2023-11-18 Allow to configure the game instance from web-app
+(E) 2023-11-14 Implement ads (out of machine, machine should keep most simple as possible)
+(E) 2023-11-14 Use remote spritesheets
+(E) 2023-11-14 Use remote instructions
+(F) 2023-11-14 Refactor: reusable cursor feature +game @refactor
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 
 

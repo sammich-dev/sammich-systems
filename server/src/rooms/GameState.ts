@@ -108,7 +108,8 @@ export class GameState extends Schema {
         const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
         this.miniGameTrack.splice(0, this.miniGameTrack.length);
         while(this.miniGameTrack.length < 5){
-            this.miniGameTrack.push(getRandomFromList([2]/*miniGameIDs*/));
+       //     this.miniGameTrack.push(getRandomFromList(miniGameIDs));
+            this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
         }
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
         this.started = true;
