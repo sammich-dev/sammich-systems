@@ -170,7 +170,10 @@ export class GameRoom extends Room<GameState> {
             this.screenRunners.forEach(s=> s?.runtime.stop());
             this.screenRunners.forEach(s=> s?.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);
-            this.broadcast("MINI_GAME_WINNER", _winnerInfo);
+            this.broadcast("MINI_GAME_WINNER", {
+                ..._winnerInfo,
+                miniGameIndex:this.state.currentMiniGameIndex
+            });
             console.log("wij",_winnerInfo);
 
             console.log("miniGameScore",  this.state.players.map((p:any)=>p.miniGameScore).join("-"));

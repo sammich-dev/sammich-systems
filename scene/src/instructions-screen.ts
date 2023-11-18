@@ -18,7 +18,7 @@ export const createInstructionScreen = (
         waitingOther:false
     }
     const {parent, position, rotation, scale} = transform;
-    const screenEntity = engine.addEntity();
+    let screenEntity = engine.addEntity();
     const WAITING_BOTH_PLAYERS_TEXT = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nPress any key when you are ready to play`;
     const WAITING_ONE_PLAYER_TEXT = `<b>INSTRUCTIONS</b>:\n${gameInstructions}\n\n\n\nWaiting other player...`;
     let backupPositionY = position.y;
@@ -53,6 +53,7 @@ export const createInstructionScreen = (
     let countdownInterval:number = 0;
     return {
         destroy: () => {
+            engine.removeEntity(instructionsTextEntity);
             engine.removeEntity(screenEntity);
             timers.clearInterval(countdownInterval);
             countdownInterval = 0;
@@ -75,21 +76,6 @@ export const createInstructionScreen = (
                 }
 
             }, 300);
-        },
-        show:({alias}:any) =>{
-            TextShape.getMutable(instructionsTextEntity).text = WAITING_BOTH_PLAYERS_TEXT;
-            Transform.getMutable(screenEntity).position.y = backupPositionY;
-            VideoPlayer.getMutable(screenEntity).playing = true;
-        },
-        hide:()=>{
-            Object.assign(state, {
-                timeoutStartedTime:0,
-                waitingOther:false
-            })
-            Transform.getMutable(screenEntity).position.y = Number.MIN_SAFE_INTEGER;
-            VideoPlayer.getMutable(screenEntity).playing = false;
-            timers.clearInterval(countdownInterval);
-            countdownInterval = 0;
         }
     }
 }

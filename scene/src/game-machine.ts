@@ -136,7 +136,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     let gameScreen:any, spectatorScreen:any, playerScreenRunner:any, spectatorScreenRunner:any;
 
 
-    room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex }:any) => {
+    room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex, miniGameIndex }:any) => {
         console.log("MINI_GAME_WINNER",winnerIndex);
 
         gameScreen?.destroy();
@@ -156,16 +156,23 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             previousScore
         });
         scoreTransition.hide();
-        //TODO load new mini-game
         state.showingInstructions = true;
-
-        instructionsPanel.show({alias:"difference-game"});//TODO
+        const nextGameId = room.state.miniGameTrack[miniGameIndex+1];
+        instructionsPanel = createInstructionScreen({
+            transform: {
+                parent: lobbyScreen.getEntity(),
+                position: Vector3.create(0, 0, -0.05),
+                scale: Vector3.One(),
+                rotation: Quaternion.Zero()
+            },
+            gameAlias: getGame(nextGameId).definition.alias,
+            gameInstructions: getGame(nextGameId).definition.instructions,
+        });
     });
 
     let instructionsPanel:any;
 
     const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
-        //TODO use it also to send "INSTRUCTIONS_READY"
         if(state.showingInstructions && !state.sentInstructionsReady){
             state.sentInstructionsReady = true;
             const playerIndex = getPlayerIndex();
@@ -203,13 +210,13 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         state.sentInstructionsReady = false;
         state.playingMiniGame = true;
         state.showingInstructions = false;
-        instructionsPanel.hide();
+        instructionsPanel.destroy();
         lobbyScreen.hide();
         const GameFactory = getGame(miniGameId);
 
         gameScreen = createSpriteScreen({
             transform: {
-                position:GameFactory.definition.should? Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0):Vector3.Zero(),
+                position:GameFactory.definition.split? Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0):Vector3.Zero(),
                 scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
                 parent: entity
             },
