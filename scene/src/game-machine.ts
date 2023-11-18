@@ -206,9 +206,10 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         instructionsPanel.hide();
         lobbyScreen.hide();
         const GameFactory = getGame(miniGameId);
+
         gameScreen = createSpriteScreen({
             transform: {
-                position: Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0),
+                position:GameFactory.definition.should? Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0):Vector3.Zero(),
                 scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
                 parent: entity
             },

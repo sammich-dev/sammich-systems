@@ -86,7 +86,7 @@ export const init = () => {
     (async () => {
 
 
-/*        const createButton = lobbyScreen.addSprite({
+        const createButton = lobbyScreen.addSprite({
             spriteDefinition: {
                 ...DEFAULT_SPRITE_DEF,
                 x: 0, y: 387, w: 47, h: 25
@@ -95,12 +95,12 @@ export const init = () => {
             layer: 1,
             onClick
         });
-        createButton.show();*/
+        createButton.show();
+
         onClick();
     })();
 
     function onClick() {
-
         lobbyScreen.hide();
         (new Array(1)).fill(null).forEach((_, playerIndex) => {
             (async () => {
