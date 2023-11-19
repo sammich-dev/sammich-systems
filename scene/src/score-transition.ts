@@ -87,6 +87,10 @@ export function createGlobalScoreTransition(screen:any){
                 player2GlobalScoreBig.setText((previousScore+1).toString());
             }
             await sleep(2000);
+        },
+        reset:()=>{
+            player1GlobalScoreBig.setText("0");
+            player2GlobalScoreBig.setText("0");
         }
     }
 }

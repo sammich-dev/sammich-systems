@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import {createScreenRunner} from "../../../lib/game-runner";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
 import {getGame, setupGameRepository} from "../../../lib/game-repository";
+import {sleep} from "../../../lib/functional";
 
 const prisma = new PrismaClient();
 
@@ -126,7 +127,7 @@ export class GameRoom extends Room<GameState> {
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
 
-     checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
+     async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
         console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore, this.state.miniGameResults, );
          const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
@@ -170,23 +171,50 @@ export class GameRoom extends Room<GameState> {
             this.screenRunners.forEach(s=> s?.runtime.stop());
             this.screenRunners.forEach(s=> s?.runtime.destroy());
             this.screenRunners.splice(0,this.screenRunners.length);
-            this.broadcast("MINI_GAME_WINNER", {
-                ..._winnerInfo,
-                miniGameIndex:this.state.currentMiniGameIndex
-            });
+
             console.log("wij",_winnerInfo);
 
             console.log("miniGameScore",  this.state.players.map((p:any)=>p.miniGameScore).join("-"));
 
-            this.state.currentMiniGameIndex++;
-            this.state.players.forEach((player:PlayerState) => {
-                player.instructionsReady = false;
-                player.miniGameScore = 0;
+            //TODO if 1 player has >= 3 globalScore and the other has less score, end game
+            const player1GlobalScore = this.getPlayerGlobalScore(0);
+            const player2GlobalScore = this.getPlayerGlobalScore(1);
+            let globalWinner = -1;
+            if(
+                ((player1GlobalScore >= 3 || player2GlobalScore >= 3) && player1GlobalScore !== player2GlobalScore)
+                || this.state.currentMiniGameIndex === 4
+            ){
+                globalWinner = player1GlobalScore>player2GlobalScore?player1GlobalScore:player2GlobalScore
+            }
+            this.broadcast("MINI_GAME_WINNER", {
+                ..._winnerInfo,
+                miniGameIndex:this.state.currentMiniGameIndex,
+                finalize:globalWinner >= 0,
+                miniGameResults:this.state.miniGameResults
             });
+
+            if(globalWinner === -1){
+                this.state.currentMiniGameIndex++;
+                this.state.players.forEach((player:PlayerState) => {
+                    player.instructionsReady = false;
+                    player.miniGameScore = 0;
+                });
+            }else{
+                console.log("WAIT SLEEP")
+                await sleep(5000);
+                console.log("RESET TRACK")
+                this.state.resetTrack();
+            }
         }
 
         return _winnerInfo;
     }
+
+    getPlayerGlobalScore(playerIndex:number){
+        return this.state.miniGameResults
+            .reduce((acc, current)=>current === playerIndex ? (acc+1):acc,0)
+    }
+
     setWinnerFn(fn:Function){
         console.log("setWinnerFn", !!fn);
         this.checkWinnerFunction = fn;

@@ -28,6 +28,8 @@ import {createGlobalScoreTransition} from "./score-transition";
 import {throttle} from "../dcl-lib/throttle";
 import {getGame, setupGameRepository} from "../../lib/game-repository";
 import {DifferenceGame} from "../../games/difference-game";
+import {sleep} from "../dcl-lib/sleep";
+import {EVENT} from "./events";
 const INSTRUCTION_READY_TIMEOUT = 5000;
 
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
@@ -135,18 +137,17 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     let gameScreen:any, spectatorScreen:any, playerScreenRunner:any, spectatorScreenRunner:any;
 
-
-    room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex, miniGameIndex }:any) => {
-        console.log("MINI_GAME_WINNER",winnerIndex);
-
+    room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
+        console.log("MINI_GAME_WINNER", winnerIndex);
         gameScreen?.destroy();
         spectatorScreen?.destroy();
         playerScreenRunner?.runtime?.stop();
         spectatorScreenRunner?.runtime?.stop();
-        playerScreenRunner?.runtime?.destroy();//TODO it's not removing background sprite
+        playerScreenRunner?.runtime?.destroy();//TODO it's not removing background sprite?
         spectatorScreenRunner?.runtime?.destroy();
 
         lobbyScreen.show();
+
         const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
             return acc + (current === winnerIndex ? 1:0);
         },0);
@@ -156,18 +157,45 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             previousScore
         });
         scoreTransition.hide();
-        state.showingInstructions = true;
-        const nextGameId = room.state.miniGameTrack[miniGameIndex+1];
-        instructionsPanel = createInstructionScreen({
-            transform: {
-                parent: lobbyScreen.getEntity(),
-                position: Vector3.create(0, 0, -0.05),
-                scale: Vector3.One(),
-                rotation: Quaternion.Zero()
-            },
-            gameAlias: getGame(nextGameId).definition.alias,
-            gameInstructions: getGame(nextGameId).definition.instructions,
-        });
+
+        if(finalize){
+            state.playingMiniGame = false;
+            state.showingInstructions = false;
+            state.sentInstructionsReady = false;
+            scoreTransition.reset();
+            callbacks.onEvent.forEach(e=>e({
+                type:EVENT.END_TRACK,
+                data:{
+                    trackWinnerIndex:getTrackWinnerFromMiniGameResults(miniGameResults)
+                }
+            }))
+        }else{
+            state.showingInstructions = true;
+            const nextGameId = room.state.miniGameTrack[miniGameIndex+1];
+            instructionsPanel = createInstructionScreen({
+                transform: {
+                    parent: lobbyScreen.getEntity(),
+                    position: Vector3.create(0, 0, -0.05),
+                    scale: Vector3.One(),
+                    rotation: Quaternion.Zero()
+                },
+                gameAlias: getGame(nextGameId).definition.alias,
+                gameInstructions: getGame(nextGameId).definition.instructions,
+            });
+        }
+
+        function getTrackWinnerFromMiniGameResults(miniGameResults:number[]){
+            let scores:number[] = [];
+            miniGameResults.forEach(winnerIndex => {
+                scores[winnerIndex] = scores[winnerIndex] || 0;
+                scores[winnerIndex]++
+            });
+            if(scores[0] > scores[1]){
+                return 0;
+            }else{
+                return 1;
+            }
+        }
     });
 
     let instructionsPanel:any;
@@ -273,12 +301,13 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             spectatorScreenRunner.runtime.attachDebugPanel(getDebugPanel());
         }else{
             if(spectatorScreen){
-                spectatorScreen.destroy();
-                spectatorScreenRunner?.destroy();
+                spectatorScreen?.destroy();
+                spectatorScreenRunner?.runtime.destroy();
                 spectatorScreen = spectatorScreenRunner = null;
             }
         }
-        console.log("screen created");
+
+
         const throttleSendPlayerFrame = throttle(() => {
             room.send("PLAYER_FRAME", {
                 playerIndex: getPlayerIndex(),

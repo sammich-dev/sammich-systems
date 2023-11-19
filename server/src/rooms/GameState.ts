@@ -114,6 +114,16 @@ export class GameState extends Schema {
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
         this.started = true;
     }
+
+    resetTrack(){
+        this.currentMiniGameIndex = 0;
+        this.started = false;
+        this.created = 0;
+        this.players.splice(0,this.players.length);
+        this.miniGameTrack.splice(0,this.miniGameTrack.length);
+        this.miniGameResults.splice(0,this.miniGameResults.length);
+    }
+
     constructor() {
         super();
     }

@@ -8,6 +8,7 @@ import {getDebugPanel} from "../dcl-lib/debug-panel";
 import "../dcl-lib/decorate-console";
 import "./polyfill";
 import {createMachineScreen} from "./game-machine";
+import {EVENT} from "./events";
 
 export const init = async () => {
 
@@ -25,6 +26,11 @@ export const init = async () => {
         rotation:Quaternion.Zero(),
         scale: Vector3.create(192 / 40, 128 / 40, 1)
     });
+    machine.onEvent(({type, data}:any)=>{
+        if(type === EVENT.END_TRACK){
+            workaroundButtonBug();
+        }
+    })
 
     workaroundButtonBug();
 
