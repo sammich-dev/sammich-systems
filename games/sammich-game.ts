@@ -60,8 +60,7 @@ function SammichGame({
             autoStart:false
         }
     );
-    const FRAME_MS = 1000 / game.runtime.getFps();
-    const FRAMES_TO_WAIT_A_SECONDS = getFrameNumber( 1000, FRAME_MS);
+    const FRAMES_PER_SECOND = game.runtime.getFps();
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
         console.log("winnerFn", state.level, player1Score, player2Score);
@@ -96,44 +95,23 @@ function SammichGame({
 
 
         if(lockedIngredients > (state.ingredientsToFall + 1)){
-            console.log("SAMMICH COMPLETED")
-            /**TODO
-             * - wait a delay of 1 second
-             * - remove all sprites
-             * - increase velocity
-             * -
-             */
-            //await game.sleep(1000);
-
-            //TODO count scores, count all the spawned sprites which are at the same position than base
-
-            console.log("wait frames",game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame, FRAMES_TO_WAIT_A_SECONDS);
-
-            await game.waitFrames(FRAMES_TO_WAIT_A_SECONDS );//TODO dont use await, it should be synchronous?
-            console.log("AFTER WAIT-A", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame,FRAMES_TO_WAIT_A_SECONDS)
+            console.log("SAMMICH COMPLETED");
+            await game.waitFrames(FRAMES_PER_SECOND );//TODO dont use await, it should be synchronous?
             spawner.cleanSprites();
             baseSprite.sprite.hide();
-            console.log("game.getPlayerScore", game.getPlayerScore());
-
             spawner.stop();
-            console.log("wait frames.",game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame,FRAMES_TO_WAIT_A_SECONDS)
-            await game.waitFrames( FRAMES_TO_WAIT_A_SECONDS );
-            console.log("AFTER WAIT-B", game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame,FRAMES_TO_WAIT_A_SECONDS)
+            await game.waitFrames( FRAMES_PER_SECOND );
             baseSprite.sprite.show();
-            console.log("state.level", state.level, LEVEL_VELOCITY)
             if(state.level < (LEVEL_VELOCITY.length-1)){
                 state.level++;
             }
-
             state.ingredientsToFall+=2;
             spawner.setOptions({
                 pixelsPerSecond:[0,LEVEL_VELOCITY[state.level]],
                 spawnIntervalMs:LEVEL_SPAWN_DELAY[state.level],
                 spawnRandomFrame:INGREDIENT_FRAMES
             });
-
             spawner.start();
-
             game.checkWinners();
         }
     });

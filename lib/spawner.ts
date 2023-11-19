@@ -119,7 +119,9 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
         },
         start: () => {
             console.log("SPAWNER START", {...state}, game.runtime.getPlayerIndex(), game.runtime.getState().lastReproducedFrame);
-            return (state.stopped = false, state.startedFrame = state.frame);
+            state.count = 0;
+            state.stopped = false;
+            state.startedFrame = state.frame;
         },
         frame: (n:number) => {
             state.frame = n;
@@ -129,7 +131,8 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
             const framesSinceStart = state.frame - state.startedFrame;
             const spawnIntervalFrames = Math.floor(options.spawnIntervalMs / frameMs);
 
-            if(options.spawnIntervalMs && ((state.count+1) * spawnIntervalFrames < framesSinceStart)){
+            if(options.spawnIntervalMs && (((state.count+1) * spawnIntervalFrames) < framesSinceStart)){
+                console.log("spawn", spawnIntervalFrames,state,state.count, state.frame);
                 spawn({layer:(options.layer||1)+state.count});
             }
 

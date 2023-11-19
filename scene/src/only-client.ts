@@ -13,7 +13,7 @@ import {Vector3, Color3} from "@dcl/sdk/math";
 import {createScreenRunner} from "../../lib/game-runner";
 import {SammichGame} from "../../games/sammich-game";
 import {DifferenceGame} from "../../games/difference-game";
-
+import {TestWait} from "../../games/test-wait";
 import {timers} from "@dcl-sdk/utils";
 import {getDebugPanel} from "../dcl-lib/debug-panel";
 import {getInputState, onInputKeyEvent, setupInputController} from "../dcl-lib/input-controller";
@@ -124,7 +124,7 @@ export const init = () => {
                 const screenRunner = createScreenRunner({
                     screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
                     timers,
-                    GameFactory: DifferenceGame,
+                    GameFactory: SammichGame,
                     serverRoom: undefined,
                     playerIndex:1,
                     clientRoom: undefined,

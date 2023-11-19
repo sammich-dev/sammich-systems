@@ -11,11 +11,11 @@
 (E) 2023-11-14 Use remote spritesheets
 (E) 2023-11-14 Use remote instructions
 (F) 2023-11-14 Refactor: reusable cursor feature +game @refactor
-2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
-Option to set if Only players can hear the sound (e.g. in a concert or conference)
 
 (0) +bug @mini-game sammich: if players don't move, game goes infinite, define escape, e.g.: doTieBreakerWhen(()=>state.level>3)
-
+2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
+Option to set if Only players can hear the sound (e.g. in a concert or conference)
+can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one
 each mini-game can have own spritesheet with instructions, which is a full screen with frames like a gif, like 2, 3 or 4 frames, 1 per second
 
 
