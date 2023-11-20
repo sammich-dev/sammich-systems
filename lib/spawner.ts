@@ -66,7 +66,8 @@ export const createSpawner = (spriteEntityFactory:SpriteKlass, _options:SpawnerO
         });
         state.stopped = false
         if(options.spawnRandomFrame?.length){
-            const index = Math.floor(game.random() * options.spawnRandomFrame.length )
+            const index = game.randomInt(0,options.spawnRandomFrame.length-1)  ;
+            console.log("RANDOM_FRAME",index,options.spawnRandomFrame)
             spriteEntity.applyFrame( options.spawnRandomFrame[index])
         }
         state.count++;
