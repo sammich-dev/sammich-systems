@@ -151,10 +151,15 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
             return acc + (current === winnerIndex ? 1:0);
         },0);
-
+        const isFinal = !!finalize;
+        const trackWinnerIndex = getTrackWinnerFromMiniGameResults(miniGameResults);
         await scoreTransition.showTransition({
             winnerIndex,
-            previousScore
+            previousScore,
+            isFinal,
+            displayName1:room.state.players[0].displayName,
+            displayName2:room.state.players[1].displayName,
+            trackWinnerIndex
         });
         scoreTransition.hide();
 

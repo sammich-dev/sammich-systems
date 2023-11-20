@@ -46,7 +46,14 @@ async function TestWait({game}:any){
      * 1000/17
      */
     const FRAMES_PER_SECOND = game.runtime.getFps();
+    console.log(game.randomInt(0,100));
+    console.log(game.randomInt(0,100));
+    console.log(game.randomInt(0,100));
+    console.log("______")
     await game.waitFrames(FRAMES_PER_SECOND);
+    console.log(game.randomInt(0,100));
+    console.log(game.randomInt(0,100));
+    console.log(game.randomInt(0,100));
     c1.setPixelPosition(40,20);
     await game.waitFrames(FRAMES_PER_SECOND);
     c1.setPixelPosition(60,20);

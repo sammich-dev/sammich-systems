@@ -64,7 +64,7 @@ export function createSpriteScreen({
             if(mutablePlane.mesh) mutablePlane.mesh[mutablePlane.mesh.$case].uvs = getUvsFromSprite({spriteDefinition, back:UVS_BACK.MIRROR});
         },
         getSize:()=>[state.spriteDefinition.w, state.spriteDefinition.h],
-        addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText}: any):Sprite => {
+        addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText,zoom=[1,1]}: any):Sprite => {
             console.log("addSprite", spriteDefinition, spriteDefinition.klass);
             const normalizedPixelPosition = normalizePixelPosition(pixelPosition[0], pixelPosition[1], layer);
             const state = {
@@ -79,8 +79,8 @@ export function createSpriteScreen({
                 transform: {
                     parent: screenEntity,
                     scale: Vector3.create(
-                        spriteDefinition.w / screenSpriteDefinition.w,
-                        spriteDefinition.h / screenSpriteDefinition.h,
+                        (spriteDefinition.w / screenSpriteDefinition.w) * zoom[0],
+                        (spriteDefinition.h / screenSpriteDefinition.h) * zoom[1],
                         1),
                     position: Vector3.create(
                         ...normalizedPixelPosition
@@ -140,7 +140,11 @@ export function createSpriteScreen({
                     mutablePosition.y = normalizedPixelPosition[1];
                 },
                 getNetwork:()=>state.network,
-                setNetwork:(value:boolean)=>state.network = value
+                setNetwork:(value:boolean)=>state.network = value,
+                setZoom: (zoom:number[]) => {
+                    Transform.getMutable(spriteEntity).scale.x = zoom[0];
+                    Transform.getMutable(spriteEntity).scale.y = zoom[1];
+                }
             }
 
             function normalizePixelPosition(xPixels: number, yPixels: number, layer: number) {
@@ -177,7 +181,7 @@ export function createSpriteScreen({
                     mutablePosition.y = normalizedPosition[1];
                 },
                 hide: () => Transform.getMutable(textEntity).position.y = -10000,
-                show: () => Transform.getMutable(textEntity).position.y = normalizedPosition[1],
+                show: () => Transform.getMutable(textEntity).position.y = normalizedPosition[1]
             }
 
             function normalizePixelPositionForText(xPixels: number, yPixels: number, layer: number) {

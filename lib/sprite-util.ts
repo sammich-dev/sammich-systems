@@ -19,6 +19,7 @@ export type Sprite = {
     hide:Function,
     show:Function,
     setPixelPosition:Function,
+    setZoom:Function,
     destroy:Function,
     setNetwork:Function,
     getNetwork:Function

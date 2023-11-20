@@ -7,8 +7,8 @@ const WINNER_POSITIONS = [
     [100,10]//player2
 ];
 const SUM_SCORE_TEXT_POSITIONS =[
-    [(192 / 4) , 128 / 2 - 16],//player1
-    [(192 / 4) * 3 , 128 / 2 - 16]//player2
+    [(192 / 4) , 128 / 4 - 16],//player1
+    [(192 / 4) * 3 , 128 / 4 - 16]//player2
 ];
 
 export function createGlobalScoreTransition(screen:any){
@@ -19,7 +19,7 @@ export function createGlobalScoreTransition(screen:any){
             w:128, h:28
         },
         pixelPosition:[100,10],
-        layer:1
+        layer:3
     });
     //winnerSprite.hide()
     const loserSprite = screen.addSprite({
@@ -29,34 +29,51 @@ export function createGlobalScoreTransition(screen:any){
             w:62, h:21
         },
         pixelPosition:[4,10],
-        layer:1
+        layer:3
     });
     //loserSprite.hide();
 
     const player1GlobalScoreBig = screen.addText({
-        pixelPosition:[192/4,128/2],
+        pixelPosition:[192/4,128/4],
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
         text:"0",
         fontSize:2,
-        textColor:Color4.Black()
+        textColor:Color4.Black(),
+        layer:3
     });
     const winnerSumPointsText = screen.addText({
         pixelPosition:SUM_SCORE_TEXT_POSITIONS[0],
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
         text:"+1",
         fontSize:1,
-        textColor:Color4.Black()
+        textColor:Color4.Black(),
+        layer:3
     })
     const player2GlobalScoreBig = screen.addText({
-        pixelPosition: [(192 / 4) * 3, 128 / 2],
+        pixelPosition: [(192 / 4) * 3, 128 / 4],
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
         text:"0",
         fontSize:2,
-        textColor:Color4.Black()
+        textColor:Color4.Black(),
+        layer:3
     });
 
+    const finalSprite = screen.addSprite({
+        pixelPosition:[0,0],
+        spriteDefinition:{
+            ...DEFAULT_SPRITE_DEF,
+            x:192, y:128,
+            w:192, h:128
+        },
+        layer:2,
+        zoom:[1,1]
+    });
+    finalSprite.hide();
 
     return {
+        destroy:()=>{
+            //TODO
+        },
         hide:()=>{
             winnerSprite.hide();
             loserSprite.hide();
@@ -64,7 +81,7 @@ export function createGlobalScoreTransition(screen:any){
             winnerSumPointsText.hide();
             player2GlobalScoreBig.hide();
         },
-        showTransition:async ({winnerIndex, previousScore}:any)=>{
+        showTransition:async ({winnerIndex, previousScore, trackWinnerIndex, displayName1, displayName2, isFinal}:any)=>{
             winnerSprite.show();
             loserSprite.show();
             player1GlobalScoreBig.show();
@@ -87,6 +104,13 @@ export function createGlobalScoreTransition(screen:any){
                 player2GlobalScoreBig.setText((previousScore+1).toString());
             }
             await sleep(2000);
+
+            if(isFinal){
+                finalSprite.show();
+                finalSprite.setZoom([trackWinnerIndex?-1:1,1]);
+                await sleep(5000);
+                finalSprite.hide();
+            }
         },
         reset:()=>{
             player1GlobalScoreBig.setText("0");

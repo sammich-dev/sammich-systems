@@ -299,7 +299,6 @@ export const createScreenRunner = ({
         //TODO REVIEW : lastFrame for seed was for rollback feature, check if still necessary even when feature is not ready
         const _seed =  seed + runtimeApi.runtime.getState().lastReproducedFrame;
         const result = memSeedGenCreate(_seed).random();
-
         return result;
     }
 

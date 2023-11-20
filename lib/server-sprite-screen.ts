@@ -104,6 +104,9 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                 return spriteState.network;
             }
         },
-        addText:(...args:any[]):any=>({setText:(...args:any[]):any=>{}})
+        addText:(...args:any[]):any=>({setText:(...args:any[]):any=>{}}),
+        setZoom: (zoom:number[]) => {
+            //TODO
+        }
     }
 }
