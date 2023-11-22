@@ -7,7 +7,7 @@ const SPRITE_SHEET_DIMENSION = {
     spriteSheetHeight: SPRITE_SHEET_SIZE,
 };
 
-async function TestWait({game}:any){
+async function run({game}:any){
     console.log("TestWait",game);
     const FRAME_MS = 1000 / game.runtime.getFps();
     const FRAMES_TO_WAIT_A_SECONDS = getFrameNumber( 1000, FRAME_MS);
@@ -69,12 +69,14 @@ async function TestWait({game}:any){
 
 }
 
-TestWait.definition = {
+const definition = {
     alias:"test-wait",
     split:false,
     fps:60,
     instructions:"test wait"
 };
+
+const TestWait = {definition, run};
 
 
 export {TestWait}

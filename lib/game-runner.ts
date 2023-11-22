@@ -363,7 +363,7 @@ export const createScreenRunner = ({
         ...runtimeApi,
     };
 
-    const gameInstance = GameFactory({game}); //TODO get from repository based on gameID
+    const gameInstance = GameFactory.run({game});
 
     return game;
 
