@@ -88,7 +88,7 @@ export class MiniGameResult extends Schema {
 export class GameState extends Schema {
     @type("number") currentMiniGameIndex:number = 0;
     @type("boolean") started = false;
-    @type("uint64") created = new Date().getTime();
+    @type("uint64") created = Date.now();
     @type([PlayerState]) players = new ArraySchema<PlayerState>();
     @type([PlayerState]) users = new ArraySchema<PlayerState>();
     @type(["uint8"]) miniGameTrack = new ArraySchema<number>();

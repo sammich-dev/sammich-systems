@@ -48,14 +48,6 @@ model PlayedMatch {
 
 model PlayedMatchPlayer {
   ID            Int @id @unique(map: "sqlite_autoindex_PlayedMatchPlayer_1") @default(autoincrement())
-  playedMatchId Int @unique(map: "sqlite_autoindex_PlayedMatchPlayer_2")
-  playerId      Int @unique(map: "sqlite_autoindex_PlayedMatchPlayer_3")
-}
-
-model Player {
-  ID               Int     @id @unique(map: "sqlite_autoindex_Player_1") @default(autoincrement())
-  userId           String?
-  hasWeb3Connected String? @unique(map: "sqlite_autoindex_Player_2")
-  publicKey        String?
-  displayName      String?
+  playedMatchId Int
+  playerId      Int
 }

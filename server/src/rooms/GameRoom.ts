@@ -23,6 +23,8 @@ const timers = {
 
 setupGameRepository();
 
+const seed = 1;
+
 export class GameRoom extends Room<GameState> {
     screenRunners:any[] = [];
     //TODO when creating a game
@@ -37,18 +39,6 @@ export class GameRoom extends Room<GameState> {
 
         this.setState(new GameState());
 
-        this.onMessage("SAVE_FRAMES",(client, {frames, playerIndex, instanceId, seed, gameId})=>{
-           const created = prisma.recordedGame.create({
-                data: {
-                    frames:JSON.stringify(frames),
-                    playerIndex,
-                    instanceId,
-                    seed,
-                    gameId
-                }
-            });
-        });
-
         this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
             console.log("INSTRUCTIONS_READY", {playerIndex});
             if(this.state.players[playerIndex].instructionsReady) return;
@@ -56,9 +46,11 @@ export class GameRoom extends Room<GameState> {
             if(this.state.players.every(i=>i.instructionsReady)){
                 const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
                 this.currentGameDefinition = GameFactory.definition;
+
                 if(GameFactory.definition.split){
                     this.screenRunners[0] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[0]),
+                        seed,
                         timers,
                         GameFactory,
                         playerIndex:0,
@@ -67,6 +59,7 @@ export class GameRoom extends Room<GameState> {
                     });
                     this.screenRunners[1] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[1]),
+                        seed,
                         timers,
                         GameFactory,
                         playerIndex:1,
@@ -76,6 +69,7 @@ export class GameRoom extends Room<GameState> {
                 } else {
                     this.screenRunners[0] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[0]),
+                        seed,
                         timers,
                         GameFactory,
                         playerIndex:0,
@@ -200,14 +194,77 @@ export class GameRoom extends Room<GameState> {
                     player.miniGameScore = 0;
                 });
             }else{
-                console.log("WAIT SLEEP")
+                console.log("WAIT SLEEP");
                 await sleep(5000);
-                console.log("RESET TRACK")
+
+
+                //TODO save data in the database about the played game, start-date, end-date, scores, miniGameIds, seed, playerUserIds,
+                // other table players with ID, playerUserId, publicKey, displayName
+                // other table played_game_player : ID, playedGameID, playerID
+                const gameIds = (await prisma.game.findMany()).map(i => i.id);
+
+                const playedMatch = await prisma.playedMatch.create({
+                    data: {
+                        startDate: this.state.created,
+                        endDate: Date.now(),
+                        scores: `${player1GlobalScore},${player2GlobalScore}`,
+                        miniGameCollection: gameIds.join(","),
+                        seed,
+                        parcel:"0,0",//TODO
+                        playerUserIds:this.state.players.map(p=>p.user.userId).join(","),//TODO
+                        playerDisplayNames:this.state.players.map(p=>p.user.displayName).join(","),
+                        miniGameIds:this.state.miniGameTrack.join(","),
+                        gameInstanceId:null
+                        //TODO gameTrackHash: null,
+                    }
+                });
+                console.log("playedMatch",playedMatch)
+                const playerIds = await manageGetOrCreateIndexedPlayers(this.state.players);
+                console.log("playerIds", playerIds);
+                for(let playerId of playerIds){
+                    const playerMatchPlayer = await prisma.playedMatchPlayer.create({
+                        data:{
+                            playedMatchId:playedMatch.ID,
+                            playerId
+                        }
+                    });
+                    console.log("created playerMatchPlayer", playerMatchPlayer)
+                }
+                //TODO manageGetOrCreatePlayers
+
+                console.log("RESET TRACK");
                 this.state.resetTrack();
             }
         }
 
         return _winnerInfo;
+
+        async function manageGetOrCreateIndexedPlayers(players:PlayerState[]){
+            let playerIds = [];
+            for(let player of players){
+                const {user} = player;
+                const {displayName, publicKey, hasConnectedWeb3, userId, version} = user;
+                const foundPlayer = await prisma.user.findFirst({where:{userId}});
+                console.log("foundPlayer",foundPlayer)
+                if(foundPlayer){
+                    playerIds.push(foundPlayer.id)
+                }else{
+                    const created = await prisma.user.create({
+                        data: {
+                            displayName,
+                            publicKey,
+                            hasConnectedWeb3,
+                            userId,
+                            version
+                        }
+                    });
+                    console.log("player created",created)
+                    playerIds.push(created.id);
+                }
+            }
+
+            return playerIds;
+        }
     }
 
     getPlayerGlobalScore(playerIndex:number){
