@@ -9,6 +9,9 @@ import { matchMaker } from "colyseus"
 import {GameRoom} from "./rooms/GameRoom";
 import {createRoom} from "@colyseus/core/build/MatchMaker";
 import {PrismaClient} from "@prisma/client";
+import {Express} from "express";
+import {getCatchResponseError} from "./express-util";
+import {tryFn} from "../../lib/functional";
 const prisma = new PrismaClient();
 
 
@@ -25,17 +28,20 @@ export default config({
 
     initializeExpress: (app) => {
         app.get("/api/played-games/:from", async (req, res) => {
-            const rows = await prisma.playedMatch.findMany({
-                take:100,
-                where:{
-                    ID:{gte:Number(req.params.from)}
-                }
-            });
-            const lastPlayedGameId = (await prisma.playedMatch.findFirst({orderBy:{ID:"desc"}})).ID;
-            return res.send({
-                results:rows,
-                lastPlayedGameId
-            });
+            tryFn(async ()=>{
+                const pageSize = req.query.pageSize || 100;
+                const rows = await prisma.playedMatch.findMany({
+                    take:Number(pageSize),
+                    where:{
+                        ID:{gte:Number(req.params.from)}
+                    }
+                });
+                const lastPlayedGameId = (await prisma.playedMatch.findFirst({orderBy:{ID:"desc"}})).ID;
+                res.send({
+                    results:rows,
+                    lastPlayedGameId
+                });
+            }, getCatchResponseError(res));
         });
 
         app.get("/api/last-played-game-id", async (req, res) => {

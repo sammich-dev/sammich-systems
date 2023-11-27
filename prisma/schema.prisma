@@ -44,6 +44,7 @@ model PlayedMatch {
   parcel             String?
   gameInstanceId     Int?
   playerDisplayNames String?
+  leaderboard        String?
 }
 
 model PlayedMatchPlayer {

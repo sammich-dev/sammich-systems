@@ -23,3 +23,18 @@ export const memoize = (fn:Function) => {
 export function sleep(ms:number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function tryFn(fn:Function, errorCallback:Function){
+    try{
+        let fnRes = fn();
+        if(fnRes.catch){
+            fnRes.catch((error:any)=> {
+                console.error(error);
+                errorCallback(error);
+            })
+        }
+    }catch(error:any){
+        console.error(error)
+        errorCallback(error);
+    }
+}
