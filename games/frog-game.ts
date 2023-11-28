@@ -42,15 +42,26 @@ async function run({game}:any){
     });
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
-        console.log("winnerfn", player1Score, player2Score)
         if(player1Score === player2Score) return;
-        if( Math.max(player1Score,player2Score)>=2 ){
 
+        const msPassed = game.runtime.getState().lastReproducedFrame * (1000/60);
+        const secondsPassed = Math.floor(msPassed);
+
+        if(
+            (secondsPassed > 100 && player1Score !== player2Score)
+            || Math.max(player1Score,player2Score) === 5
+        ){
             if(player1Score > player2Score) return {winnerIndex:0};
             if(player1Score < player2Score) return {winnerIndex:1};
         }
     });
-
+    const CarSprite = game.registerSpriteEntity({
+        klass:"Car",
+        spriteDefinition:{
+            x:24,y:528, w:8, h:8, columns:1, frames:1,
+            ...SPRITE_SHEET_DIMENSION,
+        }
+    });
     const CursorSprite = game.registerSpriteEntity({
         klass:"Frog",
         spriteDefinition:{
@@ -155,13 +166,7 @@ async function run({game}:any){
             currentPoolIndex:0
         };
         const NUM_CARS = game.randomInt(1,3);
-        const CarSprite = game.registerSpriteEntity({
-            klass:"Car",
-            spriteDefinition:{
-                x:24,y:528, w:8, h:8, columns:1, frames:1,
-                ...SPRITE_SHEET_DIMENSION,
-            }
-        });
+
         const velocity = game.randomInt(2,8);
         const CAR_SIZE = 8;
         let cancel:any, iterations = 0;
@@ -198,7 +203,7 @@ async function run({game}:any){
                     pool.forEach((car:SpriteEntity, index:number) => {
                         const [x,y] = car.getPixelPosition();
                         if(x > MAX_CAR_POS_X || x < MIN_CAR_POS_X){
-                            car.setPixelPosition(direction > 0 ? MIN_FROG_POS_X : MAX_FROG_POS_X, y)
+                            car.setPixelPosition(direction > 0 ? MIN_CAR_POS_X : MAX_CAR_POS_X, y)
                         }else{
                             car.setPixelPosition(x+direction, y);
                         }

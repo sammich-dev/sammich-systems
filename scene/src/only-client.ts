@@ -110,13 +110,13 @@ export const init = () => {
 
     function onClick() {
         lobbyScreen.hide();
-        (new Array(1)).fill(null).forEach((_, playerIndex) => {
+        (new Array(2)).fill(null).forEach((_, playerIndex) => {
             (async () => {
                 console.log("gameScreen", playerIndex);
                 const GameFactory = FrogGame
                 const gameScreen = createSpriteScreen({
                     transform: {
-                        position:Vector3.Zero(),
+                        position:Vector3.create(playerIndex/2,0,0),
                         scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
                         parent: rootEntity
                     },
