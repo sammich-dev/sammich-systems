@@ -13,6 +13,7 @@ import {
     ColliderLayer
 } from "@dcl/sdk/ecs";
 
+
 import {Color3, Vector3, Color4, Quaternion} from "@dcl/sdk/math";
 import {Client} from "colyseus.js";
 import {createSpriteScreen} from "../dcl-lib/sprite-screen";
@@ -27,8 +28,6 @@ import {DEFAULT_SPRITE_DEF, NAME_COLOR, SPLIT_SCREEN_SCALE, SHARED_SCREEN_SCALE}
 import {createGlobalScoreTransition} from "./score-transition";
 import {throttle} from "../dcl-lib/throttle";
 import {getGame, setupGameRepository} from "../../lib/game-repository";
-import {DifferenceGame} from "../../games/difference-game";
-import {sleep} from "../dcl-lib/sleep";
 import {EVENT} from "./events";
 const INSTRUCTION_READY_TIMEOUT = 5000;
 

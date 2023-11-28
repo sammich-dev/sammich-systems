@@ -67,11 +67,13 @@ export const init = async () => {
             }]});
 
         pointerEventsSystem.onPointerDown({ entity: boxStartGameWorkaround, opts:{hoverText:"Create", showFeedback:true, button:InputAction.IA_POINTER} },(event) => {
+            console.log("box onClickCreate");
             machine.onClickCreate();
             engine.removeEntity(boxStartGameWorkaround);
             engine.removeEntity(boxJoinGameWorkaround);
         });
         pointerEventsSystem.onPointerDown({ entity: boxJoinGameWorkaround, opts:{hoverText:"Join", showFeedback:true, button:InputAction.IA_POINTER} },(event) => {
+            console.log("box onClickJoin");
             machine.onClickJoin();
             engine.removeEntity(boxStartGameWorkaround);
             engine.removeEntity(boxJoinGameWorkaround);

@@ -3,6 +3,7 @@
 (B) 2023-11-18 +game Add invaders mini-game
 (B) 2023-11-18 +game Add 
 (B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
+(C) avoid any way of block waiting for spectators or people wanting to polay, e.g. track never ends
 (C) 2023-11-18 limit gameplay to best of 5 mini-games
 (C) 2023-11-18 Send results to tournament API
 (D) 2023-11-14 Add sounds +game

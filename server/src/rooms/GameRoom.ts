@@ -178,7 +178,7 @@ export class GameRoom extends Room<GameState> {
                 ((player1GlobalScore >= 3 || player2GlobalScore >= 3) && player1GlobalScore !== player2GlobalScore)
                 || this.state.currentMiniGameIndex === 4
             ){
-                globalWinner = player1GlobalScore>player2GlobalScore?player1GlobalScore:player2GlobalScore
+                globalWinner = player1GlobalScore>player2GlobalScore?0:1
             }
             this.broadcast("MINI_GAME_WINNER", {
                 ..._winnerInfo,
@@ -207,14 +207,16 @@ export class GameRoom extends Room<GameState> {
                     data: {
                         startDate: this.state.created,
                         endDate: Date.now(),
-                        scores: `${player1GlobalScore},${player2GlobalScore}`,
                         miniGameCollection: gameIds.join(","),
                         seed,
                         parcel:"0,0",//TODO
+                        miniGameIds:this.state.miniGameTrack.join(","),
+                        gameInstanceId:null,
+
                         playerUserIds:this.state.players.map(p=>p.user.userId).join(","),//TODO
                         playerDisplayNames:this.state.players.map(p=>p.user.displayName).join(","),
-                        miniGameIds:this.state.miniGameTrack.join(","),
-                        gameInstanceId:null
+                        scores: `${player1GlobalScore},${player2GlobalScore}`,
+                        leaderboard:[globalWinner, globalWinner===0?1:0 ].map(i=>this.state.players[i].user.userId).join(",")
                         //TODO gameTrackHash: null,
                     }
                 });

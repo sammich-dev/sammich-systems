@@ -52,7 +52,20 @@ const adminJs = new AdminJS({
                 client: prisma,
             },
             options: {}
+        },
+        {
+            resource: {
+                model: dmmf.modelMap.PlayedMatch,
+                client:prisma
+            }
+        },
+        {
+            resource: {
+                model: dmmf.modelMap.PlayedMatchPlayer,
+                client:prisma
+            }
         }
+
     ]
 })
 const adminRouter = AdminJSExpress.buildAuthenticatedRouter(adminJs, {
