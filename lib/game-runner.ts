@@ -196,6 +196,7 @@ export const createScreenRunner = ({
 
     };
     let _disposeWinnerFn: any;
+    const onlyClientScoreState = [0,0];
     const gameApi = {
         setScreenSprite: ({spriteDefinition}: SpriteDefinitionParams) => screen.setBackgroundSprite({spriteDefinition}),
         waitFrames: (n: number) => {

@@ -142,8 +142,8 @@ export function createSpriteScreen({
                 getNetwork:()=>state.network,
                 setNetwork:(value:boolean)=>state.network = value,
                 setZoom: (zoom:number[]) => {
-                    Transform.getMutable(spriteEntity).scale.x = zoom[0];
-                    Transform.getMutable(spriteEntity).scale.y = zoom[1];
+                    Transform.getMutable(spriteEntity).scale.x = (spriteDefinition.w / screenSpriteDefinition.w) * zoom[0];
+                    Transform.getMutable(spriteEntity).scale.y = (spriteDefinition.h / screenSpriteDefinition.h) * zoom[1];
                 }
             }
 

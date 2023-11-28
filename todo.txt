@@ -1,4 +1,4 @@
-(A) 2023-11-14 +game Add shared screen game @mini-game
+# todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
 (B) 2023-11-18 +game Add frog mini-game
 (B) 2023-11-18 +game Add invaders mini-game
 (B) 2023-11-18 +game Add 
@@ -19,5 +19,4 @@ Option to set if Only players can hear the sound (e.g. in a concert or conferenc
 can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one
 each mini-game can have own spritesheet with instructions, which is a full screen with frames like a gif, like 2, 3 or 4 frames, 1 per second
 
-
-
+x (A) 2023-11-28 2023-11-14 +game Add shared screen game @mini-game

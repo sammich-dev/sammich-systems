@@ -9,10 +9,12 @@ import {
     Transform,
     Entity,
 } from '@dcl/sdk/ecs'
-import {Vector3, Color3} from "@dcl/sdk/math";
+import {Vector3, Color3, Quaternion} from "@dcl/sdk/math";
 import {createScreenRunner} from "../../lib/game-runner";
 import {SammichGame} from "../../games/sammich-game";
 import {DifferenceGame} from "../../games/difference-game";
+import {FrogGame} from "../../games/frog-game";
+
 import {TestWait} from "../../games/test-wait";
 import {timers} from "@dcl-sdk/utils";
 import {getDebugPanel} from "../dcl-lib/debug-panel";
@@ -24,6 +26,7 @@ import "../dcl-lib/decorate-console";
 import "./polyfill";
 import {sleep} from "../dcl-lib/sleep";
 import {FrameEventType} from "../../lib/frame-util";
+import {DEFAULT_SPRITE_DEF, SHARED_SCREEN_SCALE, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
 
 
 export const init = () => {
@@ -40,6 +43,11 @@ export const init = () => {
         columns: 1, frames: 1
     };
     const rootEntity = engine.addEntity();
+    Transform.create(rootEntity, {
+        position:Vector3.create(8,2,8),
+        rotation:Quaternion.Zero(),
+        scale: Vector3.create(192 / 40, 128 / 40, 1)
+    })
     const spriteTexture = Material.Texture.Common({
         src: 'images/spritesheet.png',
         wrapMode: TextureWrapMode.TWM_REPEAT,
@@ -104,11 +112,12 @@ export const init = () => {
         lobbyScreen.hide();
         (new Array(1)).fill(null).forEach((_, playerIndex) => {
             (async () => {
-                console.log("gameScreen", playerIndex)
+                console.log("gameScreen", playerIndex);
+                const GameFactory = FrogGame
                 const gameScreen = createSpriteScreen({
                     transform: {
-                        position: Vector3.create(playerIndex * 2.4, 2, 8 - 0.1),
-                        scale: Vector3.create(SCREEN_WIDTH, 128 / 40, 1),
+                        position:Vector3.Zero(),
+                        scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
                         parent: rootEntity
                     },
                     spriteMaterial,
@@ -116,7 +125,7 @@ export const init = () => {
                         ...DEFAULT_SPRITE_DEF,
                         x: 576,
                         y: 128,
-                        w: 192,
+                        w: (GameFactory.definition.split ? 192 / 2 : 192),
                         h: 128,
                     }
                 });
@@ -124,21 +133,24 @@ export const init = () => {
                 const screenRunner = createScreenRunner({
                     screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
                     timers,
-                    GameFactory: SammichGame,
-                    serverRoom: undefined,
+                    GameFactory,
                     playerIndex:1,
-                    clientRoom: undefined,
+                    seed: 34,
                     isClientPlayer: true,
-                    recordFrames: true,
-                    seed: 30,
+                    recordFrames: true,//TODO gameRunner should not record frames, but provide interface
+                    serverRoom: undefined,
+                    clientRoom: undefined,
                     velocityMultiplier: 1,
                     autoPlay:true
                 });
                 screenRunner.runtime.onWinner(()=>{
+                    console.log("WINNER!")
                     screenRunner.runtime.destroy();
                     gameScreen.destroy();
                 })
-console.log("onInputKeyEvent init")
+
+                console.log("onInputKeyEvent init");
+
                 const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
                     console.log("onInputKeyEvent", inputActionKey, isPressed);
                     //   getDebugPanel().setState(getInputState());

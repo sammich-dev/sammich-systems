@@ -1,4 +1,4 @@
-import {init} from "./game";
+import {init} from "./only-client";
 import {sleep} from "../dcl-lib/sleep";
 import {createGlobalScoreTransition} from "./score-transition";
 
