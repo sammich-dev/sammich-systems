@@ -129,16 +129,31 @@ export const init = () => {
                         h: 128,
                     }
                 });
-
+                let checkWinnersFn:Function = ()=>{};
+                const serverRoom = {
+                    state:{players:[{miniGameScore:0, lastReproducedFrame:0},{miniGameScore:0, lastReproducedFrame:0}]},
+                    checkWinners:(...args:any[])=>{
+                        console.log("checkWinners",args);
+                        const winnerInfo =  checkWinnersFn(serverRoom.state.players[0].miniGameScore, serverRoom.state.players[1].miniGameScore);
+                        if(winnerInfo?.winnerIndex !== undefined){
+                            screenRunner.runtime.destroy();
+                            gameScreen.destroy();
+                        }
+                    },
+                    setWinnerFn:(fn:Function)=>{
+                        console.log("checkWinnersFn = fn", checkWinnersFn = fn);
+                        return () => checkWinnersFn = ()=>{};
+                    }
+                }
                 const screenRunner = createScreenRunner({
                     screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
                     timers,
                     GameFactory,
                     playerIndex:1,
-                    seed: 34,
+                    seed: 29,
                     isClientPlayer: true,
                     recordFrames: true,//TODO gameRunner should not record frames, but provide interface
-                    serverRoom: undefined,
+                    serverRoom,
                     clientRoom: undefined,
                     velocityMultiplier: 1,
                     autoPlay:true

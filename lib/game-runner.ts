@@ -25,34 +25,14 @@ export const createScreenRunner = ({
                                        GameFactory,
                                        onFinish,
                                        clientRoom,
-                                       serverRoom: _serverRoom,
+                                       serverRoom,
                                        isClientPlayer,
                                        playerIndex,
                                        recordFrames,
                                        velocityMultiplier = 1
                                    }: any) => {
-    if (_serverRoom && clientRoom) throw Error("NOT CORRECT");
-    let serverRoom = _serverRoom;
+    if (serverRoom && clientRoom) throw Error("NOT CORRECT");
 
-    if(!_serverRoom && !clientRoom){
-        let checkWinnersFn:Function = ()=>{};
-
-        console.log("THIS IS ONLY-CLIENT GAME");
-        serverRoom = {
-            state:{players:[{miniGameScore:0},{miniGameScore:0}]}, checkWinners:(...args:any[])=>{
-                console.log("checkWinners",args);
-                const winnerInfo =  checkWinnersFn(serverRoom.state.players[0].miniGameScore, serverRoom.state.players[1].miniGameScore);
-                console.log("serverRoom.checkWinners",winnerInfo )
-                if(winnerInfo?.winnerIndex !== undefined){
-                    callbacks.onWinner && callbacks.onWinner(winnerInfo);
-                }
-            },
-            setWinnerFn:(fn:Function)=>{
-                console.log("checkWinnersFn = fn", checkWinnersFn = fn);
-                return () => checkWinnersFn = ()=>{};
-            }
-        }
-    }
     const memoize = (fn:Function) => {
         const cache:any = {};
         return (...args:any[]) => {
@@ -135,7 +115,7 @@ export const createScreenRunner = ({
 
     const entityManager = createSpriteEntityFactory({
         screen,
-        serverRoom: _serverRoom,
+        serverRoom,
         clientRoom,
         isClientPlayer,
         playerIndex
@@ -275,7 +255,7 @@ export const createScreenRunner = ({
                     return serverRoom.state.players[0].miniGameScore = data;
                 }
             },
-            getPlayerScore:()=>(serverRoom||clientRoom).state.players[1].miniGameScore
+            getPlayerScore:()=>(serverRoom||clientRoom).state.players[0].miniGameScore
         },{
             setPlayerScore:(data:number)=>{
                 if (serverRoom){
@@ -285,12 +265,8 @@ export const createScreenRunner = ({
             getPlayerScore:()=> serverRoom.state.players[1].miniGameScore
         }],
         setPlayerScore: (data: number) => {//TODO this smells, should not be used by shared-screen, should not be implemented here, but in shared-screen-runner ?
-            console.log("setPlayerScore split", playerIndex);
-            if (!isClientPlayer && _serverRoom) {
-                console.log("setPlayerScore", playerIndex, data);
-                _serverRoom.state.players[playerIndex].miniGameScore = data;
-            } else {
-                //TODO?
+            if (serverRoom) {
+                serverRoom.state.players[playerIndex].miniGameScore = data;
             }
         },
         getPlayerScore: () => (serverRoom||clientRoom).state.players[playerIndex].miniGameScore
@@ -382,7 +358,7 @@ export const createScreenRunner = ({
                 await sleep(0);
             }
         }
-        if (_serverRoom && !isClientPlayer) _serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
+        if (serverRoom) serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
 
         _debugPanel?.setState({_frame: state.lastReproducedFrame});
     }
