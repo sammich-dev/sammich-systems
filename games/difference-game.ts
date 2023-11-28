@@ -16,7 +16,6 @@ export const DifferenceGame = {
         instructions:"Select the correct answer\n use <color=#ffff00><b>E, F, 1, 2, 3</b></color> keys"
     },
     run:function DifferenceGameRun({game}:any){
-        console.log("DifferenceGame",game);
         const FRAME_MS = 1000 / game.runtime.getFps();
         const FRAMES_TO_WAIT_A_SECONDS = getFrameNumber( 1000, FRAME_MS);
 
@@ -25,7 +24,6 @@ export const DifferenceGame = {
             playersSelectedState:[false,false]
         };
         game.setWinnerFn((player1Score:number, player2Score:number) => {
-            console.log("checking winners ", player1Score, player2Score);
             if(player1Score === 2 && !player2Score) return {winnerIndex:0};//2-0 makes a winner, no need to play a 3rd time
             if(player2Score === 2 && !player1Score) return {winnerIndex:0};
 
@@ -69,12 +67,12 @@ export const DifferenceGame = {
             PICTURE_WIDTH,
             PICTURE_WIDTH*2,
             PICTURE_WIDTH*3
-        ].map(i=>i-(PICTURE_CENTER - CURSOR_PICTURE_DISPLACEMENT)-4);
+        ].map(i=>i-(PICTURE_CENTER + CURSOR_PICTURE_DISPLACEMENT)-4);
         const player2PixelPositions = [
             PICTURE_WIDTH,
             PICTURE_WIDTH*2,
             PICTURE_WIDTH*3
-        ].map(i=>i-(PICTURE_CENTER + CURSOR_PICTURE_DISPLACEMENT)-4);
+        ].map(i=>i-(PICTURE_CENTER - CURSOR_PICTURE_DISPLACEMENT)-4);
 
         const cursor1 = CursorSprite.create({
             pixelPosition:[player1PixelPositions[1], CURSOR_POSITION_Y],
