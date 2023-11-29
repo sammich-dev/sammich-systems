@@ -31,7 +31,7 @@ import {getGame, setupGameRepository} from "../../lib/game-repository";
 import {EVENT} from "./events";
 const INSTRUCTION_READY_TIMEOUT = 5000;
 
-export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals) {
+export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
     setupInputController();
     setupGameRepository();
     const callbacks: { onEvent: Function[] } = {
@@ -102,8 +102,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     const user: MinUserData = await getMinUserData();
     const room: any = await colyseusClient.join(`GameRoom`, {
         user,
-        instanceId: 1,
-        gameId: 1
+        gameInstanceId
     });
     const createButton = lobbyScreen.addSprite({
         spriteDefinition: {

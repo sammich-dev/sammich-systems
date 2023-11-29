@@ -1,22 +1,28 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
-(B) 2023-11-18 +game Add frog mini-game
+(A) spectator
+(A) machine should send land and gameInstanceId to server, it will create db row in GameInstance if necessary, ws-room should have filter to join with land+gameInstanceId, it will have effect on played-games endpoint.
+(A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends
+
 (B) 2023-11-18 +game Add invaders mini-game
 (B) 2023-11-18 +game Add 
-(B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
-(C) avoid any way of block waiting for spectators or people wanting to polay, e.g. track never ends
-(C) 2023-11-18 limit gameplay to best of 5 mini-games
-(C) 2023-11-18 Send results to tournament API
+
 (D) 2023-11-14 Add sounds +game
 (D) 2023-11-18 Allow to configure the game instance from web-app
+
 (E) 2023-11-14 Implement ads (out of machine, machine should keep most simple as possible)
 (E) 2023-11-14 Use remote spritesheets
 (E) 2023-11-14 Use remote instructions
+
 (F) 2023-11-14 Refactor: reusable cursor feature +game @refactor
 
 (0) +bug @mini-game sammich: if players don't move, game goes infinite, define escape, e.g.: doTieBreakerWhen(()=>state.level>3)
+
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
 can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one
 each mini-game can have own spritesheet with instructions, which is a full screen with frames like a gif, like 2, 3 or 4 frames, 1 per second
 
+x (B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
+x (C) 2023-11-18 limit gameplay to best of 5 mini-games
+x (B) 2023-11-18 +game Add frog mini-game
 x (A) 2023-11-28 2023-11-14 +game Add shared screen game @mini-game
