@@ -21,6 +21,7 @@
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
 can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one
 each mini-game can have own spritesheet with instructions, which is a full screen with frames like a gif, like 2, 3 or 4 frames, 1 per second
+when player loads scene and server is down, try to connect on interval , or with button?
 
 x (B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
 x (C) 2023-11-18 limit gameplay to best of 5 mini-games
