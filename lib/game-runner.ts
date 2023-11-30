@@ -82,10 +82,16 @@ export const createScreenRunner = ({
             for (let frameEvent of frame.events) {
                 if (frameEvent.type === FrameEventType.INPUT) {
                     const {inputActionKey, isPressed, time} = frameEvent.data;
-                    triggerInput(inputActionKey, isPressed, time);
+                    triggerInput(
+                        frameEvent.data.playerIndex!==undefined?frameEvent.data.playerIndex:playerIndex ,
+                        inputActionKey,
+                        isPressed,
+                        time
+                    );
                 }
             }
         }
+
 
         const snapshot = {
             frameNumber: state.lastReproducedFrame,
@@ -109,7 +115,7 @@ export const createScreenRunner = ({
         return shouldSplitAwait;
     };
 
-    const triggerInput = (inputActionKey: number, isPressed: false | number, time?: number) => {
+    const triggerInput = (playerIndex:number, inputActionKey: number, isPressed: false | number, time?: number) => {
         callbacks.onInput.forEach(i => i({inputActionKey, isPressed, time, playerIndex}));
     }
 

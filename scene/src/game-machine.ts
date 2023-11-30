@@ -30,7 +30,10 @@ import {throttle} from "../dcl-lib/throttle";
 import {getGame, setupGameRepository} from "../../lib/game-repository";
 import {EVENT} from "./events";
 const INSTRUCTION_READY_TIMEOUT = 5000;
-
+const DEFAULT_SCREEN_SPRITE_DEFINITION = {
+    ...DEFAULT_SPRITE_DEF,
+    x: 576, y: 128, w: 192, h: 128,
+}
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
     setupInputController();
     setupGameRepository();
@@ -40,7 +43,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     const state = {
         showingInstructions:false,
         playingMiniGame:false,
-        sentInstructionsReady:false
+        sentInstructionsReady:false,
+        sentReady:false
     };
     const colyseusClient: Client = new Client(`ws://localhost:2567`);
 
@@ -104,6 +108,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         user,
         gameInstanceId
     });
+
     const createButton = lobbyScreen.addSprite({
         spriteDefinition: {
             ...DEFAULT_SPRITE_DEF,
@@ -133,16 +138,19 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     joinButton.hide();
     createButton.hide();
 
-    let gameScreen:any, spectatorScreen:any, playerScreenRunner:any, spectatorScreenRunner:any;
+    let playerScreens:any[] = [], screenRunners:any[] = [];
+
+    let instructionsPanel:any;
 
     room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
         console.log("MINI_GAME_WINNER", winnerIndex);
-        gameScreen?.destroy();
-        spectatorScreen?.destroy();
-        playerScreenRunner?.runtime?.stop();
-        spectatorScreenRunner?.runtime?.stop();
-        playerScreenRunner?.runtime?.destroy();//TODO it's not removing background sprite?
-        spectatorScreenRunner?.runtime?.destroy();
+        const playerIndex = getPlayerIndex();
+        disposeInputListener();
+        playerScreens.forEach((s:any)=>s.destroy());
+        screenRunners.forEach(sr=>sr.runtime.stop());
+        screenRunners.forEach(sr=>sr.runtime.destroy());
+        playerScreens = [];
+        screenRunners = [];
 
         lobbyScreen.show();
 
@@ -165,6 +173,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             state.playingMiniGame = false;
             state.showingInstructions = false;
             state.sentInstructionsReady = false;
+            console.log("finalize")
+            state.sentReady = false;
             scoreTransition.reset();
             callbacks.onEvent.forEach(e=>e({
                 type:EVENT.END_TRACK,
@@ -185,6 +195,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 gameAlias: getGame(nextGameId).definition.alias,
                 gameInstructions: getGame(nextGameId).definition.instructions,
             });
+            setInputListener(nextGameId)
         }
 
         function getTrackWinnerFromMiniGameResults(miniGameResults:number[]){
@@ -201,29 +212,53 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         }
     });
 
-    let instructionsPanel:any;
-
-    const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
-        if(state.showingInstructions && !state.sentInstructionsReady){
-            state.sentInstructionsReady = true;
-            const playerIndex = getPlayerIndex();
-            room.send("INSTRUCTIONS_READY", {playerIndex: getPlayerIndex(), foo:true});
-            instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
-        }else if(state.playingMiniGame){
-            getDebugPanel().setState(getInputState());
-            const inputFrame = playerScreenRunner.runtime.pushInputEvent({
-                inputActionKey,
-                isPressed,
-                playerIndex: getPlayerIndex()
-            });
-            room.send("INPUT_FRAME", {frame: inputFrame, playerIndex: getPlayerIndex()});
+    room.onMessage("INPUT_FRAME", ({playerIndex, frame}:any)=>{
+        //TODO review if best approach, for now to represent other player State
+        if(playerIndex !== getPlayerIndex()){
+            screenRunners.forEach(runner => {
+                const inputData = frame.events[frame.events.length-1].data
+                runner.runtime.pushInputEvent({
+                    ...inputData,
+                    playerIndex
+                })
+            })
         }
     });
+    
+    function setInputListener(gameId:number){
+        console.log("setInputListener", gameId);
+        disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
+            const playerIndex = getPlayerIndex();
+            console.log("onInputKeyEvemt", inputActionKey, isPressed, playerIndex);
+
+            if(playerIndex >= 0){
+                if(state.showingInstructions && !state.sentInstructionsReady){
+                    state.sentInstructionsReady = true;
+                    room.send("INSTRUCTIONS_READY", {playerIndex, foo:true});
+                    instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
+                }else if(state.playingMiniGame){
+
+                    getDebugPanel().setState(getInputState());
+                    const split = getGame(gameId).definition.split;
+                    console.log("split", split);
+
+                    const runner = screenRunners[split?playerIndex:0];
+                    const inputFrame = runner.runtime.pushInputEvent({
+                        inputActionKey,
+                        isPressed,
+                        playerIndex
+                    });
+                    room.send("INPUT_FRAME", {frame: inputFrame, playerIndex});
+                }
+            }
+        });
+    }
 
     room.onMessage("MINI_GAME_TRACK", async (miniGameTrack:any) => {
        //TODO show instructions of the game 0
         console.log("MINI_GAME_TRACK", miniGameTrack);
         state.showingInstructions = true;
+        setInputListener(miniGameTrack[0])
         instructionsPanel = createInstructionScreen({
             transform: {
                 parent: lobbyScreen.getEntity(),
@@ -234,9 +269,12 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             gameAlias: getGame(miniGameTrack[0]).definition.alias,
             gameInstructions: getGame(miniGameTrack[0]).definition.instructions,
         });
+
     });
 
+    let disposeInputListener:any;
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
+
         console.log("START_GAME", miniGameId);
         state.sentInstructionsReady = false;
         state.playingMiniGame = true;
@@ -244,100 +282,101 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         instructionsPanel.destroy();
         lobbyScreen.hide();
         const GameFactory = getGame(miniGameId);
-
-        gameScreen = createSpriteScreen({
-            transform: {
-                position:GameFactory.definition.split? Vector3.create(getPlayerIndex() ? 0.25 : -0.25, 0, 0):Vector3.Zero(),
-                scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
-                parent: entity
-            },
-            spriteMaterial,
-            spriteDefinition: {
-                ...DEFAULT_SPRITE_DEF,
-                x: 576,
-                y: 128,
-                w: (GameFactory.definition.split ? 192 / 2 : 192),
-                h: 128,
-            }
-        });
-        playerScreenRunner = createScreenRunner({
-            screen: gameScreen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
-            timers,
-            GameFactory,
-            playerIndex: getPlayerIndex(),
-            serverRoom: undefined,
-            clientRoom: room,
-            isClientPlayer: true,
-            recordSnapshots: true,
-            velocityMultiplier:1
-        });
-        playerScreenRunner.runtime.start(true);
-        playerScreenRunner.runtime.attachDebugPanel(getDebugPanel());
-
+        console.log("GameFactory.definition",GameFactory.definition)
         if(GameFactory.definition.split){
-            spectatorScreen = createSpriteScreen({
+            playerScreens = new Array(2).fill(null).map((_, playerIndex)=>createSpriteScreen({
                 transform: {
-                    position: Vector3.create(getOtherPlayerIndex() ? 0.25 : -0.25, 0, 0),
+                    position:Vector3.create(playerIndex?0.25:-0.25, 0, 0),
                     scale: SPLIT_SCREEN_SCALE,
                     parent: entity
                 },
                 spriteMaterial,
                 spriteDefinition: {
-                    ...DEFAULT_SPRITE_DEF,
-                    x: 576,
-                    y: 128,
+                    ...DEFAULT_SCREEN_SPRITE_DEFINITION,
                     w: 192 / 2,
-                    h: 128
                 }
-            });
-            spectatorScreenRunner = createScreenRunner({
-                screen: spectatorScreen, //TODO REVIEW; we really should use aanother screen, and decouple the lobby screen from the game
+            }));
+
+            screenRunners = playerScreens.map((screen, playerIndex) => createScreenRunner({
+                screen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
                 timers,
-                GameFactory: getGame(miniGameId),
-                playerIndex: getOtherPlayerIndex(),
+                GameFactory,
+                playerIndex,
                 serverRoom: undefined,
                 clientRoom: room,
-                isClientPlayer: false,
+                isClientPlayer: playerIndex === getPlayerIndex(),
                 velocityMultiplier:1
-            });
-            spectatorScreenRunner.runtime.start(false);
-            spectatorScreenRunner.runtime.attachDebugPanel(getDebugPanel());
-        }else{
-            if(spectatorScreen){
-                spectatorScreen?.destroy();
-                spectatorScreenRunner?.runtime.destroy();
-                spectatorScreen = spectatorScreenRunner = null;
-            }
+            }));
+            screenRunners.forEach((runner, playerIndex)=>{
+                if(playerIndex === getPlayerIndex()){
+                    runner.runtime.attachDebugPanel(getDebugPanel());
+                    startPlayerRunner(runner);
+                }else{
+                    runner.runtime.start(false);
+                }
+            })
+        }else{//shared screen
+           const playerIndex = getPlayerIndex();
+           const screen = createSpriteScreen({
+                    transform: {
+                        position:Vector3.Zero(),
+                        scale: SHARED_SCREEN_SCALE,
+                        parent: entity
+                    },
+                    spriteMaterial,
+                    spriteDefinition: {
+                        ...DEFAULT_SCREEN_SPRITE_DEFINITION
+                    }
+                });
+           playerScreens = [screen];
+           screenRunners = [createScreenRunner({
+               screen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
+               timers,
+               GameFactory,
+               playerIndex: getPlayerIndex(),
+               serverRoom: undefined,
+               clientRoom: room,
+               isClientPlayer:true,//TODO for shared-screen , is really a clientPlayer, it owuld be better to define if it's shared screen
+               sharedScreen:true,//TODO or maybe: reactToNetworkSprites
+               velocityMultiplier:1
+           })];
+
+            startPlayerRunner(screenRunners[0]);
         }
 
-
-        const throttleSendPlayerFrame = throttle(() => {
-            room.send("PLAYER_FRAME", {
-                playerIndex: getPlayerIndex(),
-                n: playerScreenRunner.runtime.getState().lastReproducedFrame
-            });
-        },100);
-        playerScreenRunner.onFrame(throttleSendPlayerFrame);
+        function startPlayerRunner(runner:any){
+            runner.runtime.start(true);
+            const throttleSendPlayerFrame = throttle(() => { //TODO REVIEW, leak | dispose
+                const playerFrameData = {
+                    playerIndex:getPlayerIndex(),
+                    n: runner.runtime.getState().lastReproducedFrame
+                }
+                room.send("PLAYER_FRAME", playerFrameData);
+            },100);
+            runner.onFrame(throttleSendPlayerFrame); //TODO REVIEW, leak | dispose
+        }
     });
+
 
     room.onStateChange((...args: any[]) => {
         if (room.state.players.length === 2 && !room.state.started) {
             const playerIndex = getPlayerIndex();
 
-            if (playerIndex >= 0 && !room.state.players[getPlayerIndex()].ready) {
-                room.send("READY", {playerIndex});
-            }
-
-            if (room.state.miniGameResults?.length && room.state.miniGameResults.length === room.state.miniGameTrack.length) {
-                //TODO finished the gamePlay?
+            if (playerIndex >= 0 && !state.sentReady) {
+                if(!state.sentReady){
+                    console.log("sending ready",state.sentReady);
+                    state.sentReady = true;
+                    room.send("READY", {playerIndex});
+                }
             }
         }
 
         if(room.state.players.filter((p:any)=>p.instructionsReady).length === 1){
             instructionsPanel.setTimeout(INSTRUCTION_READY_TIMEOUT);
-            if(!room.state.players[getPlayerIndex()].instructionsReady){
+            if(getPlayerIndex() >= 0 && !room.state.players[getPlayerIndex()].instructionsReady){
                 timers.setTimeout(() => {
                     if(!state.sentInstructionsReady){
+                        state.sentInstructionsReady = true;
                         room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: true });
                     }
                 }, INSTRUCTION_READY_TIMEOUT);
@@ -346,6 +385,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         
         applyServerState();
     });
+
 
     function applyServerState() {
         if (room?.state?.players?.length === 0) {
@@ -375,12 +415,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     function getPlayerIndex() {
         return room.state.players.findIndex((p: any) => p.user.userId === user?.userId);
-    }
-
-    function getOtherPlayerIndex() {
-        const playerIndex = getPlayerIndex();
-        if (playerIndex === -1) return -1;
-        return playerIndex === 0 ? 1 : 0;
     }
 
     return {

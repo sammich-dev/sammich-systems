@@ -98,17 +98,26 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
-            this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.getState().running && this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.reproduceFramesUntil(n);
+            const screenRunnerIndex =this.currentGameDefinition.split?playerIndex:0;
+
+            this.screenRunners[
+                screenRunnerIndex
+            ]?.runtime.getState().running
+            && this.screenRunners[
+                screenRunnerIndex
+            ]?.runtime.reproduceFramesUntil(n);
         });
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
+            if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
             console.log("INPUT_FRAME", playerIndex, frame);
              this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
         });
 
         this.onMessage("READY", async (client, {playerIndex})=>{
+            if(this.state.players[playerIndex].ready) return;
             this.state.players[playerIndex].ready = true;
-            console.log("READY", this.state.started)
+            console.log("READY", playerIndex, this.state.started)
             if(!this.state.started && this.state.players.every((player)=>player.ready)){
                 await this.state.setupNewGame();
                 console.log("broadcast gameTrack")
@@ -117,6 +126,7 @@ export class GameRoom extends Room<GameState> {
             }
         });
     }
+
 
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
