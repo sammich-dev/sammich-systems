@@ -3,7 +3,7 @@ import {seedGen} from "./seed-gen";
 import {SpriteEntity, SpriteKlass, SpriteKlassParams} from "./game-entities";
 import {createSpriteEntityFactory} from "./sprite-entity-factory";
 import {Frame, FrameEvent, FrameEventType, InputEventRepresentation} from "./frame-util";
-import {InputAction} from "@dcl/sdk/ecs";
+import {InputAction, TextAlignMode} from "@dcl/sdk/ecs";
 import {SpriteDefinitionParams} from "./sprite-util";
 import {sleep} from "../scene/dcl-lib/sleep";
 
@@ -81,12 +81,13 @@ export const createScreenRunner = ({
         if (frame) {
             for (let frameEvent of frame.events) {
                 if (frameEvent.type === FrameEventType.INPUT) {
-                    const {inputActionKey, isPressed, time} = frameEvent.data;
+                    const {inputActionKey, isPressed, time, frameNumber} = frameEvent.data;
                     triggerInput(
                         frameEvent.data.playerIndex!==undefined?frameEvent.data.playerIndex:playerIndex ,
                         inputActionKey,
                         isPressed,
-                        time
+                        time,
+                        frameNumber
                     );
                 }
             }
@@ -105,7 +106,6 @@ export const createScreenRunner = ({
             awaitingFrames.forEach(awaitingFrame => {//TODO FIX IT
                 const {startedFrame, waitN} = awaitingFrame;
                 if ((n - startedFrame) >= waitN) {
-                    console.log("RESOLVE awaiting frame", playerIndex, state.lastReproducedFrame, awaitingFrame.waitN, awaitingFrame.startedFrame, awaitingFrames.length, awaitingFrames.indexOf(awaitingFrame));
                     awaitingFrames.splice(awaitingFrames.indexOf(awaitingFrame), 1);
                     shouldSplitAwait = true;
                     awaitingFrame.resolve();
@@ -115,8 +115,8 @@ export const createScreenRunner = ({
         return shouldSplitAwait;
     };
 
-    const triggerInput = (playerIndex:number, inputActionKey: number, isPressed: false | number, time?: number) => {
-        callbacks.onInput.forEach(i => i({inputActionKey, isPressed, time, playerIndex}));
+    const triggerInput = (playerIndex:number, inputActionKey: number, isPressed: false | number, time?: number, frameNumber?:number) => {
+        callbacks.onInput.forEach(i => i({inputActionKey, isPressed, time, playerIndex, frameNumber}));
     }
 
     const entityManager = createSpriteEntityFactory({
@@ -150,12 +150,15 @@ export const createScreenRunner = ({
     function pushInputEvent(inputEventRepresentation: InputEventRepresentation): Frame {
         const time = inputEventRepresentation.time || (Date.now() - state.startTime);
         const actualFrameNumber = state.lastReproducedFrame + 1;
+        const frameNumber = inputEventRepresentation.frameNumber || actualFrameNumber;
+
         let frame: Frame = state.frames.find((f: Frame) => f.index === actualFrameNumber);
 
         const event: FrameEvent = {
             type: FrameEventType.INPUT,
             data: {
                 time,
+                frameNumber,
                 ...inputEventRepresentation
             }
         };
@@ -183,22 +186,25 @@ export const createScreenRunner = ({
     };
     let _disposeWinnerFn: any;
     const onlyClientScoreState = [0,0];
+    const waitFrames = (n: number) => {
+        console.log("wait frames", playerIndex, n);
+        const waitingFrame = {
+            startedFrame: state.lastReproducedFrame,
+            waitN: n,
+        };
+        const promise = new Promise((resolve, reject) => {
+            Object.assign(waitingFrame, {resolve, reject});
+        });
+
+        awaitingFrames.push(waitingFrame);
+
+        return promise;
+    };
+    const setScreenSprite = ({spriteDefinition}: SpriteDefinitionParams) => screen.setBackgroundSprite({spriteDefinition});
+
     const gameApi = {
-        setScreenSprite: ({spriteDefinition}: SpriteDefinitionParams) => screen.setBackgroundSprite({spriteDefinition}),
-        waitFrames: (n: number) => {
-            console.log("wait frames", playerIndex, n);
-            const waitingFrame = {
-                startedFrame: state.lastReproducedFrame,
-                waitN: n,
-            };
-            const promise = new Promise((resolve, reject) => {
-                Object.assign(waitingFrame, {resolve, reject});
-            });
-
-            awaitingFrames.push(waitingFrame);
-
-            return promise;
-        },
+        setScreenSprite,
+        waitFrames,
         onStart: (fn: Function) => {
             callbacks.onStart.push(fn);
             return () => callbacks.onStart.splice(callbacks.onStart.indexOf(fn), 1);
@@ -222,11 +228,12 @@ export const createScreenRunner = ({
             spawners.push(spawner);
             return spawner;
         },
-        addText: ({text, pixelPosition, textAlign, fontSize}: any) => screen.addText({
+        addText: ({text, pixelPosition, textAlign, fontSize, textColor}: {text:string, textColor?:number[], fontSize?:number, textAlign?:TextAlignMode, pixelPosition:number[]}) => screen.addText({
             text,
             pixelPosition,
             textAlign,
-            fontSize
+            fontSize,
+            textColor
         }),
         setWinnerFn: (fn: WinnerFunction) => {
             _disposeWinnerFn = serverRoom?.setWinnerFn(fn);
@@ -254,6 +261,9 @@ export const createScreenRunner = ({
             }
 
             return result;
+        },
+        reproduceSpriteFrames:(sprite:SpriteEntity, {loop, stepsPerFrame}:any)=>{//TODO
+
         },
         players: [{//TODO only for use with shared screen, should not be implemented here, but in shared-screen-runner ?
             setPlayerScore:(data:number)=>{

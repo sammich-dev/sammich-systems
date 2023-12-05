@@ -111,7 +111,7 @@ export class GameRoom extends Room<GameState> {
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
             if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
             console.log("INPUT_FRAME", playerIndex, frame);
-             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
+            this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
         });
 
         this.onMessage("READY", async (client, {playerIndex})=>{

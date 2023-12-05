@@ -2,13 +2,16 @@ import {ReactEcs, ReactEcsRenderer, UiEntity} from '@dcl/sdk/react-ecs';
 
 import {Vector3,Color4} from "@dcl/sdk/math";
 let debugPanel:any;
-const state = {};
+const state = {
+    show:true
+};
 
 ReactEcsRenderer.setUiRenderer(() => (
     <UiEntity
         uiTransform={{
-            width: '300px',
+            width: state.show?'300px':"0px",
             height: '100%',
+            overflow:"hidden"
         }}
         uiBackground={{ color: Color4.create(0.5, 0.8, 0.1, 0.3) }}
     >
@@ -35,4 +38,12 @@ export function getDebugPanel(){
     if(!debugPanel) debugPanel = createDebugPanel();
 
     return debugPanel;
+}
+
+export function hideDebugPanel(){
+    state.show = false;
+}
+
+export function showDebugPanel(){
+    state.show = true;
 }

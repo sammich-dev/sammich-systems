@@ -17,7 +17,7 @@ import {FrogGame} from "../../games/frog-game";
 
 import {TestWait} from "../../games/test-wait";
 import {timers} from "@dcl-sdk/utils";
-import {getDebugPanel} from "../dcl-lib/debug-panel";
+import {getDebugPanel, hideDebugPanel} from "../dcl-lib/debug-panel";
 import {getInputState, onInputKeyEvent, setupInputController} from "../dcl-lib/input-controller";
 import {createSpriteScreen} from "../dcl-lib/sprite-screen";
 import {getMinUserData, MinUserData} from "../dcl-lib/min-user-data";
@@ -27,7 +27,8 @@ import "./polyfill";
 import {sleep} from "../dcl-lib/sleep";
 import {FrameEventType} from "../../lib/frame-util";
 import {DEFAULT_SPRITE_DEF, SHARED_SCREEN_SCALE, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
-
+import {AttackGame} from "../../games/attack-game";
+const FRAME_MS = 1000/60;
 
 export const init = () => {
     const SPRITESHEET_WIDTH = 1024;
@@ -86,6 +87,7 @@ export const init = () => {
     }
 
     getDebugPanel();
+    //hideDebugPanel();
     setupInputController();
 
 
@@ -110,13 +112,13 @@ export const init = () => {
 
     function onClick() {
         lobbyScreen.hide();
-        (new Array(2)).fill(null).forEach((_, playerIndex) => {
+        (new Array(1)).fill(null).forEach((_, playerIndex) => {
             (async () => {
                 console.log("gameScreen", playerIndex);
-                const GameFactory = FrogGame
+                const GameFactory = AttackGame;
                 const gameScreen = createSpriteScreen({
                     transform: {
-                        position:Vector3.create(playerIndex/2,0,0),
+                        position:Vector3.create(playerIndex,0,0),
                         scale: GameFactory.definition.split?SPLIT_SCREEN_SCALE:SHARED_SCREEN_SCALE,
                         parent: rootEntity
                     },
@@ -134,7 +136,10 @@ export const init = () => {
                     state:{players:[{miniGameScore:0, lastReproducedFrame:0},{miniGameScore:0, lastReproducedFrame:0}]},
                     checkWinners:(...args:any[])=>{
                         console.log("checkWinners",args);
-                        const winnerInfo =  checkWinnersFn(serverRoom.state.players[0].miniGameScore, serverRoom.state.players[1].miniGameScore);
+                        const winnerInfo =  checkWinnersFn(
+                            serverRoom.state.players[0].miniGameScore,
+                            serverRoom.state.players[1].miniGameScore
+                        );
                         if(winnerInfo?.winnerIndex !== undefined){
                             screenRunner.runtime.destroy();
                             gameScreen.destroy();
@@ -167,15 +172,13 @@ export const init = () => {
                 console.log("onInputKeyEvent init");
 
                 const disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
-                    console.log("onInputKeyEvent", inputActionKey, isPressed);
-                    //   getDebugPanel().setState(getInputState());
-
                     const inputFrame = screenRunner.runtime.pushInputEvent({
+                        time:Date.now() - screenRunner.runtime.getState().startTime,
+                        frameNumber:screenRunner.runtime.getState().lastReproducedFrame,
                         inputActionKey,
                         isPressed,
                         playerIndex
                     });
-
                 });
 
                 screenRunner.runtime.start();

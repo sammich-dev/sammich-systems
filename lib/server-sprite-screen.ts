@@ -1,5 +1,4 @@
 import {PlayerState, SpriteState} from "../server/src/rooms/GameState";
-import * as net from "net";
 import {SpriteDefinition, SpriteDefinitionParams} from "./sprite-util";
 
 export function createServerSpriteScreen(playerState:PlayerState) {
@@ -46,6 +45,7 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                         playerState.spriteEntities.splice(spriteIndex, 1);
                     }
                 },
+                setZoom:(n:number)=>{},
                 applyFrame:(n:number)=>{
                     console.log("SERVER APPLY FRAME", n)
                     spriteState.frame = n;

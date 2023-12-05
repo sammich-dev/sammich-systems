@@ -1,6 +1,3 @@
-import {InputAction} from "@dcl/sdk/ecs";
-import {getFrameNumber} from "../lib/frame-util";
-
 const SPRITE_SHEET_SIZE = 1024;
 const SPRITE_SHEET_DIMENSION = {
     spriteSheetWidth: SPRITE_SHEET_SIZE,
@@ -67,7 +64,7 @@ const definition = {
     instructions:"test wait"
 };
 
-const TestWait = {definition, run};
+const TestExample = {definition, run};
 
 
-export {TestWait}
+export {TestExample}

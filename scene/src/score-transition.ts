@@ -32,13 +32,13 @@ export function createGlobalScoreTransition(screen:any){
         layer:3
     });
     //loserSprite.hide();
-
+    const textColor = [0,0,0,1];
     const player1GlobalScoreBig = screen.addText({
         pixelPosition:[192/4,128/4],
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
         text:"0",
         fontSize:2,
-        textColor:Color4.Black(),
+        textColor,
         layer:3
     });
     const winnerSumPointsText = screen.addText({
@@ -46,7 +46,7 @@ export function createGlobalScoreTransition(screen:any){
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
         text:"+1",
         fontSize:1,
-        textColor:Color4.Black(),
+        textColor,
         layer:3
     })
     const player2GlobalScoreBig = screen.addText({
@@ -54,7 +54,7 @@ export function createGlobalScoreTransition(screen:any){
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
         text:"0",
         fontSize:2,
-        textColor:Color4.Black(),
+        textColor,
         layer:3
     });
 

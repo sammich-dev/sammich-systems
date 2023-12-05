@@ -5,6 +5,7 @@ export enum FrameEventType {
 }
 
 export type InputEventRepresentation = {
+    frameNumber?:number,
     playerIndex:number,
     isPressed:boolean,
     inputActionKey:InputAction,

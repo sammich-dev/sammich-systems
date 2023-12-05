@@ -101,15 +101,19 @@ export class GameState extends Schema {
         this.currentMiniGameIndex = 0;
         this.started = false;
         this.created = new Date().getTime();
+
         if(this.players.length > 2 ){
             throw Error("FIX CODE PLAYERS > 2");
         }
-        //TODO here we load minigames from database
-        const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
+
+        //TODO Don't load minigames from database for now, because for now we have mini-games code in local
+       // const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
+
         this.miniGameTrack.splice(0, this.miniGameTrack.length);
         while(this.miniGameTrack.length < 5){
        //     this.miniGameTrack.push(getRandomFromList(miniGameIDs));
-            this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
+         //   this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
+            this.miniGameTrack.push(4);
         }
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
         this.started = true;

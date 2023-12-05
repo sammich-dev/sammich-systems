@@ -34,6 +34,7 @@ const DEFAULT_SCREEN_SPRITE_DEFINITION = {
     ...DEFAULT_SPRITE_DEF,
     x: 576, y: 128, w: 192, h: 128,
 }
+
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
     setupInputController();
     setupGameRepository();
@@ -47,7 +48,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         sentReady:false
     };
     const colyseusClient: Client = new Client(`ws://localhost:2567`);
-
     const entity = engine.addEntity();
 
     Transform.create(entity, {
@@ -237,17 +237,18 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                     room.send("INSTRUCTIONS_READY", {playerIndex, foo:true});
                     instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
                 }else if(state.playingMiniGame){
-
                     getDebugPanel().setState(getInputState());
                     const split = getGame(gameId).definition.split;
-                    console.log("split", split);
-
                     const runner = screenRunners[split?playerIndex:0];
                     const inputFrame = runner.runtime.pushInputEvent({
+                        time:Date.now() - runner.runtime.getState().startTime,
+                        frameNumber:runner.runtime.getState().lastReproducedFrame,
                         inputActionKey,
                         isPressed,
                         playerIndex
                     });
+
+                    //TODO set time
                     room.send("INPUT_FRAME", {frame: inputFrame, playerIndex});
                 }
             }

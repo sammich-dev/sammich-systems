@@ -1,31 +1,35 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
-(A) spectator
-(A) machine should send land and gameInstanceId to server, it will create db row in GameInstance if necessary, ws-room should have filter to join with land+gameInstanceId, it will have effect on played-games endpoint.
 (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends
+(A) machine should send land and gameInstanceId to server, it will create db row in GameInstance if necessary, ws-room should have filter to join with land+gameInstanceId, it will have effect on played-games endpoint.
 
-(B) 2023-11-18 +game Add invaders mini-game
-(B) 2023-11-18 +game Add 
+(B) +game Add invaders mini-game
+(B) +game Add
 
-(D) 2023-11-14 Add sounds +game
-(D) 2023-11-18 Allow to configure the game instance from web-app
+(D) Add sounds +game
+(D) Allow to configure the game instance from web-app
 
-(E) 2023-11-14 Implement ads (out of machine, machine should keep most simple as possible)
-(E) 2023-11-14 Use remote spritesheets
-(E) 2023-11-14 Use remote instructions
+(E) Implement ads (out of machine, machine should keep most simple as possible)
+(E) Use remote sprite-sheets
+(E) Use remote instructions
 
-(F) 2023-11-14 Refactor: reusable cursor feature +game @refactor
+(F) Refactor: reusable cursor feature +game @refactor
 
 (0) +bug @mini-game sammich: if players don't move, game goes infinite, define escape, e.g.: doTieBreakerWhen(()=>state.level>3)
+
+allow to set an instance to test 1 game byt passign parameter testGameId:number, will be sent to room and track will be all of this game
+add option to stop waiting/creating a match
+when a user creates a match, if waiting time is higher than 60 seconds, reset the room, because maybe someone created it and left: also if user leaves, quit
 
 tournaments: chess swiss system
 
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
 can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one
-each mini-game can have own spritesheet with instructions, which is a full screen with frames like a gif, like 2, 3 or 4 frames, 1 per second
+each mini-game can have own sprite-sheet with instructions, which is a full screen with frames like a gif, like 2, 3 or 4 frames, 1 per second
 when player loads scene and server is down, try to connect on interval , or with button?
 
 x (B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
 x (C) 2023-11-18 limit gameplay to best of 5 mini-games
 x (B) 2023-11-18 +game Add frog mini-game
 x (A) 2023-11-28 2023-11-14 +game Add shared screen game @mini-game
+x (A) spectator

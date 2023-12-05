@@ -159,11 +159,17 @@ export function createSpriteScreen({
             }
 
         },
-        addText: ({pixelPosition = [0,0], textAlign = TextAlignMode.TAM_TOP_LEFT, text = "FOO", textColor = Color4.create(0,0,0,1), fontSize = 0.5, layer = 10}:any) => {
+        addText: ({pixelPosition = [0,0], textAlign = TextAlignMode.TAM_TOP_LEFT, text = "FOO", textColor = [0,0,0,1], fontSize = 0.5, layer = 10}:any) => {
             const normalizedPosition = normalizePixelPositionForText(pixelPosition[0], pixelPosition[1], layer)
             console.log("text normalizedPosition",normalizedPosition);
             const textEntity = engine.addEntity();
-            TextShape.create(textEntity, {text, textAlign, textColor, fontSize, font:Font.F_MONOSPACE});
+            TextShape.create(textEntity, {
+                text,
+                textAlign,
+                textColor:Color4.create(...textColor),
+                fontSize,
+                font:Font.F_MONOSPACE
+            });
             Transform.create(textEntity, {
                 parent:screenEntity,
                 position:Vector3.create(...normalizedPosition)

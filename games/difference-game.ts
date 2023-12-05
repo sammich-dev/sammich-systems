@@ -1,5 +1,4 @@
 import {InputAction} from "@dcl/sdk/ecs";
-import {getFrameNumber} from "../lib/frame-util";
 
 const SPRITE_SHEET_SIZE = 1024;
 const SPRITE_SHEET_DIMENSION = {
@@ -16,8 +15,7 @@ export const DifferenceGame = {
         instructions:"Select the correct answer\n use <color=#ffff00><b>E, F, 1, 2, 3</b></color> keys"
     },
     run:function DifferenceGameRun({game}:any){
-        const FRAME_MS = 1000 / game.runtime.getFps();
-        const FRAMES_TO_WAIT_A_SECONDS = getFrameNumber( 1000, FRAME_MS);
+        const FRAMES_TO_WAIT_A_SECOND = 60;
 
         const state = {
             scores:[0,0],
@@ -148,7 +146,7 @@ export const DifferenceGame = {
                 game.players[1].setPlayerScore(state.scores[1]);
                 //TODO if answer is correct, increment player score
 
-                await game.waitFrames(FRAMES_TO_WAIT_A_SECONDS);
+                await game.waitFrames(FRAMES_TO_WAIT_A_SECOND);
                 game.checkWinners();
                 setupGame();
             }

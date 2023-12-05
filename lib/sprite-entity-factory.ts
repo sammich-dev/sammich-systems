@@ -118,6 +118,9 @@ export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClie
                     getPixelPosition:()=>sprite.getPixelPosition(),
                     setPixelPosition: (px:number,py:number) => sprite.setPixelPosition(px,py),
                     applyFrame:(n:number)=>sprite.applyFrame(n),
+                    hide:(n:number)=>sprite.hide(n),
+                    show:(n:number)=>sprite.show(n),
+                    setZoom:(zoom:number[]) => sprite.setZoom(zoom),
                     klassParams:{
                         klass,
                         spriteDefinition,
