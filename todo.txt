@@ -17,6 +17,8 @@
 
 (0) +bug @mini-game sammich: if players don't move, game goes infinite, define escape, e.g.: doTieBreakerWhen(()=>state.level>3)
 
+tournaments: chess swiss system
+
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
 can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one

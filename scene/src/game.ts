@@ -26,11 +26,11 @@ export const init = async () => {
         rotation:Quaternion.Zero(),
         scale: Vector3.create(192 / 40, 128 / 40, 1)
     }, "test");
-    const machine2 = await createMachineScreen(rootEntity, {
+/*    const machine2 = await createMachineScreen(rootEntity, {
         position:Vector3.Zero(),
         rotation:Quaternion.Zero(),
         scale: Vector3.create(192 / 40, 128 / 40, 1)
-    }, "test");
+    }, "test");*/
     machine.onEvent(({type, data}:any)=>{
         if(type === EVENT.END_TRACK){
             workaroundButtonBug();

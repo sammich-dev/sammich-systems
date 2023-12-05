@@ -76,12 +76,14 @@ export const DifferenceGame = {
 
         const cursor1 = CursorSprite.create({
             pixelPosition:[player1PixelPositions[1], CURSOR_POSITION_Y],
-            layer:3
+            layer:3,
+            network:true
         });
 
         const cursor2 = CursorSprite.create({
             pixelPosition:[player2PixelPositions[1], CURSOR_POSITION_Y],
-            layer:3
+            layer:3,
+            network:true
         });
         cursor2.applyFrame(1);
 
