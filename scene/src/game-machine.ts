@@ -183,7 +183,9 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 }
             }))
         }else{
+            state.sentInstructionsReady = false;
             state.showingInstructions = true;
+            state.playingMiniGame = false;
             const nextGameId = room.state.miniGameTrack[miniGameIndex+1];
             instructionsPanel = createInstructionScreen({
                 transform: {
@@ -229,12 +231,12 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         console.log("setInputListener", gameId);
         disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
             const playerIndex = getPlayerIndex();
-            console.log("onInputKeyEvemt", inputActionKey, isPressed, playerIndex);
+            console.log("onInputKeyEvemt", inputActionKey, isPressed, playerIndex, JSON.stringify(state,null, " "));
 
             if(playerIndex >= 0){
                 if(state.showingInstructions && !state.sentInstructionsReady){
                     state.sentInstructionsReady = true;
-                    room.send("INSTRUCTIONS_READY", {playerIndex, foo:true});
+                    room.send("INSTRUCTIONS_READY", {playerIndex, foo:1});
                     instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
                 }else if(state.playingMiniGame){
                     getDebugPanel().setState(getInputState());
@@ -379,7 +381,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 timers.setTimeout(() => {
                     if(!state.sentInstructionsReady){
                         state.sentInstructionsReady = true;
-                        room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: true });
+                        room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: 2 });
                     }
                 }, INSTRUCTION_READY_TIMEOUT);
             }

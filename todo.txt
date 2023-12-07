@@ -7,7 +7,7 @@
 
 (D) Add sounds +game
 (D) Allow to configure the game instance from web-app
-
+(D) Clean & Refactors
 (E) Implement ads (out of machine, machine should keep most simple as possible)
 (E) Use remote sprite-sheets
 (E) Use remote instructions
