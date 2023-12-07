@@ -330,6 +330,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                     }
                 });
            playerScreens = [screen];
+
            screenRunners = [createScreenRunner({
                screen, //TODO REVIEW; we really should use another screen, and decouple the lobby screen from the game
                timers,

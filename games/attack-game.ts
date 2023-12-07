@@ -1,12 +1,9 @@
-import {TextAlignMode} from "@dcl/sdk/ecs";
-import {Color3, Color4} from "@dcl/sdk/math";
-
 const SPRITE_SHEET_SIZE = 1024;
 const SPRITE_SHEET_DIMENSION = {
     spriteSheetWidth: SPRITE_SHEET_SIZE,
     spriteSheetHeight: SPRITE_SHEET_SIZE,
 };
-const WAIT_FOR_OTHER_PLAYER_RESPONSE_FRAMES = 60 * 1;
+const WAIT_FOR_OTHER_PLAYER_RESPONSE_FRAMES = 60 * 2;
 async function run({game}:any){
     const state = {
         keyAppearTime:0,
@@ -20,8 +17,7 @@ async function run({game}:any){
     };
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
-        if(Math.max(player1Score, player2Score) >= 5){//should have player at least 2 games
-            console.log("winners", player1Score, player2Score)
+        if((player1Score + player2Score) >= 5){
             if( player1Score > player2Score) return {winnerIndex:0};
             if( player1Score < player2Score) return {winnerIndex:1};
         }
@@ -208,6 +204,7 @@ async function run({game}:any){
         state.playerMovedKey[0] = -1;
         state.playerMovedKey[1] = -1;
         state.keyToPress = game.randomInt(0,2);
+        console.log("SETUP_KEY", state.keyToPress, "frame:",game.runtime.getState().lastReproducedFrame )
         state.resolvingWinner = false;
         womenAttack.hide();
         women.forEach(w=>w.show(0));
@@ -230,9 +227,7 @@ const definition = {
     instructions:"attack-game"
 };
 
-
 const AttackGame = {definition, run};
-
 
 export {AttackGame}
 
