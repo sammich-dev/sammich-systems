@@ -15,7 +15,6 @@ const SAMMICH_POSITIONS = [
     60,
     76,
 ];
-const SCREEN_OFFSET = [1, ]
 const INPUT_LEFT =  InputAction.IA_PRIMARY;
 const INPUT_RIGHT =  InputAction.IA_SECONDARY;
 const INPUT_FORWARD = InputAction.IA_POINTER;
@@ -99,9 +98,7 @@ async function run({game}:any){
                 x-4,
                 y
             );
-            frog.applyFrame(1);
-            await game.waitFrames(4);
-            frog.applyFrame(0);
+            await animateFrog();
             frog.setPixelPosition(
                 x-8,
                 y
@@ -114,9 +111,7 @@ async function run({game}:any){
                 x+4,
                 y
             );
-            frog.applyFrame(1);
-            await game.waitFrames(4);
-            frog.applyFrame(0);
+            await animateFrog();
             frog.setPixelPosition(
                 x+8,
                 y
@@ -128,9 +123,7 @@ async function run({game}:any){
                 x,
                 y-4
             );
-            frog.applyFrame(1);
-            await game.waitFrames(4);
-            frog.applyFrame(0);
+            await animateFrog();
             frog.setPixelPosition(
                 x,
                 y-8
@@ -228,6 +221,12 @@ async function run({game}:any){
         state.collision = false;
         state.takingBurger = false;
         console.log("COLLISITON reste")
+    }
+
+    async function animateFrog(){
+        frog.applyFrame(1);
+        await game.waitFrames(4);
+        frog.applyFrame(0);
     }
 }
 
