@@ -17,5 +17,8 @@ export const setupGameRepository = () => {
 
 }
 
+export const getGames = ()=> games;
+export const getGameKeys = () => Array.from(games.keys());
+
 export const getGame = (id:number) => games.get(id)
 

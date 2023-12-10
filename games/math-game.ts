@@ -122,6 +122,10 @@ async function run({game}:any){
         if(inputActionKey === InputAction.IA_POINTER){
             state.playerMovedTime[playerIndex] = time;
             state.firstMoveReceivedAtFrame = state.firstMoveReceivedAtFrame || game.runtime.getState().lastReproducedFrame;
+            const currentPosition = CURSOR_POSITIONS[playerIndex][state.playerCursorIndex[playerIndex]]
+            cursors[playerIndex].setPixelPosition(
+                currentPosition[0], currentPosition[1]-4
+            )
         }else if(inputActionKey === InputAction.IA_PRIMARY || inputActionKey === InputAction.IA_SECONDARY){
             console.log("player index", state.playerCursorIndex[playerIndex]);
             if(inputActionKey === InputAction.IA_SECONDARY && state.playerCursorIndex[playerIndex] === 5 ){
@@ -180,21 +184,21 @@ async function run({game}:any){
             teachers[winnerIndex?0:1].applyFrame(1);
             await game.waitFrames(20);
             teachers[winnerIndex].applyFrame(3);
-            //women.forEach(w=>w.hide());
-            //womenAttack.setZoom([winnerIndex?-1:1,1])
-            //womenAttack.show();
-            //console.log("times", state.keyAppearTime, state.playerMovedTime[0])
             miniGameScore.setText(`${state.score[0]} - ${state.score[1]}`)
             await game.waitFrames(60);
             generateQuestion();
             game.checkWinners();
-
+            cursors.forEach((_, playerIndex) => {
+                cursors[playerIndex].setPixelPosition(...CURSOR_POSITIONS[playerIndex][state.playerCursorIndex[playerIndex]]);
+            })
         }
     }
 
     function generateQuestion(){
         console.log("generateQuestion");
         timeTexts.forEach((t,index)=>t.setText(formatTime(  0)));
+        state.firstMoveReceivedAtFrame = 0;
+        state.showingQuestion = false;
         state.appearTime = Math.floor(game.runtime.getState().lastReproducedFrame * (1000/60));//TODO implement game.now = () => game.runtime.getState().lastReproducedFrame * (1000/60)
         state.playerMovedTime[0] = state.playerMovedTime[1] = 0;
         state.num1 = game.randomInt(0,50);

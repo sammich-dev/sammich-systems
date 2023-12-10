@@ -4,6 +4,7 @@ import { Schema, Context, ArraySchema, MapSchema, type } from "@colyseus/schema"
 import {Client} from "colyseus";
 import {PrismaClient} from "@prisma/client";
 import {getRandomFromList} from "../../../lib/lib-util";
+import {getGameKeys} from "../../../lib/game-repository";
 
 const prisma = new PrismaClient();
 
@@ -108,12 +109,13 @@ export class GameState extends Schema {
 
         //TODO Don't load minigames from database for now, because for now we have mini-games code in local
        // const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
-
+        const miniGameIDs = getGameKeys();
+        console.log("miniGameIds", miniGameIDs)
         this.miniGameTrack.splice(0, this.miniGameTrack.length);
         while(this.miniGameTrack.length < 5){
-       //     this.miniGameTrack.push(getRandomFromList(miniGameIDs));
+            this.miniGameTrack.push(getRandomFromList(miniGameIDs));
          //   this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
-            this.miniGameTrack.push(4);
+         //   this.miniGameTrack.push(5);
         }
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
         this.started = true;
