@@ -64,7 +64,7 @@ export function createSpriteScreen({
             if(mutablePlane.mesh) mutablePlane.mesh[mutablePlane.mesh.$case].uvs = getUvsFromSprite({spriteDefinition, back:UVS_BACK.MIRROR});
         },
         getSize:()=>[state.spriteDefinition.w, state.spriteDefinition.h],
-        addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText,zoom=[1,1]}: any):Sprite => {
+        addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText, zoom=[1,1]}: any):Sprite => {
             console.log("addSprite", spriteDefinition, spriteDefinition.klass);
             const normalizedPixelPosition = normalizePixelPosition(pixelPosition[0], pixelPosition[1], layer);
             const state = {

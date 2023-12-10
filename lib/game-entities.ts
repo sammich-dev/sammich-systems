@@ -16,6 +16,7 @@ export type SpriteEntityCreationParams = {
     ID?:number,
     network:boolean,
     frame?:number,
+    zoom?:number[]
 }
 export type SpriteEntity = {
     ID:number,

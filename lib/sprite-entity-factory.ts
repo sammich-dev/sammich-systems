@@ -90,7 +90,7 @@ export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClie
     }
     function registerSpriteEntity({klass, spriteDefinition, collisionBox}:SpriteKlassParams):SpriteKlass{
         const spriteEntityKlass:SpriteKlass = {
-            create:({pixelPosition, layer, network, ID, frame}:SpriteEntityCreationParams):SpriteEntity => {
+            create:({pixelPosition, layer, network, ID, frame, zoom}:SpriteEntityCreationParams):SpriteEntity => {
                 const _ID = ID || IDCount++;
                 const sprite:Sprite = screen.addSprite({
                     ID:_ID,
@@ -98,7 +98,8 @@ export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClie
                     pixelPosition,
                     layer,
                     network,
-                    klass
+                    klass,
+                    zoom
                 });
                 if(frame!==undefined){
                     sprite.applyFrame(frame);
