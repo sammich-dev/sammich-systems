@@ -1,3 +1,5 @@
+import {createScoreTextComponent, updateScoreTextComponent} from "./utils/mini-game-score";
+
 const SPRITE_SHEET_SIZE = 1024;
 const SPRITE_SHEET_DIMENSION = {
     spriteSheetWidth: SPRITE_SHEET_SIZE,
@@ -22,6 +24,8 @@ async function run({game}:any){
             if( player1Score < player2Score) return {winnerIndex:1};
         }
     });
+
+    createScoreTextComponent(game);
 
     game.setScreenSprite({
         spriteDefinition:{
@@ -88,12 +92,7 @@ async function run({game}:any){
         layer:5,
         network:true
     });
-    const miniGameScore = game.addText({
-        text:`0 - 0`,
-        pixelPosition:[192/2 - 24,20],
-        fontSize:1,
-        textColor:[1,1,1,1]
-    })
+
     const t1 = game.addText({
         text:``,
         pixelPosition:[192/4*1 - Math.floor(KeySprite.spriteDefinition.w/2) + 10 - 20, 114],
@@ -188,11 +187,10 @@ async function run({game}:any){
             womenAttack.show();
             console.log("times", state.keyAppearTime, state.playerMovedTime[0])
             timeTexts.forEach((t,index)=>state.playerMovedTime[index] && t.setText(formatTime(  state.playerMovedTime[index]-state.keyAppearTime)));
-            miniGameScore.setText(`${state.score[0]} - ${state.score[1]}`)
+            updateScoreTextComponent();
             await game.waitFrames(60);
             setupKey();
             game.checkWinners();
-
         }
     }
 

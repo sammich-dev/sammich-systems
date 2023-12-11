@@ -1,4 +1,5 @@
 import {InputAction} from "@dcl/sdk/ecs";
+import {createScoreTextComponent, updateScoreTextComponent} from "./utils/mini-game-score";
 
 const SPRITE_SHEET_SIZE = 1024;
 const SPRITE_SHEET_DIMENSION = {
@@ -30,6 +31,7 @@ export const DifferenceGame = {
                 if( player1Score < player2Score) return {winnerIndex:1};
             }
         });
+        createScoreTextComponent(game);
         game.setScreenSprite({
             spriteDefinition:{
                 x:576,
@@ -144,7 +146,7 @@ export const DifferenceGame = {
                 console.log("state.scores",state.scores)
                 game.players[0].setPlayerScore(state.scores[0]);
                 game.players[1].setPlayerScore(state.scores[1]);
-                //TODO if answer is correct, increment player score
+                updateScoreTextComponent();
 
                 await game.waitFrames(FRAMES_TO_WAIT_A_SECOND);
                 game.checkWinners();

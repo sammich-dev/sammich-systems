@@ -409,7 +409,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         applyServerState();
     });
 
-
     function applyServerState() {
         if (room?.state?.players?.length === 0) {
             createButton.show();

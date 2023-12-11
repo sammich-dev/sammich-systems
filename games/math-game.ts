@@ -2,6 +2,7 @@ import {SPRITE_SHEET_DIMENSION} from "../lib/sprite-constants";
 import {InputAction, TextAlignMode} from "@dcl/sdk/ecs";
 import {Color4} from "@dcl/sdk/math";
 import {waitFor} from "../lib/lib-util";
+import {createScoreTextComponent, updateScoreTextComponent} from "./utils/mini-game-score";
 
 //TODO BEST OF 3
 const WAIT_FOR_OTHER_PLAYER_RESPONSE_FRAMES = 60 * 2;
@@ -43,6 +44,8 @@ async function run({game}:any){
             if( player1Score < player2Score) return {winnerIndex:1};
         }
     });
+    createScoreTextComponent(game);
+
     const TeacherSprite = game.registerSpriteEntity({
         klass:"Teacher",
         spriteDefinition:{
@@ -50,12 +53,7 @@ async function run({game}:any){
             ...SPRITE_SHEET_DIMENSION,
         }
     });
-    const miniGameScore = game.addText({
-        text:`0 - 0`,
-        pixelPosition:[192/2 - 24,4],
-        fontSize:1,
-        textColor:[0,0,0,1]
-    })
+
     const teachers = [
         TeacherSprite.create({
             pixelPosition:[0, 50],
@@ -184,7 +182,7 @@ async function run({game}:any){
             teachers[winnerIndex?0:1].applyFrame(1);
             await game.waitFrames(20);
             teachers[winnerIndex].applyFrame(3);
-            miniGameScore.setText(`${state.score[0]} - ${state.score[1]}`)
+            updateScoreTextComponent();
             await game.waitFrames(60);
             generateQuestion();
             game.checkWinners();

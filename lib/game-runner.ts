@@ -14,11 +14,12 @@ export type GameRunnerCallback = {
     onInput: Function[],
     onFrame: Function[],
     onFinish: Function[],
+    onDestroy: Function[],
     onWinner:Function|null,
     onProposedWinner: Function | null
 };
 const DEFAULT_FPS = 60;
-const FRAMES_TO_TIE_BREAKER = 600;
+const FRAMES_TO_TIE_BREAKER = 60 * 60 * 2;//2 minutes per game maximum
 
 export const createScreenRunner = ({
                                        screen,
@@ -58,6 +59,7 @@ export const createScreenRunner = ({
         onInput: [],
         onFrame: [],
         onFinish: [],
+        onDestroy:[],
         onWinner: null,
         onProposedWinner: null
     };
@@ -184,6 +186,7 @@ export const createScreenRunner = ({
     }
 
     const destroy = () => {
+        callbacks.onDestroy.forEach(d=>d());
         state.destroyed = true;
         console.log("GAME RUNNER DESTROY");
         spawners.forEach(s => s && s.destroy());
@@ -228,6 +231,10 @@ export const createScreenRunner = ({
         onFinish: (fn: Function) => {
             callbacks.onFinish.push(fn);
             return () => callbacks.onFinish.splice(callbacks.onFinish.indexOf(fn), 1);
+        },
+        onDestroy: (fn: Function) => {
+            callbacks.onDestroy.push(fn);
+            return () => callbacks.onDestroy.splice(callbacks.onDestroy.indexOf(fn), 1);
         },
         registerSpriteEntity: (options: SpriteKlassParams) => entityManager.registerSpriteEntity(options),
         getSpriteEntityKlasses: () => entityManager.getSpriteEntityKlasses(),
@@ -281,21 +288,21 @@ export const createScreenRunner = ({
                     return serverRoom.state.players[0].miniGameScore = data;
                 }
             },
-            getPlayerScore:()=>(serverRoom||clientRoom).state.players[0].miniGameScore
+            getPlayerScore:()=>(serverRoom||clientRoom)?.state.players[0].miniGameScore
         },{
             setPlayerScore:(data:number)=>{
                 if (serverRoom){
                     return serverRoom.state.players[1].miniGameScore = data;
                 }
             },
-            getPlayerScore:()=> serverRoom.state.players[1].miniGameScore
+            getPlayerScore:()=> (serverRoom||clientRoom)?.state.players[1].miniGameScore
         }],
         setPlayerScore: (data: number) => {//TODO this smells, should not be used by shared-screen, should not be implemented here, but in shared-screen-runner ?
             if (serverRoom) {
                 serverRoom.state.players[playerIndex].miniGameScore = data;
             }
         },
-        getPlayerScore: () => (serverRoom||clientRoom).state.players[playerIndex].miniGameScore
+        getPlayerScore: () => (serverRoom||clientRoom)?.state.players[playerIndex].miniGameScore
     };
 
     function random() {
@@ -498,10 +505,6 @@ export const createScreenRunner = ({
             //TODO review that reproduceFramesUntil shouldn't be called once destroyed
             console.error("//TODO review that reproduceFramesUntil shouldn't be called once destroyed");
             return;
-        }
-        if(!state.tieBreaker){
-            console.trace();
-            console.log("reproduceFramesUntil", frameNumber,  state.lastReproducedFrame);
         }
         while (frameNumber > state.lastReproducedFrame) {
             state.lastReproducedFrame++;
