@@ -6,6 +6,7 @@ import {Frame, FrameEvent, FrameEventType, InputEventRepresentation} from "./fra
 import {InputAction, TextAlignMode} from "@dcl/sdk/ecs";
 import {SpriteDefinitionParams} from "./sprite-util";
 import {sleep} from "../scene/dcl-lib/sleep";
+import {SPRITE_SHEET_DIMENSION} from "./sprite-constants";
 
 let _rollbackDone = false; //TODO delete, only dev
 export type GameRunnerCallback = {
@@ -17,6 +18,7 @@ export type GameRunnerCallback = {
     onProposedWinner: Function | null
 };
 const DEFAULT_FPS = 60;
+const FRAMES_TO_TIE_BREAKER = 600;
 
 export const createScreenRunner = ({
                                        screen,
@@ -65,7 +67,8 @@ export const createScreenRunner = ({
         running: false,
         destroyed: false,
         startTime: 0,
-        lastReproducedFrame: -1
+        lastReproducedFrame: -1,
+        tieBreaker:false
     };
     const _snapshots: any[] = [{}];
 
@@ -111,6 +114,13 @@ export const createScreenRunner = ({
                     awaitingFrame.resolve();
                 }
             });
+        }
+
+        if(serverRoom && n > FRAMES_TO_TIE_BREAKER && !state.tieBreaker){
+            console.log("SERVER RUNNER TIE_BREAKER", n, state, GameFactory.definition.alias);
+            state.tieBreaker = true;
+            const winnerIndex = game.randomInt(0,1);
+            serverRoom.tieBreaker({winnerIndex});//TODO change method name serverRoom.tieBreaker: server broadcast TIE_BREAKER with the winner, so that client can reproduce the animation
         }
         return shouldSplitAwait;
     };
@@ -176,18 +186,16 @@ export const createScreenRunner = ({
     const destroy = () => {
         state.destroyed = true;
         console.log("GAME RUNNER DESTROY");
-        timers.clearInterval(frameInterval);
         spawners.forEach(s => s && s.destroy());
         spawners.splice(0, spawners.length)
         entityManager.destroy();
         awaitingFrames.splice(0, awaitingFrames.length);
         _disposeWinnerFn && _disposeWinnerFn();
-
+        stop();
     };
     let _disposeWinnerFn: any;
-    const onlyClientScoreState = [0,0];
+
     const waitFrames = (n: number) => {
-        console.log("wait frames", playerIndex, n);
         const waitingFrame = {
             startedFrame: state.lastReproducedFrame,
             waitN: n,
@@ -228,18 +236,20 @@ export const createScreenRunner = ({
             spawners.push(spawner);
             return spawner;
         },
-        addText: ({text, pixelPosition, textAlign, fontSize, textColor}: {text:string, textColor?:number[], fontSize?:number, textAlign?:TextAlignMode, pixelPosition:number[]}) => screen.addText({
+        addText: ({text, pixelPosition, textAlign, fontSize, textColor,layer}: {text:string, textColor?:number[], fontSize?:number, textAlign?:TextAlignMode, pixelPosition:number[], layer?:number}) => screen.addText({
             text,
             pixelPosition,
             textAlign,
             fontSize,
-            textColor
+            textColor,
+            layer
         }),
         setWinnerFn: (fn: WinnerFunction) => {
             _disposeWinnerFn = serverRoom?.setWinnerFn(fn);
         },
         checkWinners: () => {
-            console.log("checkWinners", !!serverRoom, !!clientRoom, playerIndex, state.lastReproducedFrame)
+            console.log("checkWinners", !!serverRoom, !!clientRoom, playerIndex, state.lastReproducedFrame);
+            if(state.tieBreaker) return;
             serverRoom?.checkWinners({playerIndex, n: state.lastReproducedFrame});//TODO REVIEW: this can be executed double due to both screenRunners
         },
         getSpriteEntities,
@@ -300,7 +310,9 @@ export const createScreenRunner = ({
     }
 
     const runtimeApi = {
+        definition:GameFactory.definition,
         runtime: {
+            tieBreaker,
             getPlayerIndex: () => playerIndex,
             onProposedWinner: (fn: Function): Function => {
                 callbacks.onProposedWinner = fn;
@@ -315,6 +327,7 @@ export const createScreenRunner = ({
             attachDebugPanel: (debugPanel: any) => _debugPanel = debugPanel,
             rollbackToFrame,
             getState: () => state,
+            setState:(o:any)=>Object.assign(state,o),
             getFps: () => fps,
             destroy,
             pushInputEvent,
@@ -324,6 +337,19 @@ export const createScreenRunner = ({
                 return Math.floor((Date.now() - state.startTime) / frameMs);
             },
             reproduceFramesUntil,
+            reproduce:(autoPlay = true)=>{
+                state.running = true;
+                timers.clearInterval(frameInterval);
+                frameInterval = timers.setInterval(() => {
+                    let currentFrame = getFrameNumber(Date.now() - state.startTime);
+
+                    reproduceFramesUntil(currentFrame);
+                    _debugPanel?.setState({
+                        spriteEntities: "\n" + getSpriteEntities().map((s: SpriteEntity) => `${s.klassParams.klass}-${s.ID}-${s.getPixelPosition()[1]}`).join("\n")
+                    });
+
+                }, frameMs);
+            },
             start: (autoPlay: boolean = true) => {
                 console.log("START__", playerIndex);
                 state.running = true;
@@ -351,6 +377,108 @@ export const createScreenRunner = ({
         }
     }
 
+    async function tieBreaker({winnerIndex}:{winnerIndex:number}){
+        const BASE_LAYER = 90;
+        const COIN_ANIMATION_FRAME_DELAY = 5;
+        const text = game.addText({
+            layer:BASE_LAYER+4,
+            pixelPosition:[192/2,20],
+            text:"TIE BREAKER\nThe winner is ...",
+            fontSize:0.8,
+            textColor:[1,1,1,1],
+            textAlign:TextAlignMode.TAM_TOP_CENTER
+        });
+        const overlaySprite = game.registerSpriteEntity({
+            klass:"Overlay",
+            spriteDefinition:{
+                x:576,
+                y:128,
+                w:192,
+                h:128,
+                ...SPRITE_SHEET_DIMENSION
+            }
+        }).create({
+            pixelPosition:[0,0],
+            layer:BASE_LAYER+1
+        });
+        const CoinSprite = game.registerSpriteEntity({
+            klass:"Coin",
+            spriteDefinition:{
+                x:0,y:736, w:32, h:32, columns:4,frames:4,
+                ...SPRITE_SHEET_DIMENSION,
+            }
+        });
+        const CoinNumberSprite = game.registerSpriteEntity({
+
+            klass:"CoinNumber",
+            spriteDefinition:{
+                x:0,y:711, w:32, h:28, columns:6,frames:6,
+                ...SPRITE_SHEET_DIMENSION,
+            }
+        });
+        const coinNumber = CoinNumberSprite.create({
+            pixelPosition:[192/2 - 16, 62],
+            layer:BASE_LAYER+4
+        });
+
+        const coin = CoinSprite.create({
+            pixelPosition:[192/2 -16,60],
+            layer:BASE_LAYER+2
+        });
+
+        const winnerRound = 6+winnerIndex;
+        const state = {
+            round:0
+        };
+
+        const COIN_NUMBER_FRAMES = [
+            [3,4,5,0,1,2],
+            [0,1,2,3,4,5],
+        ];
+
+        while(state.round < winnerRound){
+            await round();
+        }
+        text.setText("TIE BREAKER\nThe winner is...\nplayer "+(winnerIndex+1))
+        async function round(){
+            const coinNumberFrames = COIN_NUMBER_FRAMES[winnerIndex];
+
+            coin.applyFrame(0);
+            coinNumber.applyFrame(coinNumberFrames[0]);
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+
+
+            coin.applyFrame(1);
+            coinNumber.applyFrame(coinNumberFrames[1]);//TODO NOT WORKING WELL, SPRITE NOT VISIB LE
+
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+
+            coin.applyFrame(2);
+            coinNumber.applyFrame(coinNumberFrames[2]);
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+
+            coin.applyFrame(3);
+            coinNumber.hide();
+
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+            coin.applyFrame(2);
+            coinNumber.show();
+            coinNumber.applyFrame(coinNumberFrames[3]);
+
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+            coin.applyFrame(1);
+            coinNumber.applyFrame(coinNumberFrames[4]);
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+
+            coin.applyFrame(0);
+            coinNumber.applyFrame(coinNumberFrames[3]);
+
+            await game.waitFrames(COIN_ANIMATION_FRAME_DELAY);
+            state.round++;
+        }
+
+        return winnerIndex;
+    }
     const game = {
         ...gameApi,
         ...runtimeApi,
@@ -366,6 +494,15 @@ export const createScreenRunner = ({
     }
 
     async function reproduceFramesUntil(frameNumber: number) {
+        if(state.destroyed) {
+            //TODO review that reproduceFramesUntil shouldn't be called once destroyed
+            console.error("//TODO review that reproduceFramesUntil shouldn't be called once destroyed");
+            return;
+        }
+        if(!state.tieBreaker){
+            console.trace();
+            console.log("reproduceFramesUntil", frameNumber,  state.lastReproducedFrame);
+        }
         while (frameNumber > state.lastReproducedFrame) {
             state.lastReproducedFrame++;
             const frame = findFrame(state.lastReproducedFrame);
@@ -374,7 +511,7 @@ export const createScreenRunner = ({
                 await sleep(0);
             }
         }
-        if (serverRoom) serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
+        if (serverRoom  && serverRoom.state.players[playerIndex]) serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;
 
         _debugPanel?.setState({_frame: state.lastReproducedFrame});
     }

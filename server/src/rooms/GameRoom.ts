@@ -5,7 +5,7 @@ import {GameState, MiniGameResult, PlayerState} from "./GameState";
 import { PrismaClient } from '@prisma/client';
 import {createScreenRunner} from "../../../lib/game-runner";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
-import {getGame, setupGameRepository} from "../../../lib/game-repository";
+import {getGame, getGameKeys, setupGameRepository} from "../../../lib/game-repository";
 import {sleep} from "../../../lib/functional";
 
 const prisma = new PrismaClient();
@@ -35,6 +35,9 @@ export class GameRoom extends Room<GameState> {
         instructions:string
     };
     onCreate(...args:any[]) {
+        this.checkWinners = this.checkWinners.bind(this);
+        this.forceWinner = this.forceWinner.bind(this);
+        this.handleWinner = this.handleWinner.bind(this);
         this.autoDispose = false;
 
         this.setState(new GameState());
@@ -77,7 +80,7 @@ export class GameRoom extends Room<GameState> {
                         clientRoom:undefined
                     });
                 }
-
+                console.log("START_GAME", this.state.currentMiniGameIndex)
                 this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.currentMiniGameIndex]});
                 this.screenRunners.forEach(g => g.runtime.start(false));
             }
@@ -131,7 +134,113 @@ export class GameRoom extends Room<GameState> {
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
 
-     async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
+    async tieBreaker({winnerIndex}:{winnerIndex:number}){
+        console.log("TIE_BREAKER", winnerIndex, this.state.currentMiniGameIndex);
+        this.screenRunners.forEach(r=>r.runtime.setState({tieBreaker:true}));
+        this.broadcast("TIE_BREAKER", {winnerIndex});
+
+        await sleep(7 * 5 * 7 * (1000/60) + 2000);//delay_frames * num_delays * rounds
+        this.forceWinner({winnerIndex});
+    }
+
+    async forceWinner({winnerIndex}:{winnerIndex:number}){
+        console.log("forceWinner")
+        if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
+        const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
+        if(GameFactory.definition.split){
+            if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
+                console.log("lastReproducedFrame 0 > 1", this.screenRunners[1].runtime.getState().lastReproducedFrame);
+                this.screenRunners[1].runtime.reproduceFramesUntil(this.screenRunners[0].runtime.getState().lastReproducedFrame);
+            }
+            console.log("miniGameScoreB", this.state.players.map((p:any)=>p.miniGameScore));
+            if(this.screenRunners[1].runtime.getState().lastReproducedFrame > this.screenRunners[0].runtime.getState().lastReproducedFrame){
+                console.log("lastReproducedFrame 1 > 0", this.screenRunners[0].runtime.getState().lastReproducedFrame);
+                this.screenRunners[0].runtime.reproduceFramesUntil(this.screenRunners[1].runtime.getState().lastReproducedFrame);
+            }
+        }
+        this.askedToCheckWinners[0] = this.askedToCheckWinners[1] = 0;
+        await this.handleWinner({winnerIndex});
+    }
+
+    async handleWinner({winnerIndex}:{winnerIndex:number}){
+        const _winnerInfo = {winnerIndex};
+
+        if(_winnerInfo !== undefined){
+            console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
+            this.state.miniGameResults.push(_winnerInfo.winnerIndex);
+            this.screenRunners.forEach(s=> s?.runtime.stop());
+            this.screenRunners.forEach(s=> s?.runtime.destroy());
+            this.screenRunners.splice(0,this.screenRunners.length);
+
+            console.log("wij",_winnerInfo);
+
+            console.log("miniGameScore",  this.state.players.map((p:any)=>p.miniGameScore).join("-"));
+
+            //TODO if 1 player has >= 3 globalScore and the other has less score, end game
+            const player1GlobalScore = this.getPlayerGlobalScore(0);
+            const player2GlobalScore = this.getPlayerGlobalScore(1);
+            let globalWinner = -1;
+            if(
+                ((player1GlobalScore >= 3 || player2GlobalScore >= 3) && player1GlobalScore !== player2GlobalScore)
+                || this.state.currentMiniGameIndex === 4
+            ){
+                globalWinner = player1GlobalScore>player2GlobalScore?0:1
+            }
+            this.broadcast("MINI_GAME_WINNER", {
+                ..._winnerInfo,
+                miniGameIndex:this.state.currentMiniGameIndex,
+                finalize:globalWinner >= 0,
+                miniGameResults:this.state.miniGameResults
+            });
+            this.state.players.forEach((player:PlayerState) => {
+                player.instructionsReady = false;
+                player.miniGameScore = 0;
+            });
+
+            if(globalWinner === -1){
+                this.state.currentMiniGameIndex++;
+            }else{
+                console.log("WAIT SLEEP");
+                await sleep(5000);
+
+                const gameIds = getGameKeys();//TODO this should be collected at start of the game, not at the end just in case new are added
+                const playedMatch = await prisma.playedMatch.create({
+                    data: {
+                        startDate: this.state.created,
+                        endDate: Date.now(),
+                        miniGameCollection: gameIds.join(","),
+                        //TODO gameTrackHash: null, //TODO: a hash of the mini-games and their versions
+                        seed,
+                        parcel:"0,0",//TODO
+                        miniGameIds:this.state.miniGameTrack.join(","),
+                        gameInstanceId:null,
+
+                        playerUserIds:this.state.players.map(p=>p.user.userId).join(","),//TODO
+                        playerDisplayNames:this.state.players.map(p=>p.user.displayName).join(","),
+                        scores: `${player1GlobalScore},${player2GlobalScore}`,
+                        leaderboard:[globalWinner, globalWinner===0?1:0 ].map(i=>this.state.players[i].user.userId).join(",")
+                    }
+                });
+                console.log("playedMatch",playedMatch)
+                const playerIds = await this.manageGetOrCreateIndexedPlayers(this.state.players);
+                console.log("playerIds", playerIds);
+                for(let playerId of playerIds){
+                    const playerMatchPlayer = await prisma.playedMatchPlayer.create({
+                        data:{
+                            playedMatchId:playedMatch.ID,
+                            playerId
+                        }
+                    });
+                    console.log("created playerMatchPlayer", playerMatchPlayer)
+                }
+
+                console.log("RESET TRACK");
+                this.state.resetTrack();
+            }
+        }
+    }
+
+    async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
         console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore, this.state.miniGameResults, );
          const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
@@ -163,120 +272,36 @@ export class GameRoom extends Room<GameState> {
         //TODO to check winner, both runners whould have same frames, otherwise, wait until both have.
 
         const _winnerInfo = this.checkWinnerFunction && this.checkWinnerFunction(...playersScore) || undefined;
-        console.log("WINNER FOUND", playerIndex, n,
-            _winnerInfo,
-            this.screenRunners[playerIndex?0:1]?.runtime.getState().lastReproducedFrame,
-            this.screenRunners[playerIndex]?.runtime.getState().lastReproducedFrame
-        );
+        if(_winnerInfo){
+            return await this.handleWinner(_winnerInfo);
+        }
+    }
 
-        if(_winnerInfo !== undefined){
-            console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
-            this.state.miniGameResults.push(_winnerInfo.winnerIndex);
-            this.screenRunners.forEach(s=> s?.runtime.stop());
-            this.screenRunners.forEach(s=> s?.runtime.destroy());
-            this.screenRunners.splice(0,this.screenRunners.length);
-
-            console.log("wij",_winnerInfo);
-
-            console.log("miniGameScore",  this.state.players.map((p:any)=>p.miniGameScore).join("-"));
-
-            //TODO if 1 player has >= 3 globalScore and the other has less score, end game
-            const player1GlobalScore = this.getPlayerGlobalScore(0);
-            const player2GlobalScore = this.getPlayerGlobalScore(1);
-            let globalWinner = -1;
-            if(
-                ((player1GlobalScore >= 3 || player2GlobalScore >= 3) && player1GlobalScore !== player2GlobalScore)
-                || this.state.currentMiniGameIndex === 4
-            ){
-                globalWinner = player1GlobalScore>player2GlobalScore?0:1
-            }
-            this.broadcast("MINI_GAME_WINNER", {
-                ..._winnerInfo,
-                miniGameIndex:this.state.currentMiniGameIndex,
-                finalize:globalWinner >= 0,
-                miniGameResults:this.state.miniGameResults
-            });
-
-            if(globalWinner === -1){
-                this.state.currentMiniGameIndex++;
-                this.state.players.forEach((player:PlayerState) => {
-                    player.instructionsReady = false;
-                    player.miniGameScore = 0;
-                });
+    async manageGetOrCreateIndexedPlayers(players:PlayerState[]){
+        let playerIds = [];
+        for(let player of players){
+            const {user} = player;
+            const {displayName, publicKey, hasConnectedWeb3, userId, version} = user;
+            const foundPlayer = await prisma.user.findFirst({where:{userId}});
+            console.log("foundPlayer",foundPlayer)
+            if(foundPlayer){
+                playerIds.push(foundPlayer.id)
             }else{
-                console.log("WAIT SLEEP");
-                await sleep(5000);
-
-
-                //TODO save data in the database about the played game, start-date, end-date, scores, miniGameIds, seed, playerUserIds,
-                // other table players with ID, playerUserId, publicKey, displayName
-                // other table played_game_player : ID, playedGameID, playerID
-                const gameIds = (await prisma.game.findMany()).map(i => i.id);
-
-                const playedMatch = await prisma.playedMatch.create({
+                const created = await prisma.user.create({
                     data: {
-                        startDate: this.state.created,
-                        endDate: Date.now(),
-                        miniGameCollection: gameIds.join(","),
-                        seed,
-                        parcel:"0,0",//TODO
-                        miniGameIds:this.state.miniGameTrack.join(","),
-                        gameInstanceId:null,
-
-                        playerUserIds:this.state.players.map(p=>p.user.userId).join(","),//TODO
-                        playerDisplayNames:this.state.players.map(p=>p.user.displayName).join(","),
-                        scores: `${player1GlobalScore},${player2GlobalScore}`,
-                        leaderboard:[globalWinner, globalWinner===0?1:0 ].map(i=>this.state.players[i].user.userId).join(",")
-                        //TODO gameTrackHash: null,
+                        displayName,
+                        publicKey,
+                        hasConnectedWeb3,
+                        userId,
+                        version
                     }
                 });
-                console.log("playedMatch",playedMatch)
-                const playerIds = await manageGetOrCreateIndexedPlayers(this.state.players);
-                console.log("playerIds", playerIds);
-                for(let playerId of playerIds){
-                    const playerMatchPlayer = await prisma.playedMatchPlayer.create({
-                        data:{
-                            playedMatchId:playedMatch.ID,
-                            playerId
-                        }
-                    });
-                    console.log("created playerMatchPlayer", playerMatchPlayer)
-                }
-                //TODO manageGetOrCreatePlayers
-
-                console.log("RESET TRACK");
-                this.state.resetTrack();
+                console.log("player created",created)
+                playerIds.push(created.id);
             }
         }
 
-        return _winnerInfo;
-
-        async function manageGetOrCreateIndexedPlayers(players:PlayerState[]){
-            let playerIds = [];
-            for(let player of players){
-                const {user} = player;
-                const {displayName, publicKey, hasConnectedWeb3, userId, version} = user;
-                const foundPlayer = await prisma.user.findFirst({where:{userId}});
-                console.log("foundPlayer",foundPlayer)
-                if(foundPlayer){
-                    playerIds.push(foundPlayer.id)
-                }else{
-                    const created = await prisma.user.create({
-                        data: {
-                            displayName,
-                            publicKey,
-                            hasConnectedWeb3,
-                            userId,
-                            version
-                        }
-                    });
-                    console.log("player created",created)
-                    playerIds.push(created.id);
-                }
-            }
-
-            return playerIds;
-        }
+        return playerIds;
     }
 
     getPlayerGlobalScore(playerIndex:number){
@@ -289,6 +314,7 @@ export class GameRoom extends Room<GameState> {
         this.checkWinnerFunction = fn;
         return ():any => this.checkWinnerFunction = null;
     }
+
     prepareNextMinigame(){
 
     }

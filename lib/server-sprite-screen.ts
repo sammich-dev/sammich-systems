@@ -47,7 +47,6 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                 },
                 setZoom:(n:number)=>{},
                 applyFrame:(n:number)=>{
-                    console.log("SERVER APPLY FRAME", n)
                     spriteState.frame = n;
                     if(spriteState.network){
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
@@ -61,7 +60,7 @@ export function createServerSpriteScreen(playerState:PlayerState) {
                         const colyseusSprite = playerState.spriteEntities.find(s=>s.ID === ID);
                         if(!colyseusSprite){
                             console.trace();
-                            debugger;
+                           // debugger;//TODO still can happen?
                         }
                         if(colyseusSprite) colyseusSprite.visible = false;
                     }

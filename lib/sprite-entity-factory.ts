@@ -125,8 +125,7 @@ export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClie
                     klassParams:{
                         klass,
                         spriteDefinition,
-                        collisionBox,
-                        screen:undefined
+                        collisionBox
                     },
                     spriteEntityKlass,
                     createParams:_createParams,
@@ -161,8 +160,7 @@ export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClie
             },
             klass,
             spriteDefinition,
-            collisionBox,
-            screen
+            collisionBox
         };
         spriteEntityKlasses.set(klass, spriteEntityKlass);
         return spriteEntityKlass;

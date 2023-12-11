@@ -4,7 +4,6 @@ export type SpriteKlassParams ={
     klass:string,//TODO rename to klassAlias
     spriteDefinition:SpriteDefinition,
     collisionBox?:any,
-    screen:any
 }
 
 export type SpriteKlass = SpriteKlassParams & {
@@ -18,6 +17,7 @@ export type SpriteEntityCreationParams = {
     frame?:number,
     zoom?:number[]
 }
+
 export type SpriteEntity = {
     ID:number,
     sprite:Sprite,

@@ -1,20 +1,29 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
+(A) frog game video
+(A) instructions countdown, if no-one perss any key during instructions, advance game
+(A) bug: end screen: should not show create button
+(A) reconnection
+
+count times where tie-breaker: if all mini-games were tie-breaker, most sure is invalid game to take into account.
 (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends
 (A) machine should send land and gameInstanceId to server, it will create db row in GameInstance if necessary, ws-room should have filter to join with land+gameInstanceId, it will have effect on played-games endpoint.
-
-(B) +game Add invaders mini-game
-(B) +game Add obstacles mini-game (runner)
-(B) +game Add catch 100 mini-game
-(B) +game Add Rotation mini-game
-
+(B) +1 add animate API utilities
+(B) +1 generation of random track also should be seed based
+(B) +0 MESSAGE & EVENTS as enum
 (B) Create Frame Component
 (C) When server is disconnected: try to connect X times, or add button to manually connect
-(D) Add sounds +game
+(C) Add sounds +game
+(D) add secret seed from .env that will be used as part of the seed for games
 (D) Allow to configure the game instance from web-app
 (D) Clean & Refactors
 (E) Implement ads (out of machine, machine should keep most simple as possible)
 (E) Use remote sprite-sheets
 (E) Use remote instructions
+
+(C) +game Add invaders mini-game
+(C) +game Add obstacles mini-game (runner)
+(C) +game Add catch 100 mini-game
+(C) +game Add Rotation mini-game
 
 (F) Refactor: reusable cursor feature +game @refactor
 

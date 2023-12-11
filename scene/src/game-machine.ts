@@ -45,7 +45,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         showingInstructions:false,
         playingMiniGame:false,
         sentInstructionsReady:false,
-        sentReady:false
+        sentReady:false,
+        tieBreaker:false
     };
     const colyseusClient: Client = new Client(`ws://localhost:2567`);
     const entity = engine.addEntity();
@@ -139,12 +140,11 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     createButton.hide();
 
     let playerScreens:any[] = [], screenRunners:any[] = [];
-
     let instructionsPanel:any;
 
     room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
         console.log("MINI_GAME_WINNER", winnerIndex);
-        const playerIndex = getPlayerIndex();
+        
         disposeInputListener();
         playerScreens.forEach((s:any)=>s.destroy());
         screenRunners.forEach(sr=>sr.runtime.stop());
@@ -214,6 +214,19 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         }
     });
 
+    room.onMessage("TIE_BREAKER", async ({winnerIndex}:{winnerIndex:number})=>{
+        if(state.tieBreaker) return;
+        console.log("TIE_BREAKER",{winnerIndex});
+
+        state.tieBreaker = true;
+
+        if(getPlayerIndex() !== 0){
+            console.log("reproducing 0 runner from player", getPlayerIndex())
+            screenRunners[0].runtime.reproduce();
+        }
+        await screenRunners[0].runtime.tieBreaker({winnerIndex});
+    });
+
     room.onMessage("INPUT_FRAME", ({playerIndex, frame}:any)=>{
         //TODO review if best approach, for now to represent other player State
         if(playerIndex !== getPlayerIndex()){
@@ -277,15 +290,16 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     let disposeInputListener:any;
     room.onMessage("START_GAME", async ({miniGameId}: any) => {
-
         console.log("START_GAME", miniGameId);
+
+        state.tieBreaker = false;
         state.sentInstructionsReady = false;
         state.playingMiniGame = true;
         state.showingInstructions = false;
         instructionsPanel.destroy();
         lobbyScreen.hide();
         const GameFactory = getGame(miniGameId);
-        console.log("GameFactory.definition",GameFactory.definition)
+        console.log("GameFactory.definition",GameFactory.definition);
         if(GameFactory.definition.split){
             playerScreens = new Array(2).fill(null).map((_, playerIndex)=>createSpriteScreen({
                 transform: {
@@ -350,14 +364,19 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
         function startPlayerRunner(runner:any){
             runner.runtime.start(true);
+            let disposeOnFrame:any;
             const throttleSendPlayerFrame = throttle(() => { //TODO REVIEW, leak | dispose
+                if(!runner || runner.runtime.getState().destroyed){
+                    if(disposeOnFrame) disposeOnFrame();
+                    return;
+                }
                 const playerFrameData = {
                     playerIndex:getPlayerIndex(),
                     n: runner.runtime.getState().lastReproducedFrame
                 }
                 room.send("PLAYER_FRAME", playerFrameData);
             },100);
-            runner.onFrame(throttleSendPlayerFrame); //TODO REVIEW, leak | dispose
+            disposeOnFrame = runner.onFrame(throttleSendPlayerFrame);
         }
     });
 
