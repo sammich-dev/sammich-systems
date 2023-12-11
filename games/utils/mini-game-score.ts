@@ -20,10 +20,6 @@ export function createScoreTextComponent(game:any, options?:any){//TODO rename t
 
 export async function updateScoreTextComponent(_score?:any){
     if(!miniGameScoreComponent) return;
-    await miniGameScoreComponent.game.waitFrames(1);
-    const score = _score || [
-        miniGameScoreComponent.game.players[0].getPlayerScore(),
-        miniGameScoreComponent.game.players[1].getPlayerScore()
-    ];
+    const score = _score || miniGameScoreComponent.game.runtime.getState().score;
     miniGameScoreComponent.setText(`${score[0]} - ${score[1]}`);
 }

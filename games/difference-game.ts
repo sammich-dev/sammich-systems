@@ -146,7 +146,8 @@ export const DifferenceGame = {
                 console.log("state.scores",state.scores)
                 game.players[0].setPlayerScore(state.scores[0]);
                 game.players[1].setPlayerScore(state.scores[1]);
-                updateScoreTextComponent();
+
+                await updateScoreTextComponent();
 
                 await game.waitFrames(FRAMES_TO_WAIT_A_SECOND);
                 game.checkWinners();

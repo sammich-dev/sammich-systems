@@ -246,7 +246,11 @@ export class GameRoom extends Room<GameState> {
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
          console.log("this.askedToCheckWinners",this.askedToCheckWinners);
         this.askedToCheckWinners[playerIndex] = n;
+
         if(!this.askedToCheckWinners.every(i=>i) && GameFactory.definition.split){ //TODO we should only return if its not sharedScreen
+            //TODO if other player doesnt make any input, and we checkWinners on input, this never won't happen
+                //TODO ... we should wait both players to ask winners infinite, we should set a delay to ask
+                //TODO ... maybe just send a WS message to ask for winner
             return;
         }
         //TODO reproduce

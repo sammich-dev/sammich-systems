@@ -1,5 +1,4 @@
 import {InputAction} from "@dcl/sdk/ecs";
-import {getFrameNumber} from "../lib/frame-util";
 import {SpriteEntity} from "../lib/game-entities";
 import {boxCollision} from "../lib/math-util";
 const SPRITE_SIZE = {w:8,h:8};
@@ -41,6 +40,8 @@ async function run({game}:any){
     });
 
     game.setWinnerFn((player1Score:number, player2Score:number) => {
+        console.log("FROG_CHECK_WINNER", player1Score, player2Score);
+
         if(player1Score === player2Score) return;
 
         const msPassed = game.runtime.getState().lastReproducedFrame * (1000/60);
@@ -135,6 +136,7 @@ async function run({game}:any){
             state.moving = false;
         }
         game.checkWinners();
+
         function checkBurgers(){
             [x,y] = frog.getPixelPosition();
             const foundBurger = SAMMICH_POSITIONS.findIndex(i=>i===x);

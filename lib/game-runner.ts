@@ -70,8 +70,19 @@ export const createScreenRunner = ({
         destroyed: false,
         startTime: 0,
         lastReproducedFrame: -1,
-        tieBreaker:false
+        tieBreaker:false,
+        score:[0,0]
     };
+
+    if(clientRoom){
+        clientRoom.onStateChange(()=>{//TODO ? REVIEW OPTIMIZE ?
+            if(clientRoom.state?.players?.length){
+                state.score[0] = clientRoom.state.players[0].miniGameScore;
+                state.score[1] = clientRoom.state.players[1].miniGameScore;
+            }
+        });
+    }
+
     const _snapshots: any[] = [{}];
 
 
@@ -284,25 +295,28 @@ export const createScreenRunner = ({
         },
         players: [{//TODO only for use with shared screen, should not be implemented here, but in shared-screen-runner ?
             setPlayerScore:(data:number)=>{
+                state.score[0] = data;
                 if (serverRoom){
                     return serverRoom.state.players[0].miniGameScore = data;
                 }
             },
-            getPlayerScore:()=>(serverRoom||clientRoom)?.state.players[0].miniGameScore
+            getPlayerScore:()=>(serverRoom||clientRoom)?.state.players[0].miniGameScore || state.score[0]
         },{
             setPlayerScore:(data:number)=>{
+                state.score[1] = data;
                 if (serverRoom){
                     return serverRoom.state.players[1].miniGameScore = data;
                 }
             },
-            getPlayerScore:()=> (serverRoom||clientRoom)?.state.players[1].miniGameScore
+            getPlayerScore:()=> (serverRoom||clientRoom)?.state.players[1].miniGameScore || state.score[1]
         }],
         setPlayerScore: (data: number) => {//TODO this smells, should not be used by shared-screen, should not be implemented here, but in shared-screen-runner ?
+            state.score[playerIndex] = data;
             if (serverRoom) {
                 serverRoom.state.players[playerIndex].miniGameScore = data;
             }
         },
-        getPlayerScore: () => (serverRoom||clientRoom)?.state.players[playerIndex].miniGameScore
+        getPlayerScore: () => (serverRoom||clientRoom)?.state.players[playerIndex].miniGameScore || state.score[playerIndex]
     };
 
     function random() {
