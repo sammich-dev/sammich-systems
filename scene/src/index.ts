@@ -5,5 +5,3 @@ import {sleep} from "../dcl-lib/sleep";
     await sleep(1300);
     init();
 })();
-
-

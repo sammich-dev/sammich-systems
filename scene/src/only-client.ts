@@ -117,7 +117,7 @@ export const init = () => {
         (new Array(1)).fill(null).forEach((_, playerIndex) => {
             (async () => {
                 console.log("gameScreen", playerIndex);
-                const GameFactory = TieBreaker;
+                const GameFactory = FrogGame;
                 const gameScreen = createSpriteScreen({
                     transform: {
                         position:Vector3.create(playerIndex,0,0),

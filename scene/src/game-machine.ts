@@ -34,6 +34,9 @@ const DEFAULT_SCREEN_SPRITE_DEFINITION = {
     ...DEFAULT_SPRITE_DEF,
     x: 576, y: 128, w: 192, h: 128,
 }
+import { getRealm } from '~system/Runtime'
+import {create} from "domain";
+
 
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
     setupInputController();
@@ -46,9 +49,12 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         playingMiniGame:false,
         sentInstructionsReady:false,
         sentReady:false,
-        tieBreaker:false
+        tieBreaker:false,
+        ending:false
     };
-    const colyseusClient: Client = new Client(`ws://localhost:2567`);
+    const {realmInfo} = await getRealm({});
+    console.log("realmInfo",realmInfo);
+    const colyseusClient: Client = new Client((realmInfo?.realmName||"").indexOf("localhost")?`ws://localhost:2567`:"wss://sammich.pro/colyseus");
     const entity = engine.addEntity();
 
     Transform.create(entity, {
@@ -143,7 +149,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     let instructionsPanel:any;
 
     room.onMessage("MINI_GAME_WINNER", async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
-        console.log("MINI_GAME_WINNER", winnerIndex);
+        console.log("MINI_GAME_WINNER", winnerIndex, miniGameResults);
         
         disposeInputListener();
         playerScreens.forEach((s:any)=>s.destroy());
@@ -159,6 +165,9 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         },0);
         const isFinal = !!finalize;
         const trackWinnerIndex = getTrackWinnerFromMiniGameResults(miniGameResults);
+        console.log("trackWinnerIndex",trackWinnerIndex)
+        state.ending = isFinal;
+
         await scoreTransition.showTransition({
             winnerIndex,
             previousScore,
@@ -170,22 +179,20 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         scoreTransition.hide();
 
         if(finalize){
-            state.playingMiniGame = false;
             state.showingInstructions = false;
-            state.sentInstructionsReady = false;
+
             console.log("finalize")
             state.sentReady = false;
             scoreTransition.reset();
             callbacks.onEvent.forEach(e=>e({
                 type:EVENT.END_TRACK,
                 data:{
-                    trackWinnerIndex:getTrackWinnerFromMiniGameResults(miniGameResults)
+                    trackWinnerIndex
                 }
             }))
         }else{
-            state.sentInstructionsReady = false;
             state.showingInstructions = true;
-            state.playingMiniGame = false;
+
             const nextGameId = room.state.miniGameTrack[miniGameIndex+1];
             instructionsPanel = createInstructionScreen({
                 transform: {
@@ -200,12 +207,16 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             setInputListener(nextGameId)
         }
 
+        state.ending = false;
+        state.playingMiniGame = false;
+        state.sentInstructionsReady = false;
+
         function getTrackWinnerFromMiniGameResults(miniGameResults:number[]){
-            let scores:number[] = [];
+            let scores:number[] = [0,0];
             miniGameResults.forEach(winnerIndex => {
-                scores[winnerIndex] = scores[winnerIndex] || 0;
                 scores[winnerIndex]++
             });
+            console.log("scores", scores);
             if(scores[0] > scores[1]){
                 return 0;
             }else{
@@ -425,11 +436,11 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         if (room.state.players.length === 1 && room.state.players[0].user.userId !== user.userId) {
             joinButton.show();
         }
-        if (getPlayerIndex() !== -1) {
-            createButton.hide();
-            joinButton.hide();
-        }
-        if (room.state.players.length === 2) {
+
+        if (room.state.players.length === 2
+            || state.ending
+            || getPlayerIndex() !== -1
+        ) {
             createButton.hide();
             joinButton.hide();
         }
