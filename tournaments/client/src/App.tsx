@@ -6,6 +6,9 @@ import {
 
 import Home from "./pages/Home"
 import CreateTournament from "../src/pages/CreateTournament";
+import TournamentDetails from "../src/pages/TournamentDetails";
+import Login from "./components/Login";
+
 
 
 
@@ -14,8 +17,11 @@ import CreateTournament from "../src/pages/CreateTournament";
       <>
         <Router>
           <Routes>
-            <Route element={<Home />} path="/" />
+            <Route element={<Login />} path="/" />
+            <Route element={<Home />} path="/Home" />
             <Route element={<CreateTournament />} path="/createTournament" />
+            
+            <Route element={<TournamentDetails />} path="/Home/tournamentDetails/:id" />
           </Routes>
         </Router>
       </>

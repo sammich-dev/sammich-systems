@@ -4,7 +4,9 @@ import { InitialState } from "../../../interfaces/Interfaces";
 const initialState: InitialState = {
   currentPage: 1,
   tournaments: [],
-  tournamentDetails: {}
+  tournamentDetails: {},
+  participants: [],
+  matches: [],
 };
 
 const tournamentsSlice = createSlice({
@@ -17,12 +19,24 @@ const tournamentsSlice = createSlice({
     getTournamentById: (state, action) => {
       state.tournamentDetails = action.payload;
     },
+    getParticipants: (state, action) => {
+      state.participants = action.payload;
+    },
+    getParticipantById: (state, action) => {
+      state.tournamentDetails = action.payload;
+    },
+    clearDetails: (state) => {
+      state.tournamentDetails = {};
+    },
   },
 });
 
 export const {
   getTournaments,
   getTournamentById,
+  clearDetails,
+  getParticipants,
+  getParticipantById
 } = tournamentsSlice.actions;
 
 export default tournamentsSlice.reducer;

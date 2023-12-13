@@ -6,7 +6,7 @@ import { MdArrowBack } from "react-icons/md";
 const GoBack = () => {
     return (
         <>
-            <Link to="/">
+            <Link to="/Home">
                 <div className="absolute left-0 top-0 p-5 font-bold text-gray-200">
                 <MdArrowBack size={35}/>
                 </div>

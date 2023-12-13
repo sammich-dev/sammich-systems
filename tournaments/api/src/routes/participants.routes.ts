@@ -11,7 +11,7 @@ router.get("/participants", async (_req, res) => {
 router.get("/participants/:id", async (req, res) => {
     const participant = await prisma.tournamentParticipants.findFirst({
         where: {
-            id: parseInt(req.params.id)
+            id: req.params.id
         }
     })
     if(!participant){
@@ -20,11 +20,29 @@ router.get("/participants/:id", async (req, res) => {
     return res.json(participant)
 })
 
-router.post("/participants", async (req, res) => {
+router.post("/participant", async (req, res) => {
+    try {
         const newParticipiant = await prisma.tournamentParticipants.create({
             data: req.body
         })
         res.json(newParticipiant);
+    }
+    catch(error) {
+        console.error(error);
+    }
 })
+
+router.delete("/participant/:id", async (req, res) => {
+    const deletedTournament = await prisma.tournamentParticipants.delete({
+        where: {
+            id: req.params.id
+        }
+    })
+    if(!deletedTournament){
+        return res.status(404).json({error: 'tournament not found'})
+    }
+    return res.json(deletedTournament)
+})
+
 
 export default router

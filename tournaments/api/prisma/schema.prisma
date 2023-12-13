@@ -13,22 +13,24 @@ datasource db {
 model Tournaments {
   id Int @id @default(autoincrement())
   title String @unique
+  createdBy String
   description String 
   startDate DateTime @default(now())
+  endDate DateTime @default(now())
   participants TournamentParticipants[]
   matches TournamentsMatches[]
 }
 
 model TournamentParticipants {
-  id Int @id @default(autoincrement())
-  adress String 
+  id String @id @default(uuid())
+  address String 
   displayName String
   tournament Tournaments @relation(fields: [tournamentId], references: [id])
   tournamentId Int 
 }
 
 model TournamentsMatches {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   openDate DateTime 
   resolutionDate DateTime
   winnerIndex Int 

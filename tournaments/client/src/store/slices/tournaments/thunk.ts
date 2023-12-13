@@ -8,7 +8,7 @@ import { AppThunk } from "../../store";
 // } from "../../../interfaces/Interfaces";
 
 import { getTournaments, getTournamentById } from "./tournamentsSlice";
-import { TournamentsInterface } from "../../../interfaces/Interfaces";
+import { ParticipantInterface, TournamentsInterface } from "../../../interfaces/Interfaces";
 
 export function getAllTournamentsThunk(): AppThunk {
   return async (dispatch) => {
@@ -16,7 +16,7 @@ export function getAllTournamentsThunk(): AppThunk {
       const response = await axios.get("http://localhost:3000/api/tournaments");
       const results = response.data;
       dispatch(getTournaments(results));
-      console.log(results);
+      // console.log(results);
     } catch (e) {
       console.error(e);
     }
@@ -29,9 +29,9 @@ export function getTournament(id: string): AppThunk {
       const response = await axios.get(
         `http://localhost:3000/api/tournaments/${id}`
       );
-      // let results = response.data.results;
-      dispatch(getTournamentById(response.data[0]));
+      // const results = response.data;
       // console.log(results);
+      dispatch(getTournamentById(response.data));
     } catch (e) {
       console.error(e);
     }
@@ -41,7 +41,30 @@ export function getTournament(id: string): AppThunk {
 export const createTournamentThunk = (tournament: Omit<TournamentsInterface, 'id'>) => {
   return async () => {
       try {
-          await axios.post("http://localhost:3000/api/tournaments", tournament)
+          await axios.post("http://localhost:3000/api/tournament", tournament)
+      } catch (e) {
+          console.error(e)
+      }
+  }
+}
+
+export function getParticipants(): AppThunk {
+  return async (dispatch) => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/participants");
+      const results = response.data;
+      dispatch(getTournaments(results));
+      // console.log(results);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+export const createParticipantThunk = (participant:Omit<ParticipantInterface, 'id'>) => {
+  return async () => {
+      try {
+          await axios.post("http://localhost:3000/api/participant", participant)
       } catch (e) {
           console.error(e)
       }

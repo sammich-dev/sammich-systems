@@ -4,14 +4,23 @@ import { prisma } from "../db"
 const router = Router();
 
 router.get("/tournaments", async (_req, res) => {
-    const tournaments = await prisma.tournaments.findMany()
+    const tournaments = await prisma.tournaments.findMany({
+        include: {
+            participants:true,
+            matches:true
+        }
+    })
     res.json(tournaments)
 })
 
 router.get("/tournaments/:id", async (req, res) => {
-    const tournament = await prisma.tournaments.findFirst({
+    const tournament = await prisma.tournaments.findUnique({
         where: {
             id: parseInt(req.params.id)
+        },
+        include: {
+            participants: true,
+            matches: true
         }
     })
     if(!tournament){
@@ -20,18 +29,33 @@ router.get("/tournaments/:id", async (req, res) => {
     return res.json(tournament)
 })
 
-router.post("/tournaments", async (req, res) => {
+router.post("/tournament", async (req, res) => {
     try {
         const newTournament = await prisma.tournaments.create({
-            data: req.body
+            data: {
+                title: req.body.title,
+                description: req.body.description,
+                createdBy: req.body.createdBy,
+                startDate: new Date(req.body.startDate),
+                endDate: new Date(req.body.endDate)
+            }
         })
-        res.json(newTournament);
-    } catch (error) {
+        for (let participant of req.body.participants) {
+            await prisma.tournamentParticipants.create({
+                data: {
+                    ...participant,
+                    tournamentId: newTournament.id
+                }
+            })
+        }
+        res.json(true)
+    } catch (error:any) {
         console.log(error);
+        res.status(500).send({error:error?.message})
     }
 })
 
-router.delete("/tournaments/:id", async (req, res) => {
+router.delete("/tournament/:id", async (req, res) => {
     const deletedTournament = await prisma.tournaments.delete({
         where: {
             id: parseInt(req.params.id)

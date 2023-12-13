@@ -2,8 +2,9 @@ import { useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux";
 
 import { getAllTournamentsThunk } from "../store/slices/tournaments/thunk"
-
 import type { AppDispatch, RootState } from "../../src/store/store";
+
+import Tournament from "./Tournament";
 
 
 const TournamentsTable = () => {
@@ -28,21 +29,21 @@ const TournamentsTable = () => {
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">N. Participants</th>
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">Start Date</th>
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">State</th>
+                        <th className="p-3 text-sm font-semibold tracking-wide text-left">Details</th>
                     </tr>
                 </thead>
                 {tournaments ? tournaments.map((tournament, index) => (
-
-                    <tbody key={index}>
-                        <tr className="border-b border-gray-200">
-                            <td className="p-3 text-sm text-gray-200 ">{tournament.id}</td>
-                            <td className="p-3 text-sm text-gray-200 ">{tournament.description}</td>
-                            <td className="p-3 text-sm text-gray-200 ">{tournament.title}</td>
-                            <td className="p-3 text-sm text-gray-200 ">{tournament.participants}</td>
-                            <td className="p-3 text-sm text-gray-200 ">{tournament.startDate}</td>
-                            <td className="p-3 text-sm text-gray-200 ">Open</td>
-                        </tr>
-                    </tbody>
-
+                    <Tournament
+                    key={index}
+                    id={tournament.id}
+                    createdBy={tournament.createdBy}
+                    description={tournament.description}
+                    startDate={tournament.startDate}
+                    endDate={tournament.endDate}
+                    title={tournament.title}
+                    participants={tournament.participants}
+                    matches={tournament.matches}
+                    />
                 )) : "Loading..."}
             </table>
         </div>
