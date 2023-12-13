@@ -7,6 +7,12 @@
 		"navmapThumbnail": "images/scene-thumbnail.png",
 		"favicon": "favicon_asset"
 	},
+	"worldConfiguration": {
+		"name": "sammich.dcl.eth",
+		"placesConfig": {
+			"optOut": false
+		}
+	},
 	"owner": "",
 	"contact": {
 		"name": "SDK",
@@ -16,10 +22,9 @@
 	"tags": [],
 	"scene": {
 		"parcels": [
-			"47,-45",
-			"46,-45"
+			"0,0"
 		],
-		"base": "47,-45"
+		"base": "0,0"
 	},
 	"spawnPoints": [
 		{
