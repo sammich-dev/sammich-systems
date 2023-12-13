@@ -1,5 +1,4 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
-(A) allow reconnection when connection is lost
 (A) instructions countdown, if no-one perss any key during instructions, advance game
 
 count times where tie-breaker: if all mini-games were tie-breaker, most sure is invalid game to take into account.
@@ -46,3 +45,5 @@ x (B) 2023-11-18 +game Add frog mini-game
 x (A) 2023-11-28 2023-11-14 +game Add shared screen game @mini-game
 x (A) spectator
 x (A) bug: end screen: should not show create button
+x (A) allow reconnection when connection is lost
+x (A) when server is down when scene is loading, try to connect on intervals

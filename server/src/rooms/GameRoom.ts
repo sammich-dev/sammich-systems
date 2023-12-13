@@ -44,7 +44,12 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
             console.log("INSTRUCTIONS_READY", {playerIndex});
-            if(this.state.players[playerIndex].instructionsReady) return;
+            if(!this.state.players[playerIndex]){
+                //TODO
+                console.warn("REVIEW WHY THIS CAN HAPPEN");
+                return;
+            }
+            if(this.state?.players[playerIndex]?.instructionsReady) return;
             this.state.players[playerIndex].instructionsReady = true;
             if(this.state.players.every(i=>i.instructionsReady)){
                 const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
@@ -113,7 +118,6 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
             if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
-            console.log("INPUT_FRAME", playerIndex, frame);
             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
         });
 
@@ -241,19 +245,17 @@ export class GameRoom extends Room<GameState> {
     }
 
     async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
+        const anyOfChecksDueTime = () => this.askedToCheckWinners.some(i=> i + 60 < n );
+
         console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore, this.state.miniGameResults, );
          const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
         if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
          console.log("this.askedToCheckWinners",this.askedToCheckWinners);
-        this.askedToCheckWinners[playerIndex] = n;
+        this.askedToCheckWinners[playerIndex] = this.askedToCheckWinners[playerIndex] || n;
 
-        if(!this.askedToCheckWinners.every(i=>i) && GameFactory.definition.split){ //TODO we should only return if its not sharedScreen
-            //TODO if other player doesnt make any input, and we checkWinners on input, this never won't happen
-                //TODO ... we should wait both players to ask winners infinite, we should set a delay to ask
-                //TODO ... maybe just send a WS message to ask for winner
+        if(!this.askedToCheckWinners.every(i=>i) && GameFactory.definition.split && !(anyOfChecksDueTime())){
             return;
         }
-        //TODO reproduce
          console.log("miniGameScoreA", this.state.players.map((p:any)=>p.miniGameScore));
         if(GameFactory.definition.split){
             if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
@@ -279,6 +281,9 @@ export class GameRoom extends Room<GameState> {
         if(_winnerInfo){
             return await this.handleWinner(_winnerInfo);
         }
+
+
+
     }
 
     async manageGetOrCreateIndexedPlayers(players:PlayerState[]){
@@ -329,16 +334,29 @@ export class GameRoom extends Room<GameState> {
         //TODO only when it's player, not when it's user
     }
 
-    onLeave(client: Client) {
-        const foundUserIndex = this.state.users.findIndex(p=>p.client === client);
-        const foundPlayerIndex = this.state.players.findIndex(p=>p.client === client);
-        console.log("onLeave", foundUserIndex);
-        foundUserIndex !== -1 && this.state.users.splice(foundUserIndex, 1);
-        foundPlayerIndex !== -1 && this.state.players.splice(foundPlayerIndex, 1);
-        this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
-        if(!this.state.players.length){
-            this.state.started = false;
+    async onLeave(client: Client, consented:boolean) {
+        try {
+            if (consented) {
+                throw new Error("consented leave");
+            }
+
+            // allow disconnected client to reconnect into this room until 20 seconds
+            await this.allowReconnection(client, 120);//TODO or until game finishes if it's a participant to also allow one player to win
+
+            console.log("allowed reconnection", client.id);
+        } catch (e) {
+            const foundUserIndex = this.state.users.findIndex(p=>p.client === client);
+            const foundPlayerIndex = this.state.players.findIndex(p=>p.client === client);
+            console.log("onLeave", foundUserIndex);
+            if(foundUserIndex !== -1) this.state.users.splice(foundUserIndex, 1);
+            if(foundPlayerIndex !== -1) this.state.players.splice(foundPlayerIndex, 1);
+            this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
+            if(!this.state.players.length){
+                this.state.started = false;
+            }
         }
+
+
     }
 
     onDispose(): void | Promise<any> {
