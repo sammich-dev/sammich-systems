@@ -2,14 +2,16 @@
 CREATE TABLE "Tournaments" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "title" TEXT NOT NULL,
+    "createdBy" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "startDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "startDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "endDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
 CREATE TABLE "TournamentParticipants" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "adress" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "address" TEXT NOT NULL,
     "displayName" TEXT NOT NULL,
     "tournamentId" INTEGER NOT NULL,
     CONSTRAINT "TournamentParticipants_tournamentId_fkey" FOREIGN KEY ("tournamentId") REFERENCES "Tournaments" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
@@ -17,7 +19,7 @@ CREATE TABLE "TournamentParticipants" (
 
 -- CreateTable
 CREATE TABLE "TournamentsMatches" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "openDate" DATETIME NOT NULL,
     "resolutionDate" DATETIME NOT NULL,
     "winnerIndex" INTEGER NOT NULL,
