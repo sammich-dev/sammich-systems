@@ -45,7 +45,7 @@ async function run({game}:any){
         if(player1Score === player2Score) return;
 
         const msPassed = game.runtime.getState().lastReproducedFrame * (1000/60);
-        const secondsPassed = Math.floor(msPassed);
+        const secondsPassed = Math.floor(msPassed/1000);
 
         if(
             (secondsPassed > 100 && player1Score !== player2Score)
