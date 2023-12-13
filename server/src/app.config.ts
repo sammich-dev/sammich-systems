@@ -7,13 +7,21 @@ import { matchMaker } from "colyseus"
  * Import your Room files
  */
 import {GameRoom} from "./rooms/GameRoom";
-import {createRoom} from "@colyseus/core/build/MatchMaker";
+import {createRoom, controller} from "@colyseus/core/build/MatchMaker";
 import {PrismaClient} from "@prisma/client";
 import {Express} from "express";
 import {getCatchResponseError} from "./express-util";
 import {tryFn} from "../../lib/functional";
 const prisma = new PrismaClient();
 
+
+controller.getCorsHeaders = function(req) {
+    return {
+        'Access-Control-Allow-Origin': '*',
+        'Vary': '*',
+        // 'Vary': "<header-name>, <header-name>, ...",
+    }
+}
 
 export default config({
 
