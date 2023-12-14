@@ -115,7 +115,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     const user: MinUserData = await getMinUserData();
 
-    const colyseusClient: Client = new Client((realmInfo?.realmName||"").toLowerCase().indexOf("local")?`ws://localhost:2567`:"wss://sammich.pro/colyseus");
+    const colyseusClient: Client = new Client(~(realmInfo?.realmName||"").toLowerCase().indexOf("local")?`ws://localhost:2567`:"wss://sammich.pro/colyseus");
 
     const connectRoom = async ()=>{
         let _room;
