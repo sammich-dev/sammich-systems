@@ -31,7 +31,7 @@ const TournamentsTable = () => {
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">Details</th>
                     </tr>
                 </thead>
-                {tournaments ? tournaments.map((tournament, index) => (
+                {tournaments ? tournaments.map((tournament:any, index:number) => (
                     <Tournament
                     key={index}
                     id={tournament.id}

@@ -7,7 +7,7 @@ import { AppDispatch, RootState } from "../store/store";
 import { getTournament } from "../store/slices/tournaments/thunk";
 import { clearDetails } from "../store/slices/tournaments/tournamentsSlice"
 
-import { TournamentsInterface } from "../interfaces/Interfaces";
+//import { TournamentsInterface } from "../interfaces/Interfaces";
 import GoBack from "../components/GoBack";
 
 
@@ -16,7 +16,7 @@ const TournamentDetails: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { id } = useParams();
 
-  const tournaments: TournamentsInterface = useSelector(
+  const tournaments: any = useSelector(
     (state: RootState) => state.tournaments.tournamentDetails
   );
 

@@ -28,7 +28,9 @@ app.use(
     )
 
 app.use(express.json())
-
+const frontendFiles = __dirname + '/../../client/dist';
+console.log("frontendFiles", frontendFiles);
+app.use("/", express.static(frontendFiles));
 app.use("/api", matchesRoute);
 app.use("/api", participantsRoute);
 app.use("/api", tournamentsRoute)
