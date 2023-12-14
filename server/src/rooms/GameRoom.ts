@@ -35,6 +35,7 @@ export class GameRoom extends Room<GameState> {
         instructions:string
     };
     onCreate(...args:any[]) {
+        console.log("onCreate", args);
         this.checkWinners = this.checkWinners.bind(this);
         this.forceWinner = this.forceWinner.bind(this);
         this.handleWinner = this.handleWinner.bind(this);
@@ -369,5 +370,6 @@ export class GameRoom extends Room<GameState> {
 
     onDispose(): void | Promise<any> {
         console.log("DISPOSE");
+        process.exit(0);
     }
 }

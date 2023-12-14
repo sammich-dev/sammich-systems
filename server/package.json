@@ -8,8 +8,9 @@
     "node": ">= 16.13.0"
   },
   "scripts": {
-    "pm2": "pm2 start npm --time --name \"golfcraft-ws\" -- run prod",
-    "start": "tsx watch src/index.ts",
+    "pm2": "pm2 start npm --time --name \"colyseus\" -- run prod",
+    "prod": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "loadtest": "tsx loadtest/example.ts --room my_room --numClients 2",
     "build": "npm run clean && tsc",
     "clean": "rimraf build",
