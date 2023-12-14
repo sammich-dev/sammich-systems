@@ -112,9 +112,9 @@ export class GameState extends Schema {
         console.log("miniGameIds", miniGameIDs)
         this.miniGameTrack.splice(0, this.miniGameTrack.length);
         while(this.miniGameTrack.length < 5){
-         //   this.miniGameTrack.push(getRandomFromList(miniGameIDs));
+            this.miniGameTrack.push(getRandomFromList(miniGameIDs));
          //   this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
-            this.miniGameTrack.push(2);
+         //   this.miniGameTrack.push(2);
         }
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
         this.started = true;
