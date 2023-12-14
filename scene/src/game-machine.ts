@@ -175,7 +175,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     let instructionsPanel:any;
 
 
-    const roomOnMessage = async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
+    const roomOnMessageMiniGameWinner = async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
         console.log("MINI_GAME_WINNER", winnerIndex, miniGameResults);
 
         disposeInputListener();
@@ -238,6 +238,9 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         state.playingMiniGame = false;
         state.sentInstructionsReady = false;
 
+        applyServerState();
+
+        
         function getTrackWinnerFromMiniGameResults(miniGameResults:number[]){
             let scores:number[] = [0,0];
             miniGameResults.forEach(winnerIndex => {
@@ -439,7 +442,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     addRoomHandlers();
 
     function addRoomHandlers(){
-        room.onMessage("MINI_GAME_WINNER", roomOnMessage);
+        room.onMessage("MINI_GAME_WINNER", roomOnMessageMiniGameWinner);
         room.onMessage("TIE_BREAKER", roomOnTieBreaker);
         room.onMessage("INPUT_FRAME", roomOnInputFrame);
         room.onMessage("MINI_GAME_TRACK", onMiniGameTrack);
