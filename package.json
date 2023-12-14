@@ -33,10 +33,13 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-basic-auth": "^1.2.1",
+    "express-formidable": "^1.2.0",
     "express-history-api-fallback": "^2.2.1",
+    "express-session": "^1.17.3",
     "prisma": "^3.10.0",
     "react": "=16.14.0",
     "react-dom": "=16.14.0",
+    "react-is": "^18.2.0",
     "react-json-view": "^1.21.3",
     "tsx": "^3.13.0"
   }
