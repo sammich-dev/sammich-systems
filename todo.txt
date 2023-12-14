@@ -8,6 +8,7 @@ count times where tie-breaker: if all mini-games were tie-breaker, most sure is 
 (B) +1 generation of random track also should be seed based
 (B) +0 MESSAGE & EVENTS as enum
 (B) Create Frame Component
+
 (C) When server is disconnected: try to connect X times, or add button to manually connect
 (C) Add sounds +game
 (D) add secret seed from .env that will be used as part of the seed for games
@@ -26,11 +27,14 @@ count times where tie-breaker: if all mini-games were tie-breaker, most sure is 
 
 (A) +bug spectator: waiting screen
 (A) +bug
+
+BUG handling when user leaves in middle of a game
 allow to set an instance to test 1 game byt passign parameter testGameId:number, will be sent to room and track will be all of this game
 add option to stop waiting/creating a match
 when a user creates a match, if waiting time is higher than 60 seconds, reset the room, because maybe someone created it and left: also if user leaves, quit
 
 tournaments: chess swiss system
+
 
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
