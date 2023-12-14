@@ -24,7 +24,6 @@ const TournamentsTable = () => {
                 <thead className="bg-gray-200 border-2 border-slate-800 text-slate-600">
                     <tr>
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">Id</th>
-                        <th className="p-3 text-sm font-semibold tracking-wide text-left">Game</th>
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">Title</th>
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">N. Participants</th>
                         <th className="p-3 text-sm font-semibold tracking-wide text-left">Start Date</th>
@@ -37,10 +36,9 @@ const TournamentsTable = () => {
                     key={index}
                     id={tournament.id}
                     createdBy={tournament.createdBy}
-                    description={tournament.description}
                     startDate={tournament.startDate}
                     endDate={tournament.endDate}
-                    title={tournament.title}
+                    tournament_title={tournament.title}
                     participants={tournament.participants}
                     matches={tournament.matches}
                     />

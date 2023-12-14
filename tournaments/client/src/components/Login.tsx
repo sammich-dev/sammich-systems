@@ -22,7 +22,7 @@ function Login() {
       //@ts-expect-error
       provider = window.web3.currentProvider;
     } else {
-      console.log("Non-ethereum browser detected. You should install Metamask");
+      alert("Non-ethereum browser detected. You should install Metamask");
     }
     return provider;
   };

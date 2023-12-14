@@ -33,8 +33,8 @@ router.post("/tournament", async (req, res) => {
     try {
         const newTournament = await prisma.tournaments.create({
             data: {
-                title: req.body.title,
-                description: req.body.description,
+                title: req.body.tournament_title,
+                description: req.body.tournament_description,
                 createdBy: req.body.createdBy,
                 startDate: new Date(req.body.startDate),
                 endDate: new Date(req.body.endDate)

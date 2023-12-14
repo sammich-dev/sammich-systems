@@ -9,11 +9,24 @@ import tournamentsRoute from "./routes/tournaments.routes"
 
 
 // Server Port
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
 // Express methods
 const app = express();
-app.use(cors<Request>());
+
+app.use(
+        cors({
+            credentials: true,
+            methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
+            allowedHeaders: [
+                'Origin',
+                'X-Requested-With',
+                'Content-Type',
+                'Accept',
+            ],
+        })
+    )
+
 app.use(express.json())
 
 app.use("/api", matchesRoute);

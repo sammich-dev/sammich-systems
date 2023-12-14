@@ -1,22 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ActionInterface {
     type: string
-    payload: Record
+    payload: Record<any, any>
 }
 
 export interface InitialState {
     currentPage: number
     tournaments: TournamentsInterface[]
-    tournamentDetails: TournamentsInterface | Record<string>
+    tournamentDetails: TournamentsInterface | Record<string, any>
     participants: ParticipantInterface[]
     matches: string[]
 }
 
 export interface TournamentsInterface {
   id: number
-  title: string
+  tournament_title: string
+  tournament_description?: string
   description?: string
-  createdBy: string
+  createdBy: any
   startDate: any
   endDate: any
   participants: any

@@ -3,9 +3,8 @@ import { TournamentsInterface } from "../interfaces/Interfaces"
 
 
 const Tournament = ({
-    id,
-    description,
-    title,
+    id,   
+    tournament_title,
     startDate,
     participants
   }: TournamentsInterface): JSX.Element => {
@@ -13,8 +12,7 @@ const Tournament = ({
         <tbody key={id}>
             <tr className="border-b border-gray-200">
                 <td className="p-3 text-sm text-gray-200 ">{id}</td>
-                <td className="p-3 text-sm text-gray-200 ">{description}</td>
-                <td className="p-3 text-sm text-gray-200 ">{title}</td>
+                <td className="p-3 text-sm text-gray-200 ">{tournament_title}</td>
                 <td className="p-3 text-sm text-gray-200 ">{participants.length}</td>
                 <td className="p-3 text-sm text-gray-200 ">{startDate}</td>
                 <td className="p-3 text-sm text-gray-200">Open</td>

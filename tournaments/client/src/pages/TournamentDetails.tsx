@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -39,15 +40,18 @@ const TournamentDetails: React.FC = () => {
         </h1>
         <GoBack />
       </div>
-      <h3 className="text-gray-200 font-bold text-xl p-8">Pendent Matches</h3>
       <h3 className="text-gray-200 font-medium text-lg p-8">Tournament created by: <span className="font-normal text-lime-300">{tournaments.createdBy}</span></h3>
+      <div className="text-gray-200 font-medium text-lg p-8">
+        <p className="text-gray-200">{tournaments.description}</p>
+      </div>
+      <h3 className="text-gray-200 font-bold text-xl p-8">Pendent Matches</h3>
       <div className="flex p-4">
         <section className="w-[20%]">
           <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 1</h5>
           {
 
-            tournaments ? players1?.map(t =>
-              <aside className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
+            tournaments ? players1?.map((t:any, i:any) =>
+              <aside key={ i } className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
               : null
 
           }
@@ -56,8 +60,8 @@ const TournamentDetails: React.FC = () => {
           <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 2</h5>
           {
 
-            tournaments ? players2?.map(t =>
-              <aside className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
+            tournaments ? players2?.map((t:any, i:any) =>
+              <aside key={ i } className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
               : null
 
           }
@@ -70,10 +74,6 @@ const TournamentDetails: React.FC = () => {
           <h5 className="text-center font-medium text-lg p-4 border border-gray-400">End Date</h5>
           <aside className="w-full p-2 text-center font-medium">{tournaments.endDate} </aside>
         </section>
-
-
-        {/* <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Open Date</h5>
-        <h5 className="text-center font-medium text-lg p-4 border border-gray-400">End Date</h5> */}
       </div>
       <h3 className="text-gray-200 font-bold text-xl p-8">Resolved Matches</h3>
       <div className="flex p-4">
@@ -81,8 +81,8 @@ const TournamentDetails: React.FC = () => {
           <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 1</h5>
           {
 
-            tournaments ? players1?.map(t =>
-              <aside className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
+            tournaments ? players1?.map((t:any, i:any) =>
+              <aside key={ i } className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
               : null
 
           }
@@ -91,8 +91,8 @@ const TournamentDetails: React.FC = () => {
           <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 2</h5>
           {
 
-            tournaments ? players2?.map(t =>
-              <aside className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
+            tournaments ? players2?.map((t:any, i:any) =>
+              <aside key={ i } className="w-full p-2 text-center font-medium">{t.displayName} </aside>)
               : null
 
           }
@@ -114,4 +114,4 @@ const TournamentDetails: React.FC = () => {
   )
 }
 
-export default TournamentDetails
+export default TournamentDetails;
