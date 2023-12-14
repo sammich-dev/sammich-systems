@@ -30,6 +30,7 @@ import {DEFAULT_SPRITE_DEF, SHARED_SCREEN_SCALE, SPLIT_SCREEN_SCALE} from "../..
 import {AttackGame} from "../../games/attack-game";
 import {MathGame} from "../../games/math-game";
 import {TieBreaker} from "../../games/tie-breaker";
+import {TestExample} from "../../games/test-example";
 const FRAME_MS = 1000/60;
 
 export const init = () => {
@@ -117,7 +118,7 @@ export const init = () => {
         (new Array(1)).fill(null).forEach((_, playerIndex) => {
             (async () => {
                 console.log("gameScreen", playerIndex);
-                const GameFactory = FrogGame;
+                const GameFactory = TestExample;
                 const gameScreen = createSpriteScreen({
                     transform: {
                         position:Vector3.create(playerIndex,0,0),
