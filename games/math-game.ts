@@ -44,7 +44,7 @@ async function run({game}:any){
             if( player1Score < player2Score) return {winnerIndex:1};
         }
     });
-    createScoreTextComponent(game);
+    createScoreTextComponent(game, {pixelPosition:[192/2, 2], fontSize:0.6});
 
     const TeacherSprite = game.registerSpriteEntity({
         klass:"Teacher",
