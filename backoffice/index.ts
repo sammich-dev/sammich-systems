@@ -23,7 +23,7 @@ router.use("*/public", express.static(__dirname + '/public'));
 const adminJs = new AdminJS({
     branding: {
         companyName: "Sammich Admin",
-        logo: "https://europe1.discourse-cdn.com/business20/uploads/decentraland/original/1X/1e2aef1438927bb3a88457d4c9908148d68006df.png",
+        logo: "https://cdn.discordapp.com/attachments/1117787207089000468/1184539452194947132/pabloest_pixelart_frog_eating_sammich_28812ce4-73d4-4386-879e-20ed8f2af647.png?ex=658c5755&is=6579e255&hm=f5dcc6e2ea467fe43d8286c7fda5eb73399b7d72bb05788ca53d91c21597725f&",
         softwareBrothers: false
     },
     assets: {
