@@ -100,7 +100,7 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("JOIN_GAME", (client, {user})=>{
-            console.log("JOIN_GAME");
+            console.log("JOIN_GAME", user);
             if(!this.state.players.length || this.state.players.length === 2) return;
             this.state.players.push(new PlayerState({user, client, playerIndex:1}));
         });
@@ -348,13 +348,14 @@ export class GameRoom extends Room<GameState> {
             }
 
             // allow disconnected client to reconnect into this room until 20 seconds
-            await this.allowReconnection(client, 120);//TODO or until game finishes if it's a participant to also allow one player to win
+            await this.allowReconnection(client, 10);//TODO or until game finishes if it's a participant to also allow one player to win
 
             console.log("allowed reconnection", client.id);
         } catch (e) {
+            console.log("catching onLeave")
             const foundUserIndex = this.state.users.findIndex(p=>p.client === client);
             const foundPlayerIndex = this.state.players.findIndex(p=>p.client === client);
-            console.log("onLeave", foundUserIndex);
+            console.log("onLeave", foundUserIndex, foundPlayerIndex);
             if(foundUserIndex !== -1) this.state.users.splice(foundUserIndex, 1);
             if(foundPlayerIndex !== -1) this.state.players.splice(foundPlayerIndex, 1);
             this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
