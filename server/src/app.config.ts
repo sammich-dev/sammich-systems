@@ -35,7 +35,7 @@ export default config({
     },
 
     initializeExpress: (app) => {
-        app.get("/api/played-games/:from", async (req, res) => {
+        app.get("/colyseus/api/played-games/:from", async (req, res) => {
             tryFn(async ()=>{
                 const pageSize = req.query.pageSize || 100;
                 const rows = await prisma.playedMatch.findMany({
@@ -52,7 +52,7 @@ export default config({
             }, getCatchResponseError(res));
         });
 
-        app.get("/api/last-played-game-id", async (req, res) => {
+        app.get("/colyseus/api/last-played-game-id", async (req, res) => {
             const lastPlayedGameId = (await prisma.playedMatch.findFirst({orderBy:{ID:"desc"}})).ID;
             return res.send(lastPlayedGameId)
         });
@@ -70,7 +70,7 @@ export default config({
          * It is recommended to protect this route with a password
          * //TODO Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
          */
-        app.use("/monitor", monitor());
+        app.use("/colyseus/monitor", monitor());
     },
 
 
