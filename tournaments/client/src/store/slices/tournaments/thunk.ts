@@ -13,7 +13,7 @@ import { ParticipantInterface, TournamentsInterface } from "../../../interfaces/
 export function getAllTournamentsThunk(): AppThunk {
   return async (dispatch) => {
     try {
-      const response = await axios.get("http://localhost:3000/api/tournaments");
+      const response = await axios.get("/api/tournaments");
       const results = response.data;
       dispatch(getTournaments(results));
       // console.log(results);
@@ -27,7 +27,7 @@ export function getTournament(id: string): AppThunk {
   return async (dispatch) => {
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/tournaments/${id}`
+        `/api/tournaments/${id}`
       );
       // const results = response.data;
       // console.log(results);
@@ -41,7 +41,7 @@ export function getTournament(id: string): AppThunk {
 export const createTournamentThunk = (tournament: Omit<TournamentsInterface, 'id'>) => {
   return async () => {
       try {
-          await axios.post("http://localhost:3000/api/tournament", tournament)
+          await axios.post("/api/tournament", tournament)
       } catch (e) {
           console.error(e)
       }
@@ -51,7 +51,7 @@ export const createTournamentThunk = (tournament: Omit<TournamentsInterface, 'id
 export function getParticipants(): AppThunk {
   return async (dispatch) => {
     try {
-      const response = await axios.get("http://localhost:3000/api/participants");
+      const response = await axios.get("/api/participants");
       const results = response.data;
       dispatch(getTournaments(results));
       // console.log(results);
@@ -64,7 +64,7 @@ export function getParticipants(): AppThunk {
 export const createParticipantThunk = (participant:Omit<ParticipantInterface, 'id'>) => {
   return async () => {
       try {
-          await axios.post("http://localhost:3000/api/participant", participant)
+          await axios.post("/api/participant", participant)
       } catch (e) {
           console.error(e)
       }
@@ -75,7 +75,7 @@ export const deleteTournamentThunk = (id: string | undefined) => {
   return async () => {
       try {
           if (id !== undefined) {
-              await axios.delete(`http://localhost:3000/api/tournaments/${id}`)
+              await axios.delete(`/api/tournaments/${id}`)
           }
       } catch (e) {
           console.error(e)
