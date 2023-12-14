@@ -35,7 +35,6 @@ const DEFAULT_SCREEN_SPRITE_DEFINITION = {
     x: 576, y: 128, w: 192, h: 128,
 }
 import { getRealm } from '~system/Runtime'
-import {create} from "domain";
 import {sleep} from "../dcl-lib/sleep";
 
 

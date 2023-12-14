@@ -329,6 +329,13 @@ export class GameRoom extends Room<GameState> {
     }
 
     onJoin(client: Client, {user}:any) {
+        //TODO if there is already an item in players or users with same userId, remove them
+        const foundUserIndex = this.state.users.findIndex((p:PlayerState)=>p.user.userId === user.userId);
+        const foundPlayerIndex = this.state.players.findIndex((p:PlayerState)=>p.user.userId === user.userId);
+        if(foundUserIndex >= 0) console.log("foundUserIndex",foundUserIndex);
+        if(foundPlayerIndex >= 0) console.log("foundPlayerIndex", foundPlayerIndex);
+        if(foundUserIndex >= 0) this.state.users.splice(foundUserIndex,1);
+        if(foundPlayerIndex >= 0) this.state.players.splice(foundPlayerIndex,1);
         console.log("onJoin", user)
         this.state.users.push(new PlayerState({user, client, playerIndex:-1}));
         //TODO only when it's player, not when it's user

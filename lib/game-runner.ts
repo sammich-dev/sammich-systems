@@ -77,8 +77,8 @@ export const createScreenRunner = ({
     if(clientRoom){
         clientRoom.onStateChange(()=>{//TODO ? REVIEW OPTIMIZE ?
             if(clientRoom.state?.players?.length){
-                state.score[0] = clientRoom.state.players[0].miniGameScore;
-                state.score[1] = clientRoom.state.players[1].miniGameScore;
+                if(clientRoom.state?.players[0]) state.score[0] = clientRoom.state.players[0].miniGameScore;
+                if(clientRoom.state?.players[1]) state.score[1] = clientRoom.state.players[1].miniGameScore;
             }
         });
     }
@@ -223,7 +223,18 @@ export const createScreenRunner = ({
         return promise;
     };
     const setScreenSprite = ({spriteDefinition}: SpriteDefinitionParams) => screen.setBackgroundSprite({spriteDefinition});
-
+    const setPlayer1Score = (data:number) => {
+        state.score[0] = data;
+        if (serverRoom && serverRoom.state.players[0]){
+            return serverRoom.state.players[0].miniGameScore = data;
+        }
+    };
+    const setPlayer2Score = (data:number) => {
+        state.score[1] = data;
+        if (serverRoom && serverRoom.state.players[1]){
+            return serverRoom.state.players[1].miniGameScore = data;
+        }
+    };
     const gameApi = {
         setScreenSprite,
         waitFrames,
@@ -294,20 +305,10 @@ export const createScreenRunner = ({
 
         },
         players: [{//TODO only for use with shared screen, should not be implemented here, but in shared-screen-runner ?
-            setPlayerScore:(data:number)=>{
-                state.score[0] = data;
-                if (serverRoom){
-                    return serverRoom.state.players[0].miniGameScore = data;
-                }
-            },
+            setPlayerScore:setPlayer1Score,
             getPlayerScore:()=>(serverRoom||clientRoom)?.state.players[0].miniGameScore || state.score[0]
         },{
-            setPlayerScore:(data:number)=>{
-                state.score[1] = data;
-                if (serverRoom){
-                    return serverRoom.state.players[1].miniGameScore = data;
-                }
-            },
+            setPlayerScore:setPlayer2Score,
             getPlayerScore:()=> (serverRoom||clientRoom)?.state.players[1].miniGameScore || state.score[1]
         }],
         setPlayerScore: (data: number) => {//TODO this smells, should not be used by shared-screen, should not be implemented here, but in shared-screen-runner ?
