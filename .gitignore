@@ -11,3 +11,4 @@ yarn-error.log*
 server/lib
 .idea
 .env
+prisma/*.db
