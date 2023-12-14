@@ -93,11 +93,10 @@ export class GameState extends Schema {
     @type([PlayerState]) players = new ArraySchema<PlayerState>();
     @type([PlayerState]) users = new ArraySchema<PlayerState>();
     @type(["uint8"]) miniGameTrack = new ArraySchema<number>();
-
     @type(["uint8"])
     miniGameResults:number[] = new ArraySchema<number>();
 
-    async setupNewGame(){
+    async setupNewGame(seed = Math.random()){
         this.miniGameResults.splice(0, this.miniGameResults.length);
         this.currentMiniGameIndex = 0;
         this.started = false;
@@ -107,7 +106,7 @@ export class GameState extends Schema {
             throw Error("FIX CODE PLAYERS > 2");
         }
 
-        //TODO Don't load minigames from database for now, because for now we have mini-games code in local
+        //TODO Don't load minigames from database for now, because for now we have mini-games code in local, later we will need to filter by state, etc.
        // const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
         const miniGameIDs = getGameKeys();
         console.log("miniGameIds", miniGameIDs)
@@ -115,10 +114,12 @@ export class GameState extends Schema {
         while(this.miniGameTrack.length < 5){
          //   this.miniGameTrack.push(getRandomFromList(miniGameIDs));
          //   this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
-            this.miniGameTrack.push(3);
+            this.miniGameTrack.push(2);
         }
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
         this.started = true;
+
+        return {seed, miniGameTrack:this.miniGameTrack};
     }
 
     resetTrack(){
