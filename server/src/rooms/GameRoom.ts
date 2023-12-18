@@ -103,6 +103,8 @@ export class GameRoom extends Room<GameState> {
         this.onMessage("JOIN_GAME", (client, {user})=>{
             console.log("JOIN_GAME", user);
             if(!this.state.players.length || this.state.players.length === 2) return;
+            if(this.state.players[0].user.userId === user.userId) return;
+
             this.state.players.push(new PlayerState({user, client, playerIndex:1}));
         });
 
