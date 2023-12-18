@@ -175,9 +175,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
 
     const roomOnMessageMiniGameWinner = async ({ winnerIndex, miniGameIndex, finalize,miniGameResults }:any) => {
-        console.log("MINI_GAME_WINNER", winnerIndex, miniGameResults);
+        disposeInputListener && disposeInputListener();
 
-        disposeInputListener();
         playerScreens.forEach((s:any)=>s.destroy());
         screenRunners.forEach(sr=>sr.runtime.stop());
         screenRunners.forEach(sr=>sr.runtime.destroy());
@@ -411,6 +410,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     };
 
     const roomOnStateChange = (...args: any[]) => {
+        callbacks.onEvent.forEach(c => c({type:EVENT.ROOM_STATE_CHANGE, data:room.state.toJSON()}));
+
         if (room.state.players.length === 2 && !room.state.started) {
             const playerIndex = getPlayerIndex();
 
