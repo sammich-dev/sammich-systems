@@ -1,7 +1,6 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
+Change licenses to Apache 2
 (A) instructions countdown, if no-one perss any key during instructions, advance game
-
-count times where tie-breaker: if all mini-games were tie-breaker, most sure is invalid game to take into account.
 (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends
 (A) machine should send land and gameInstanceId to server, it will create db row in GameInstance if necessary, ws-room should have filter to join with land+gameInstanceId, it will have effect on played-games endpoint.
 (B) +1 add animate API utilities
@@ -36,7 +35,7 @@ when a user creates a match, if waiting time is higher than 60 seconds, reset th
 tournaments: chess swiss system
 
 
-
+report dcl-sdk7 pointer issues
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
 can optimize spawner maybe? remove entity and reuse later, when creating sprie in screen, if there is available, use it instead of creating a new one
@@ -44,6 +43,7 @@ each mini-game can have own sprite-sheet with instructions, which is a full scre
 when player loads scene and server is down, try to connect on interval , or with button?
 review to test/fix/improve when spectator joins at different moments, like showing instructions, or game started, etc.
 bug: from same computer, having an incognito window playing the game,
+count times where tie-breaker: if all mini-games were tie-breaker, most sure is invalid game to take into account.
 x player 1 name, is not taken fine when spectator.
 x (B) 2023-11-14 +web Finish Design/Analysis tournament API & web-app @api @web
 x (C) 2023-11-18 limit gameplay to best of 5 mini-games
