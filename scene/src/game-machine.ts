@@ -492,7 +492,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         }
         if (room.state.players.length === 1) {
             Transform.getMutable(textEntity).position.y = -0.24;
-            TextShape.getMutable(textEntity).text = `<color=${NAME_COLOR}>${user.displayName}</color> is waiting someone to join the game...`;
+            TextShape.getMutable(textEntity).text = `<color=${NAME_COLOR}>${room.state.players[0].user.displayName}</color> is waiting someone to join the game...`;
         } else {
             Transform.getMutable(textEntity).position.y = -10000;
             TextShape.getMutable(textEntity).text = ``;
