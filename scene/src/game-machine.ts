@@ -275,7 +275,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         }
 
         function hideInstructions(){
-            lobbyScreen.hide();
             instructionsPanel?.destroy();
         }
     };
@@ -335,7 +334,7 @@ console.log("reconnectionToken",reconnectionToken);
 
         const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
             return acc + (current === winnerIndex ? 1:0);
-        },0);
+        },0) - 1;
         const isFinal = !!finalize;
         const trackWinnerIndex = getTrackWinnerFromMiniGameResults(miniGameResults);
         console.log("trackWinnerIndex",trackWinnerIndex)
@@ -373,6 +372,7 @@ console.log("reconnectionToken",reconnectionToken);
         return room.state.miniGameTrack[index];
     }
     const startMiniGame = async () => {
+        lobbyScreen.hide();
         const miniGameId = getPlayingMiniGameId();
         console.log("START_GAME", miniGameId);
         const GameFactory = getGame(miniGameId);
