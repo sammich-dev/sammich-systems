@@ -24,10 +24,11 @@ const MIN_CAR_POS_X = MIN_FROG_POS_X - 16;
 const MAX_CAR_POS_X = MAX_FROG_POS_X + 8;
 
 async function run({game}:any){
-    const state = {
+    const state:any = {
         moving:false,
         takingBurger:false,
-        collision:false
+        collision:false,
+        tookIndexes:[]
     }
     game.setScreenSprite({
         spriteDefinition:{
@@ -130,20 +131,29 @@ async function run({game}:any){
                 y-8
             );
             if(y <= 16){
-                checkBurgers();
-                resetFrog();
+                checkBurgerRow();
             }
             state.moving = false;
         }
         game.checkWinners();
 
-        function checkBurgers(){
+        function checkBurgerRow(){
             [x,y] = frog.getPixelPosition();
-            const foundBurger = SAMMICH_POSITIONS.findIndex(i=>i===x);
-            if(~foundBurger){
-                burgers[foundBurger].sprite.hide();
+            const foundBurgerIndex = SAMMICH_POSITIONS
+                .filter((_,index) => !~state.tookIndexes.indexOf(index))
+                .findIndex(i=>i===x);
+            const foundBurguerSpace = SAMMICH_POSITIONS
+                .findIndex(i=>i===x);
+            if(~foundBurgerIndex){
+                burgers[foundBurgerIndex].sprite.hide();
                 game.setPlayerScore(game.getPlayerScore()+1);
                 state.takingBurger = true;
+                state.tookIndexes.push(foundBurgerIndex)
+            }
+            if(~foundBurguerSpace){
+                resetFrog();
+            }else{
+                frog.setPixelPosition(x,y+8);
             }
         }
     });
