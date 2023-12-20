@@ -81,10 +81,10 @@ export function createGlobalScoreTransition(screen:any){
 
     return {
         destroy:()=>{
-            //TODO
+
         },
         hide,
-        showTransition:async ({winnerIndex, previousScore, trackWinnerIndex, displayName1, displayName2, isFinal}:any)=>{
+        showTransition:async ({winnerIndex, previousScore}:any)=>{
             winnerSprite.show();
             loserSprite.show();
             player1GlobalScoreBig.show();
@@ -93,6 +93,7 @@ export function createGlobalScoreTransition(screen:any){
             await sleep(1000);
 
             if(winnerIndex === 0){
+                player1GlobalScoreBig.setText(previousScore)
                 winnerSumPointsText.setPixelPosition(...SUM_SCORE_TEXT_POSITIONS[0]);
 
                 winnerSumPointsText.show();
@@ -100,6 +101,7 @@ export function createGlobalScoreTransition(screen:any){
                 winnerSumPointsText.hide();
                 player1GlobalScoreBig.setText((previousScore+1).toString());
             }else if(winnerIndex === 1){
+                player2GlobalScoreBig.setText(previousScore)
                 winnerSumPointsText.setPixelPosition(...SUM_SCORE_TEXT_POSITIONS[1]);
                 winnerSumPointsText.show();
                 await sleep(1000);
