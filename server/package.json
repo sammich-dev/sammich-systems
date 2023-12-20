@@ -9,6 +9,7 @@
   },
   "scripts": {
     "pm2": "pm2 start npm --time --name \"colyseus\" -- run prod",
+    "pm2:dev": "pm2 start npm --time --name \"colyseus\" -- run dev",
     "prod": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
     "loadtest": "tsx loadtest/example.ts --room my_room --numClients 2",

@@ -43,12 +43,6 @@ export function createSpriteScreen({
     MeshCollider.setPlane(screenEntity);
 
     const screenSpriteDefinition = spriteDefinition;
-    const pixelSize = [
-        (transform?.scale?.x || 0) / spriteDefinition.w,
-        (transform?.scale?.y || 0) / spriteDefinition.h
-    ];
-
-
     const SPRITE_BUTTON_POINTER_OPTIONS = {pointerEvents:[{
             eventType: PointerEventType.PET_DOWN,
             eventInfo: {
@@ -65,7 +59,6 @@ export function createSpriteScreen({
         },
         getSize:()=>[state.spriteDefinition.w, state.spriteDefinition.h],
         addSprite: ({ID, spriteDefinition, onClick, pixelPosition, layer, network, hoverText, zoom=[1,1]}: any):Sprite => {
-            console.log("addSprite", spriteDefinition, spriteDefinition.klass);
             const normalizedPixelPosition = normalizePixelPosition(pixelPosition[0], pixelPosition[1], layer);
             const state = {
                 pixelPosition,
@@ -161,7 +154,6 @@ export function createSpriteScreen({
         },
         addText: ({pixelPosition = [0,0], textAlign = TextAlignMode.TAM_TOP_LEFT, text = "FOO", textColor = [0,0,0,1], fontSize = 0.5, layer = 10}:any) => {
             const normalizedPosition = normalizePixelPositionForText(pixelPosition[0], pixelPosition[1], layer)
-            console.log("text normalizedPosition",normalizedPosition);
             const textEntity = engine.addEntity();
             TextShape.create(textEntity, {
                 text,

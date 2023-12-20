@@ -15,16 +15,9 @@ export const init = async () => {
     getDebugPanel();
 
     const rootEntity = engine.addEntity();
-    const position = Vector3.create(8,1.55,8);
-
-    Transform.create(rootEntity, {
-        position
-    });
-
     await createMachineScreen(rootEntity, {
-        position:Vector3.Zero(),
+        position:Vector3.create(4,1,4),
         rotation:Quaternion.Zero(),
-        scale: Vector3.create(192 / 40, 128 / 40, 1)
+        scale: Vector3.create(2, 1.5, 1)
     }, "test");
-
 }

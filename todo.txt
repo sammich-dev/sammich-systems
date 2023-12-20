@@ -1,5 +1,9 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
 Change licenses to Apache 2
+handling when a player leaves on any gameStage
+handling spectator entering on any track gameStage
+handling server going down in middle of any of the gameStage (client should recover even if track is aborted, and game idle again)
+
 (A) instructions countdown, if no-one perss any key during instructions, advance game
 (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends
 (A) machine should send land and gameInstanceId to server, it will create db row in GameInstance if necessary, ws-room should have filter to join with land+gameInstanceId, it will have effect on played-games endpoint.

@@ -1,0 +1,11 @@
+export enum GAME_STAGE {
+    NOT_CONNECTED, //when client never connected to server yet
+    IDLE,
+    WAITING_PLAYER_JOIN,
+    WAITING_PLAYERS_READY,
+    SHOWING_INSTRUCTIONS,
+    PLAYING_MINIGAME,
+    TIE_BREAKER,
+    SHOWING_SCORE_TRANSITION,
+    SHOWING_END
+}

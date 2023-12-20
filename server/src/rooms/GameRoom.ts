@@ -7,6 +7,7 @@ import {createScreenRunner} from "../../../lib/game-runner";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
 import {getGame, getGameKeys, setupGameRepository} from "../../../lib/game-repository";
 import {sleep} from "../../../lib/functional";
+import {GAME_STAGE} from "../../../lib/game-stages";
 
 const prisma = new PrismaClient();
 
@@ -39,11 +40,14 @@ export class GameRoom extends Room<GameState> {
         this.checkWinners = this.checkWinners.bind(this);
         this.forceWinner = this.forceWinner.bind(this);
         this.handleWinner = this.handleWinner.bind(this);
+        this.getGlobalWinner = this.getGlobalWinner.bind(this);
+        this.getPlayerGlobalScore = this.getPlayerGlobalScore.bind(this);
         this.autoDispose = false;
 
         this.setState(new GameState());
 
         this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
+
             console.log("INSTRUCTIONS_READY", {playerIndex});
             if(!this.state.players[playerIndex]){
                 //TODO
@@ -51,9 +55,11 @@ export class GameRoom extends Room<GameState> {
                 return;
             }
             if(this.state?.players[playerIndex]?.instructionsReady) return;
+
             this.state.players[playerIndex].instructionsReady = true;
+
             if(this.state.players.every(i=>i.instructionsReady)){
-                const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
+                const GameFactory:any = getGame(this.state.miniGameTrack[this.state.miniGameResults.length]);
                 this.currentGameDefinition = GameFactory.definition;
 
                 if(GameFactory.definition.split){
@@ -86,26 +92,27 @@ export class GameRoom extends Room<GameState> {
                         clientRoom:undefined
                     });
                 }
-                console.log("START_GAME", this.state.currentMiniGameIndex)
-                this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.currentMiniGameIndex]});
+                this.state.gameStage = GAME_STAGE.PLAYING_MINIGAME;
                 this.screenRunners.forEach(g => g.runtime.start(false));
+                this.broadcastPatch();
             }
         });
 
         this.onMessage("CREATE_GAME", (client, {user})=>{
             console.log("CREATE_GAME", user);
             if(this.state.players.length) return;
-
+            this.state.gameStage = GAME_STAGE.WAITING_PLAYER_JOIN;
             this.state.players.push(new PlayerState({user, client, playerIndex:0}));
-            //TODO we have to create the screen when we know the minigames, not before
+            this.broadcastPatch();
         });
 
         this.onMessage("JOIN_GAME", (client, {user})=>{
             console.log("JOIN_GAME", user);
             if(!this.state.players.length || this.state.players.length === 2) return;
             if(this.state.players[0].user.userId === user.userId) return;
-
+            this.state.gameStage = GAME_STAGE.WAITING_PLAYERS_READY;
             this.state.players.push(new PlayerState({user, client, playerIndex:1}));
+            this.broadcastPatch();
         });
 
         this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
@@ -117,44 +124,56 @@ export class GameRoom extends Room<GameState> {
             && this.screenRunners[
                 screenRunnerIndex
             ]?.runtime.reproduceFramesUntil(n);
+            this.broadcastPatch();
         });
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
             if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
+            this.broadcastPatch();
         });
 
         this.onMessage("READY", async (client, {playerIndex})=>{
+            console.log("READY", playerIndex);
             if(this.state.players[playerIndex].ready) return;
             this.state.players[playerIndex].ready = true;
-            console.log("READY", playerIndex, this.state.started)
-            if(!this.state.started && this.state.players.every((player)=>player.ready)){
-                await this.state.setupNewGame();
-                console.log("broadcast gameTrack")
-                this.broadcast("MINI_GAME_TRACK", this.state.miniGameTrack.toJSON());
-              //  this.broadcast("START_GAME", {miniGameId:this.state.miniGameTrack[this.state.miniGameResults.length]});
+
+            if(
+                inStage(GAME_STAGE.WAITING_PLAYERS_READY)
+                && this.state.players.every((player)=>player.ready)
+            ){
+                await this.state.setupNewTrack();//SHOWING_INSTRUCTIONS
+                console.log("this.tate.gameStage", this.state.gameStage)
+                this.broadcastPatch();
             }
         });
-    }
 
+        const inStage = (STATE:GAME_STAGE)=>this.state.gameStage === STATE;
+    }
+    patches:number = 0;
+    async onBeforePatch(state: GameState) {
+        console.log("patch gameStage",this.state.gameStage);
+    }
 
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
 
     async tieBreaker({winnerIndex}:{winnerIndex:number}){
-        console.log("TIE_BREAKER", winnerIndex, this.state.currentMiniGameIndex);
+        console.log("TIE_BREAKER", winnerIndex, this.state.miniGameResults.length);
+        this.state.gameStage = GAME_STAGE.TIE_BREAKER;
+        //TODO we are defining the winner before ending the minigame, can be confusing, maybe better create another state.tieBreakerWinner
+        this.state.tieBreakerWinner = winnerIndex;
         this.screenRunners.forEach(r=>r.runtime.setState({tieBreaker:true}));
-        this.broadcast("TIE_BREAKER", {winnerIndex});
-
-        await sleep(7 * 5 * 7 * (1000/60) + 2000);//delay_frames * num_delays * rounds
+        this.broadcastPatch();
+        await sleep(7 * 5 * 7 * (1000/60) + 2000 + 500);//coin animation: delay_frames * num_delays * rounds + pl2HalfSecond
         this.forceWinner({winnerIndex});
     }
 
     async forceWinner({winnerIndex}:{winnerIndex:number}){
-        console.log("forceWinner")
-        if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
-        const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
+        const GameFactory:any = getGame(this.state.miniGameTrack[this.state.miniGameResults.length]);
+        console.log("forceWinner", GameFactory.definition.alias);
         if(GameFactory.definition.split){
+            console.log("split, cjecking lastReproducedFrame")
             if(this.screenRunners[0].runtime.getState().lastReproducedFrame > this.screenRunners[1].runtime.getState().lastReproducedFrame){
                 console.log("lastReproducedFrame 0 > 1", this.screenRunners[1].runtime.getState().lastReproducedFrame);
                 this.screenRunners[1].runtime.reproduceFramesUntil(this.screenRunners[0].runtime.getState().lastReproducedFrame);
@@ -170,10 +189,12 @@ export class GameRoom extends Room<GameState> {
     }
 
     async handleWinner({winnerIndex}:{winnerIndex:number}){
+        console.log("handleWinner",winnerIndex)
         const _winnerInfo = {winnerIndex};
 
         if(_winnerInfo !== undefined){
             console.log("PUSH MINIGAME RESULT", _winnerInfo.winnerIndex);
+
             this.state.miniGameResults.push(_winnerInfo.winnerIndex);
             this.screenRunners.forEach(s=> s?.runtime.stop());
             this.screenRunners.forEach(s=> s?.runtime.destroy());
@@ -184,32 +205,21 @@ export class GameRoom extends Room<GameState> {
             console.log("miniGameScore",  this.state.players.map((p:any)=>p.miniGameScore).join("-"));
 
             //TODO if 1 player has >= 3 globalScore and the other has less score, end game
-            const player1GlobalScore = this.getPlayerGlobalScore(0);
-            const player2GlobalScore = this.getPlayerGlobalScore(1);
-            let globalWinner = -1;
-            if(
-                ((player1GlobalScore >= 3 || player2GlobalScore >= 3) && player1GlobalScore !== player2GlobalScore)
-                || this.state.currentMiniGameIndex === 4
-            ){
-                globalWinner = player1GlobalScore>player2GlobalScore?0:1
-            }
-            this.broadcast("MINI_GAME_WINNER", {
-                ..._winnerInfo,
-                miniGameIndex:this.state.currentMiniGameIndex,
-                finalize:globalWinner >= 0,
-                miniGameResults:this.state.miniGameResults
-            });
+            const globalWinner = this.getGlobalWinner();
+            console.log("SHOW SCORE TRANSITION");
+            this.state.gameStage = GAME_STAGE.SHOWING_SCORE_TRANSITION;
+            this.broadcastPatch();
+            await sleep(1000 + 1000 + 2000);
+
             this.state.players.forEach((player:PlayerState) => {
                 player.instructionsReady = false;
                 player.miniGameScore = 0;
             });
 
-            if(globalWinner === -1){
-                this.state.currentMiniGameIndex++;
-            }else{
-                console.log("WAIT SLEEP");
+            if(globalWinner >= 0){
+                this.state.gameStage = GAME_STAGE.SHOWING_END;
+                this.broadcastPatch();
                 await sleep(5000);
-
                 const gameIds = getGameKeys();//TODO this should be collected at start of the game, not at the end just in case new are added
                 const playedMatch = await prisma.playedMatch.create({
                     data: {
@@ -221,10 +231,9 @@ export class GameRoom extends Room<GameState> {
                         parcel:"0,0",//TODO
                         miniGameIds:this.state.miniGameTrack.join(","),
                         gameInstanceId:null,
-
                         playerUserIds:this.state.players.map(p=>p.user.userId).join(","),//TODO
                         playerDisplayNames:this.state.players.map(p=>p.user.displayName).join(","),
-                        scores: `${player1GlobalScore},${player2GlobalScore}`,
+                        scores: `${this.getPlayerGlobalScore(0)},${this.getPlayerGlobalScore(1)}`,
                         leaderboard:[globalWinner, globalWinner===0?1:0 ].map(i=>this.state.players[i].user.userId).join(",")
                     }
                 });
@@ -240,19 +249,19 @@ export class GameRoom extends Room<GameState> {
                     });
                     console.log("created playerMatchPlayer", playerMatchPlayer)
                 }
-
-                console.log("RESET TRACK");
                 this.state.resetTrack();
+            }else{
+                this.state.gameStage = GAME_STAGE.SHOWING_INSTRUCTIONS;
             }
+            this.broadcastPatch();
         }
     }
 
     async checkWinners({playerIndex, n}:{playerIndex:0|1, n:number}){
         const anyOfChecksDueTime = () => this.askedToCheckWinners.some(i=> i + 60 < n );
-
         console.log("checkWinners",playerIndex, n, this.state.players[0].miniGameScore, this.state.players[1].miniGameScore, this.state.miniGameResults, );
-         const GameFactory:any = getGame(this.state.miniGameTrack[this.state.currentMiniGameIndex]);
-        if(this.state.miniGameResults[this.state.currentMiniGameIndex]) return;
+         const GameFactory:any = getGame(this.state.miniGameTrack[this.state.miniGameResults.length]);
+        if(this.state.miniGameResults[this.state.miniGameResults.length]) return;
          console.log("this.askedToCheckWinners",this.askedToCheckWinners);
         this.askedToCheckWinners[playerIndex] = this.askedToCheckWinners[playerIndex] || n;
 
@@ -284,9 +293,6 @@ export class GameRoom extends Room<GameState> {
         if(_winnerInfo){
             return await this.handleWinner(_winnerInfo);
         }
-
-
-
     }
 
     async manageGetOrCreateIndexedPlayers(players:PlayerState[]){
@@ -321,14 +327,22 @@ export class GameRoom extends Room<GameState> {
             .reduce((acc, current)=>current === playerIndex ? (acc+1):acc,0)
     }
 
+    getGlobalWinner(){
+        const player1GlobalScore = this.getPlayerGlobalScore(0);
+        const player2GlobalScore = this.getPlayerGlobalScore(1);
+        if(
+            ((player1GlobalScore >= 3 || player2GlobalScore >= 3) && player1GlobalScore !== player2GlobalScore)
+            || this.state.miniGameResults.length === 5
+        ){
+            return player1GlobalScore > player2GlobalScore ? 0 : 1
+        }
+        return -1;
+    }
+
     setWinnerFn(fn:Function){
         console.log("setWinnerFn", !!fn);
         this.checkWinnerFunction = fn;
         return ():any => this.checkWinnerFunction = null;
-    }
-
-    prepareNextMinigame(){
-
     }
 
     onJoin(client: Client, {user}:any) {
@@ -341,36 +355,49 @@ export class GameRoom extends Room<GameState> {
         if(foundPlayerIndex >= 0) this.state.players.splice(foundPlayerIndex,1);
         console.log("onJoin", user)
         this.state.users.push(new PlayerState({user, client, playerIndex:-1}));
+        this.broadcastPatch();
         //TODO only when it's player, not when it's user
     }
 
     async onLeave(client: Client, consented:boolean) {
         try {
+            //if gameStage is waiting to join, and one of the players is the client, cancel and reset
+            if(this.state.gameStage === GAME_STAGE.WAITING_PLAYER_JOIN && this.state.players.find(p=>p.client === client)){
+                this.state.players.splice(0, this.state.players.length);
+                this.screenRunners.forEach(s=>s.runtime.destroy());
+                this.state.gameStage = GAME_STAGE.IDLE;
+                this.state.resetTrack();
+            }
             if (consented) {
                 throw new Error("consented leave");
             }
 
             // allow disconnected client to reconnect into this room until 20 seconds
+            //TODO review if after reconnection, it needs to change maps of clients/sessionId on any PlayerState
+
             await this.allowReconnection(client, 10);//TODO or until game finishes if it's a participant to also allow one player to win
 
             console.log("allowed reconnection", client.id);
         } catch (e) {
-            console.log("catching onLeave")
+            console.log("catching onLeave", consented)
             const foundUserIndex = this.state.users.findIndex(p=>p.client === client);
             const foundPlayerIndex = this.state.players.findIndex(p=>p.client === client);
-            console.log("onLeave", foundUserIndex, foundPlayerIndex);
-            if(foundUserIndex !== -1) this.state.users.splice(foundUserIndex, 1);
-            if(foundPlayerIndex !== -1) this.state.players.splice(foundPlayerIndex, 1);
-            this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
-            if(!this.state.players.length){
-                this.state.started = false;
+            console.log("onLeave foundUserIndex:", foundUserIndex,"  foundPlayerIndex:", foundPlayerIndex);
+
+            if(foundUserIndex >= 0) this.state.users.splice(foundUserIndex, 1);
+            if(foundPlayerIndex >= 0){
+                this.state.players.splice(foundPlayerIndex, 1);
+                this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
+                this.state.gameStage = GAME_STAGE.IDLE;
+                this.state.resetTrack();
             }
+
         }
-
-
+        this.broadcastPatch();
     }
 
     onDispose(): void | Promise<any> {
+        this.clients.forEach(c=>c.leave())
         console.log("DISPOSE");
         process.exit(0);
     }

@@ -68,19 +68,22 @@ export function createGlobalScoreTransition(screen:any){
         layer:2,
         zoom:[1,1]
     });
+    const hide = ()=>{
+        winnerSprite.hide();
+        loserSprite.hide();
+        player1GlobalScoreBig.hide();
+        winnerSumPointsText.hide();
+        player2GlobalScoreBig.hide();
+    };
+
     finalSprite.hide();
+    hide();
 
     return {
         destroy:()=>{
             //TODO
         },
-        hide:()=>{
-            winnerSprite.hide();
-            loserSprite.hide();
-            player1GlobalScoreBig.hide();
-            winnerSumPointsText.hide();
-            player2GlobalScoreBig.hide();
-        },
+        hide,
         showTransition:async ({winnerIndex, previousScore, trackWinnerIndex, displayName1, displayName2, isFinal}:any)=>{
             winnerSprite.show();
             loserSprite.show();
@@ -104,13 +107,12 @@ export function createGlobalScoreTransition(screen:any){
                 player2GlobalScoreBig.setText((previousScore+1).toString());
             }
             await sleep(2000);
-
-            if(isFinal){
-                finalSprite.show();
-                finalSprite.setZoom([trackWinnerIndex?-1:1,1]);
-                await sleep(5000);
-                finalSprite.hide();
-            }
+        },
+        showFinalSprite:async (trackWinnerIndex:number)=>{
+            finalSprite.show();
+            finalSprite.setZoom([trackWinnerIndex?-1:1,1]);
+            await sleep(5000);
+            finalSprite.hide();
         },
         reset:()=>{
             player1GlobalScoreBig.setText("0");

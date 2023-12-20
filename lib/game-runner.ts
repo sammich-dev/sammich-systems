@@ -265,14 +265,17 @@ export const createScreenRunner = ({
             spawners.push(spawner);
             return spawner;
         },
-        addText: ({text, pixelPosition, textAlign, fontSize, textColor,layer}: {text:string, textColor?:number[], fontSize?:number, textAlign?:TextAlignMode, pixelPosition:number[], layer?:number}) => screen.addText({
-            text,
-            pixelPosition,
-            textAlign,
-            fontSize,
-            textColor,
-            layer
-        }),
+        addText: (
+            {text, pixelPosition, textAlign, fontSize, textColor, layer}
+                : { text: string, textColor?: number[], fontSize?: number, textAlign?: TextAlignMode, pixelPosition: number[], layer?: number }) =>
+            screen.addText({
+                text,
+                pixelPosition,
+                textAlign,
+                fontSize,
+                textColor,
+                layer
+            }),
         setWinnerFn: (fn: WinnerFunction) => {
             _disposeWinnerFn = serverRoom?.setWinnerFn(fn);
         },
@@ -284,9 +287,7 @@ export const createScreenRunner = ({
         getSpriteEntities,
         random,
         randomInt,
-        getRandomFromList: (list: any[]) => {
-            return list[Math.floor(random() * list.length)];
-        },
+        getRandomFromList: (list: any[]) => list[Math.floor(random() * list.length)],
         shuffleList: (list: any[]) => {//immutable, returns new list
             const listCopy = [...list];
             const result = [];
@@ -306,10 +307,10 @@ export const createScreenRunner = ({
         },
         players: [{//TODO only for use with shared screen, should not be implemented here, but in shared-screen-runner ?
             setPlayerScore:setPlayer1Score,
-            getPlayerScore:()=>(serverRoom||clientRoom)?.state.players[0].miniGameScore || state.score[0]
+            getPlayerScore:()=>(serverRoom||clientRoom)?.state.players[0]?.miniGameScore || state.score[0]
         },{
             setPlayerScore:setPlayer2Score,
-            getPlayerScore:()=> (serverRoom||clientRoom)?.state.players[1].miniGameScore || state.score[1]
+            getPlayerScore:()=> (serverRoom||clientRoom)?.state.players[1]?.miniGameScore || state.score[1]
         }],
         setPlayerScore: (data: number) => {//TODO this smells, should not be used by shared-screen, should not be implemented here, but in shared-screen-runner ?
             state.score[playerIndex] = data;
@@ -317,7 +318,7 @@ export const createScreenRunner = ({
                 serverRoom.state.players[playerIndex].miniGameScore = data;
             }
         },
-        getPlayerScore: () => (serverRoom||clientRoom)?.state.players[playerIndex].miniGameScore || state.score[playerIndex]
+        getPlayerScore: () => (serverRoom || clientRoom)?.state.players[playerIndex]?.miniGameScore || state.score[playerIndex]
     };
 
     function random() {

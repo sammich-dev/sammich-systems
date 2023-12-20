@@ -33,10 +33,10 @@ export const createSpriteEntityFactory = ({screen, serverRoom, clientRoom,isClie
                    spriteState.onChange((changes)=>{
                        const spriteStateJSON:SpriteState = spriteState.toJSON() as SpriteState;
                        const localSprite:SpriteEntity = spriteEntities.find(i=>i.ID === spriteStateJSON.ID) as SpriteEntity;
-                       if(localSprite.sprite.getPixelPosition()[0] !== spriteStateJSON.x || localSprite.sprite.getPixelPosition()[1] !== spriteStateJSON.y){
+                       if(localSprite?.sprite && localSprite.sprite.getPixelPosition()[0] !== spriteStateJSON.x || localSprite.sprite.getPixelPosition()[1] !== spriteStateJSON.y){
                            localSprite.setPixelPosition(spriteStateJSON.x,spriteStateJSON.y);
                        }
-                       if(localSprite.sprite.getFrame() !== spriteStateJSON.frame){
+                       if(localSprite?.sprite && localSprite.sprite.getFrame() !== spriteStateJSON.frame){
                            localSprite.applyFrame(spriteStateJSON.frame);
                        }
                    })

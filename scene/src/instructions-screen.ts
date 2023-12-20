@@ -13,6 +13,7 @@ export const createInstructionScreen = (
         gameAlias: string,
         gameInstructions: string
     }) => {
+    console.log("createInstructionScreen", gameAlias);
     const state = {
         timeoutStartedTime:0,
         waitingOther:false

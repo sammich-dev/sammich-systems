@@ -5,16 +5,9 @@ import {Client} from "colyseus";
 import {PrismaClient} from "@prisma/client";
 import {getRandomFromList} from "../../../lib/lib-util";
 import {getGameKeys} from "../../../lib/game-repository";
+import {GAME_STAGE} from "../../../lib/game-stages";
 
 const prisma = new PrismaClient();
-
-export enum GAME_STATE {
-    IDLE,
-    CREATING,
-    INSTRUCTIONS,
-    PLAYING,
-    FINISH
-}
 
 export class UserState extends Schema {
     @type("string") publicKey: string = "";
@@ -87,48 +80,46 @@ export class MiniGameResult extends Schema {
 }
 
 export class GameState extends Schema {
-    @type("number") currentMiniGameIndex:number = 0;
-    @type("boolean") started = false;
+    @type("int8") gameStage:number = 1;
+    @type("int8") tieBreakerWinner:number = -1;
     @type("uint64") created = Date.now();
     @type([PlayerState]) players = new ArraySchema<PlayerState>();
     @type([PlayerState]) users = new ArraySchema<PlayerState>();
-    @type(["uint8"]) miniGameTrack = new ArraySchema<number>();
-    @type(["uint8"])
+    @type(["int8"]) miniGameTrack = new ArraySchema<number>();
+    @type(["int8"])
     miniGameResults:number[] = new ArraySchema<number>();
 
-    async setupNewGame(seed = Math.random()){
+    async setupNewTrack(seed = Math.random()){
         this.miniGameResults.splice(0, this.miniGameResults.length);
-        this.currentMiniGameIndex = 0;
-        this.started = false;
-        this.created = new Date().getTime();
+        this.created = Date.now();
+        this.tieBreakerWinner = -1;
 
         if(this.players.length > 2 ){
             throw Error("FIX CODE PLAYERS > 2");
         }
 
-        //TODO Don't load minigames from database for now, because for now we have mini-games code in local, later we will need to filter by state, etc.
+        //TODO Don't load minigames from database for now, because for now we have mini-games code in local, later we will need to filter by state, etc. later, maybe we need to add new GAME_STAGE.DEFINING_TRACK or use WAITING_READY && !this.miniTrack.length
        // const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
         const miniGameIDs = getGameKeys();
         console.log("miniGameIds", miniGameIDs)
         this.miniGameTrack.splice(0, this.miniGameTrack.length);
         while(this.miniGameTrack.length < 5){
             this.miniGameTrack.push(getRandomFromList(miniGameIDs));
-         //   this.miniGameTrack.push(this.miniGameTrack.length%2===0?2:1);
-         //   this.miniGameTrack.push(2);
+            //this.miniGameTrack.push(2);
         }
-        console.log("miniGameTrack", this.miniGameTrack.toJSON())
-        this.started = true;
 
+        console.log("miniGameTrack", this.miniGameTrack.toJSON())
+        this.gameStage = GAME_STAGE.SHOWING_INSTRUCTIONS;
         return {seed, miniGameTrack:this.miniGameTrack};
     }
 
     resetTrack(){
-        this.currentMiniGameIndex = 0;
-        this.started = false;
         this.created = 0;
         this.players.splice(0,this.players.length);
         this.miniGameTrack.splice(0,this.miniGameTrack.length);
         this.miniGameResults.splice(0,this.miniGameResults.length);
+        this.tieBreakerWinner = -1;
+        this.gameStage = GAME_STAGE.IDLE;
     }
 
     constructor() {
