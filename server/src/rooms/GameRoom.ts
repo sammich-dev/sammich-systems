@@ -385,7 +385,7 @@ export class GameRoom extends Room<GameState> {
             console.log("onLeave foundUserIndex:", foundUserIndex,"  foundPlayerIndex:", foundPlayerIndex);
 
             if(foundUserIndex >= 0) this.state.users.splice(foundUserIndex, 1);
-            if(foundPlayerIndex >= 0){
+            if(foundPlayerIndex >= 0 || this.state.players.length < 2){
                 this.state.players.splice(foundPlayerIndex, 1);
                 this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
                 this.state.gameStage = GAME_STAGE.IDLE;
