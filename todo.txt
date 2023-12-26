@@ -1,10 +1,12 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
 Change licenses to Apache 2
+Review plane onClick problem: if there is no plane after pointer, there is no problem, could be affected by the other plane, or maybe just that backface works fine.
 handling when a player leaves on any gameStage
 handling spectator entering on any track gameStage
 client: handle server restart while playing
 handling server going down in middle of any of the gameStage (client should recover even if track is aborted, and game idle again)
-
+Add some ads of "built by DAO"
+on each mini-game show the clock to tie_break (out of game-runner but in game-machine ? whos responsibility?)
 
 (A) instructions countdown, if no-one perss any key during instructions, advance game
 (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends

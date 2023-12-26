@@ -10,7 +10,6 @@ import {
     Transform
 } from "@dcl/sdk/ecs";
 
-
 import {Color3, Quaternion, Vector3} from "@dcl/sdk/math";
 import {Client} from "colyseus.js";
 import {createSpriteScreen} from "../dcl-lib/sprite-screen";
@@ -28,10 +27,11 @@ import {getGame, setupGameRepository} from "../../lib/game-repository";
 import {getRealm} from '~system/Runtime'
 import {sleep} from "../dcl-lib/sleep";
 import {GAME_STAGE} from "../../lib/game-stages";
-import {cloneDeep, waitFor} from "../../lib/lib-util";
+import {cloneDeep} from "../../lib/lib-util";
 import {EVENT} from "./events";
 
-const INSTRUCTION_READY_TIMEOUT = 5000;
+const INSTRUCTION_READY_TIMEOUT = 7000;
+const INSTRUCTION_TOTAL_TIMEOUT = 30000;
 const DEFAULT_SCREEN_SPRITE_DEFINITION = {
     ...DEFAULT_SPRITE_DEF,
     x: 576, y: 128, w: 192, h: 128,
@@ -235,6 +235,8 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 console.log("SEND READY")
                 room.send("READY", {playerIndex});
                 setInputListener();
+            }else if(!inRoomStage(GAME_STAGE.WAITING_PLAYERS_READY) && state.sentReady){
+                state.sentReady = false;
             }
         }
 
@@ -261,6 +263,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         function showInstructions(){
             const nextMiniGameIndex = room.state.miniGameResults.length;
             const nextGameId = room.state.miniGameTrack[nextMiniGameIndex];
+            console.log("showInstructions", nextMiniGameIndex, nextGameId, getGame(nextGameId).definition.alias)
             lobbyScreen.show();
             instructionsPanel = createInstructionScreen({
                 transform: {
@@ -271,7 +274,15 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 },
                 gameAlias: getGame(nextGameId).definition.alias,
                 gameInstructions: getGame(nextGameId).definition.instructions,
+                playerIndex:getPlayerIndex()
             });
+            instructionsPanel.setTimeout(30000);
+            timers.setTimeout(()=>{
+                if(!state.sentInstructionsReady){
+                    state.sentInstructionsReady = true;
+                    room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: 2 });
+                }
+            }, 30000);
         }
 
         function hideInstructions(){
@@ -292,7 +303,7 @@ console.log("reconnectionToken",reconnectionToken);
             x: 0, y: 387, w: 47, h: 25,
             metadata: {name: "createButton"}
         },
-        pixelPosition: [10, 80],
+        pixelPosition: [-47, 80],
         layer: 200,
         onClick: onClickCreate,
         hoverText: "Start new game",
@@ -305,7 +316,7 @@ console.log("reconnectionToken",reconnectionToken);
             x: 49, y: 387, w: 47, h: 25,
             metadata: {name: "joinButton"}
         },
-        pixelPosition: [192 - 10 - 47, 80],
+        pixelPosition: [192 , 80],
         layer: 200,
         onClick: onClickJoin,
         hoverText: "Join game",
@@ -464,13 +475,11 @@ console.log("reconnectionToken",reconnectionToken);
 
     function addRoomHandlers(){
         console.log("addRoomHandlers");
-        //room.onMessage("MINI_GAME_WINNER", roomOnMessageMiniGameWinner);//TODO move to stage state logic
         room.onMessage("INPUT_FRAME", roomOnInputFrame);
         room.onMessage("MINI_GAME_TRACK", onMiniGameTrack);
         room.onMessage("*", (...args:any[])=>{
             console.log("any message", args)
         });
-        //room.onMessage("START_GAME", roomOnStart);
         room.onLeave(reconnect);
         room.onStateChange(roomOnStateChange);
     }
@@ -480,7 +489,8 @@ console.log("reconnectionToken",reconnectionToken);
         if(playerIndex < 0) return;
         disposeInputListener = onInputKeyEvent((inputActionKey: any, isPressed: any) => {
             console.log("input", inputActionKey, isPressed)
-                if(inRoomStage(GAME_STAGE.SHOWING_INSTRUCTIONS) && !state.sentInstructionsReady){
+                if(inLocalStage(GAME_STAGE.SHOWING_INSTRUCTIONS) && !state.sentInstructionsReady){
+
                     state.sentInstructionsReady = true;
                     console.log("sending INSTRUCTIONS_READY");
                     room.send("INSTRUCTIONS_READY", {playerIndex, foo:1});
@@ -533,6 +543,11 @@ console.log("reconnectionToken",reconnectionToken);
         if (inLocalStage(GAME_STAGE.SHOWING_END)) {
             createButton.hide();
             joinButton.hide();
+        }
+        if(!state.connected){
+            disconnectionText.show()
+        }else{
+            disconnectionText.hide()
         }
     }
     function showWaitingText(str:string){
