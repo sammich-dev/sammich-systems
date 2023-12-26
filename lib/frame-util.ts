@@ -11,12 +11,12 @@ export type InputEventRepresentation = {
     inputActionKey:InputAction,
     time?:number
 }
-
+export type FrameEventData = InputEventRepresentation & {
+    time?:number,
+}
 export type FrameEvent = {
     type:FrameEventType,
-    data:InputEventRepresentation & {
-        time?:number,
-    }
+    data:FrameEventData
 }
 
 export type Frame = {
