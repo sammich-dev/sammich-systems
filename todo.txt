@@ -2,7 +2,9 @@
 Change licenses to Apache 2
 handling when a player leaves on any gameStage
 handling spectator entering on any track gameStage
+client: handle server restart while playing
 handling server going down in middle of any of the gameStage (client should recover even if track is aborted, and game idle again)
+
 
 (A) instructions countdown, if no-one perss any key during instructions, advance game
 (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends

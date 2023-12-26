@@ -52,14 +52,15 @@ export class GameRoom extends Room<GameState> {
             console.log("INSTRUCTIONS_READY", {playerIndex});
             if(!this.state.players[playerIndex]){
                 //TODO
-                console.warn("REVIEW WHY THIS CAN HAPPEN");
+                console.warn("REVIEW WHY THIS CAN HAPPEN", this.state.toJSON());
+
                 return;
             }
             if(this.state?.players[playerIndex]?.instructionsReady) return;
 
             this.state.players[playerIndex].instructionsReady = true;
 
-            if(this.state.players.every(i=>i.instructionsReady)){
+            if(this.state.players.length === 2 && this.state.players.every(i=>i.instructionsReady)){
                 const GameFactory:any = getGame(this.state.miniGameTrack[this.state.miniGameResults.length]);
                 this.currentGameDefinition = GameFactory.definition;
 
@@ -97,6 +98,9 @@ export class GameRoom extends Room<GameState> {
                 this.screenRunners.forEach(g => g.runtime.start(false));
                 this.broadcastPatch();
             }
+            if(this.state.players.length !== 2){
+                console.log("INSTRUCTIONS_READY bad state", this.state.toJSON());
+            }
         });
 
         this.onMessage("CREATE_GAME", (client, {user})=>{
@@ -114,6 +118,7 @@ export class GameRoom extends Room<GameState> {
             this.state.gameStage = GAME_STAGE.WAITING_PLAYERS_READY;
             this.state.players.push(new PlayerState({user, client, playerIndex:1}));
             this.broadcastPatch();
+            console.log("joined game state", this.state.toJSON())
         });
 
         this.onMessage("PLAYER_FRAME", async (client, {playerIndex, n})=>{
@@ -144,13 +149,14 @@ export class GameRoom extends Room<GameState> {
             console.log("READY", playerIndex);
             if(this.state.players[playerIndex].ready) return;
             this.state.players[playerIndex].ready = true;
-
+            console.log("READY state", this.state.toJSON());
             if(
                 inStage(GAME_STAGE.WAITING_PLAYERS_READY)
                 && this.state.players.every((player)=>player.ready)
             ){
+                await sleep(300);
                 await this.state.setupNewTrack();//SHOWING_INSTRUCTIONS
-                console.log("this.tate.gameStage", this.state.gameStage)
+                console.log("this.tate.gameStage", this.state.gameStage, this.state.toJSON())
                 this.broadcastPatch();
             }
         });
@@ -359,7 +365,13 @@ export class GameRoom extends Room<GameState> {
         if(foundUserIndex >= 0) console.log("foundUserIndex",foundUserIndex);
         if(foundPlayerIndex >= 0) console.log("foundPlayerIndex", foundPlayerIndex);
         if(foundUserIndex >= 0) this.state.users.splice(foundUserIndex,1);
-        if(foundPlayerIndex >= 0) this.state.players.splice(foundPlayerIndex,1);
+        if(foundPlayerIndex >= 0) this.resetGame();
+        if(this.state.players.length === 1 && this.state.gameStage !== GAME_STAGE.WAITING_PLAYER_JOIN){
+            this.resetGame();
+        }
+        if(this.state.players.length === 0 && this.state.gameStage !== GAME_STAGE.IDLE){
+            this.resetGame();
+        }
         console.log("onJoin", user);
         console.log("onJoin state", this.state.toJSON());
         this.state.users.push(new PlayerState({user, client, playerIndex:-1}));
@@ -371,10 +383,7 @@ export class GameRoom extends Room<GameState> {
         try {
             //if gameStage is waiting to join, and one of the players is the client, cancel and reset
             if(this.state.gameStage === GAME_STAGE.WAITING_PLAYER_JOIN && this.state.players.find(p=>p.client === client)){
-                this.state.players.splice(0, this.state.players.length);
-                this.screenRunners.forEach(s=>s.runtime.destroy());
-                this.state.gameStage = GAME_STAGE.IDLE;
-                this.state.resetTrack();
+                this.resetGame();
             }
             if (consented) {
                 throw new Error("consented leave");
@@ -398,15 +407,21 @@ export class GameRoom extends Room<GameState> {
             }
             if(foundPlayerIndex >= 0){
                 //TODO when a player leaves, if connected player was winning, he should win the track
-                this.state.players.splice(foundPlayerIndex, 1);
-                this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
-                this.state.gameStage = GAME_STAGE.IDLE;
-                this.state.resetTrack();
+                this.resetGame();
             }
 
         }
         this.broadcastPatch();
         console.log("onLeave state", this.state.toJSON());
+    }
+
+    resetGame(){
+        this.state.players.splice(0, this.state.players.length);
+        console.log("resetGame")
+        this.screenRunners[0]?.runtime?.destroy();
+        this.screenRunners[1]?.runtime?.destroy();
+        this.state.gameStage = GAME_STAGE.IDLE;
+        this.state.resetTrack();
     }
 
     onDispose(): void | Promise<any> {

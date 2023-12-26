@@ -6,6 +6,7 @@ import {PrismaClient} from "@prisma/client";
 import {getRandomFromList} from "../../../lib/lib-util";
 import {getGameKeys} from "../../../lib/game-repository";
 import {GAME_STAGE} from "../../../lib/game-stages";
+import {Frame, FrameEvent, FrameEventData, InputEventRepresentation} from "../../../lib/frame-util";
 
 const prisma = new PrismaClient();
 
@@ -79,6 +80,49 @@ export class MiniGameResult extends Schema {
     }
 }
 
+export class FrameEventDataSchema extends Schema {
+    @type("uint64") frameNumber?:number;
+    @type("uint8") playerIndex?:number;
+    @type("boolean") isPressed?:boolean;
+    @type("uint8") inputActionKey?:number;
+    @type("uint64") time?:number;
+
+    constructor(data:FrameEventData){
+        super();
+        this.frameNumber = data.frameNumber;
+        this.playerIndex = data.playerIndex;
+        this.isPressed = data.isPressed;
+        this.inputActionKey = data.inputActionKey;
+        this.time = data.time;
+    }
+}
+
+export class FrameEventSchema extends Schema {
+    @type("uint8") type:number;
+    @type(FrameEventDataSchema) data:any;
+
+    constructor(event:FrameEvent){
+        super();
+        this.type = event.type;
+        this.data = new FrameEventDataSchema(event.data);
+    }
+}
+export class InputFrameSchema extends Schema {
+    @type("uint64") index:number;
+    @type([FrameEventSchema]) events:FrameEventSchema[];
+
+    constructor(frame:Frame){
+        super();
+        this.index = frame.index;
+        this.events = new ArraySchema<FrameEventSchema>();
+        frame.events.forEach((e) => this.events.push(new FrameEventSchema(e)) );
+    }
+}
+
+class PlayerFrameCollection extends Schema {
+    @type([InputFrameSchema]) frames = new ArraySchema<InputFrameSchema>();
+}
+
 export class GameState extends Schema {
     @type("int8") gameStage:number = 1;
     @type("int8") tieBreakerWinner:number = -1;
@@ -89,41 +133,44 @@ export class GameState extends Schema {
     @type(["int8"])
     miniGameResults:number[] = new ArraySchema<number>();
 
+    @type([PlayerFrameCollection])
+    screenFrames = new ArraySchema<PlayerFrameCollection>();
+
+    constructor() {
+        super();
+        this.screenFrames[0] = new PlayerFrameCollection();
+        this.screenFrames[1] = new PlayerFrameCollection();
+    }
+
     async setupNewTrack(seed = Math.random()){
-        this.miniGameResults.splice(0, this.miniGameResults.length);
-        this.created = Date.now();
-        this.tieBreakerWinner = -1;
-
-        if(this.players.length > 2 ){
-            throw Error("FIX CODE PLAYERS > 2");
-        }
-
+        this.resetTrack(false);
         //TODO Don't load minigames from database for now, because for now we have mini-games code in local, later we will need to filter by state, etc. later, maybe we need to add new GAME_STAGE.DEFINING_TRACK or use WAITING_READY && !this.miniTrack.length
        // const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
         const miniGameIDs = getGameKeys();
-        console.log("miniGameIds", miniGameIDs)
-        this.miniGameTrack.splice(0, this.miniGameTrack.length);
+
         while(this.miniGameTrack.length < 5){
             this.miniGameTrack.push(getRandomFromList(miniGameIDs));
             //this.miniGameTrack.push(2);
         }
 
+        console.log("miniGameIds", miniGameIDs);
         console.log("miniGameTrack", this.miniGameTrack.toJSON())
+
         this.gameStage = GAME_STAGE.SHOWING_INSTRUCTIONS;
+        console.log("state", this.toJSON());
         return {seed, miniGameTrack:this.miniGameTrack};
     }
 
-    resetTrack(){
+    resetTrack(resetPlayers = true){
         this.created = 0;
-        this.players.splice(0,this.players.length);
+        if(resetPlayers) this.players.splice(0,this.players.length);
         this.miniGameTrack.splice(0,this.miniGameTrack.length);
         this.miniGameResults.splice(0,this.miniGameResults.length);
+        this.screenFrames[0].frames.splice(0,this.screenFrames[0].frames.length);
+        this.screenFrames[1].frames.splice(0,this.screenFrames[1].frames.length);
         this.tieBreakerWinner = -1;
         this.gameStage = GAME_STAGE.IDLE;
     }
 
-    constructor() {
-        super();
-    }
 }
 
