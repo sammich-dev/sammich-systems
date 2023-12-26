@@ -1,13 +1,14 @@
 // noinspection TypeScriptValidateTypes,JSAnnotator
 //TODO REFACTOR messages from Strings to exported enum
 import {Client, Room} from "colyseus";
-import {GameState, MiniGameResult, PlayerState} from "./GameState";
+import {FrameEventSchema, GameState, InputFrameSchema, MiniGameResult, PlayerState} from "./GameState";
 import { PrismaClient } from '@prisma/client';
 import {createScreenRunner} from "../../../lib/game-runner";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
 import {getGame, getGameKeys, setupGameRepository} from "../../../lib/game-repository";
 import {sleep} from "../../../lib/functional";
 import {GAME_STAGE} from "../../../lib/game-stages";
+import {waitFor} from "../../../lib/lib-util";
 
 const prisma = new PrismaClient();
 
@@ -115,13 +116,14 @@ export class GameRoom extends Room<GameState> {
             this.broadcastPatch();
         });
 
-        this.onMessage("PLAYER_FRAME", (client, {playerIndex, n})=>{
-            const screenRunnerIndex =this.currentGameDefinition.split?playerIndex:0;
+        this.onMessage("PLAYER_FRAME", async (client, {playerIndex, n})=>{
+            await waitFor(()=>this.currentGameDefinition);//TODO review if still necessary
+            const screenRunnerIndex =this.currentGameDefinition?.split?playerIndex:0;
 
             this.screenRunners[
                 screenRunnerIndex
             ]?.runtime.getState().running
-            && this.screenRunners[
+            && await this.screenRunners[
                 screenRunnerIndex
             ]?.runtime.reproduceFramesUntil(n);
             this.broadcastPatch();
@@ -129,7 +131,12 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
             if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
+
             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
+            console.log("INPUT_FRAME previous state",this.state?.toJSON())
+
+            this.state.screenFrames[this.currentGameDefinition.split?playerIndex:0].frames.push(new InputFrameSchema(frame));
+
             this.broadcastPatch();
         });
 
@@ -353,7 +360,8 @@ export class GameRoom extends Room<GameState> {
         if(foundPlayerIndex >= 0) console.log("foundPlayerIndex", foundPlayerIndex);
         if(foundUserIndex >= 0) this.state.users.splice(foundUserIndex,1);
         if(foundPlayerIndex >= 0) this.state.players.splice(foundPlayerIndex,1);
-        console.log("onJoin", user)
+        console.log("onJoin", user);
+        console.log("onJoin state", this.state.toJSON());
         this.state.users.push(new PlayerState({user, client, playerIndex:-1}));
         this.broadcastPatch();
         //TODO only when it's player, not when it's user
@@ -384,8 +392,12 @@ export class GameRoom extends Room<GameState> {
             const foundPlayerIndex = this.state.players.findIndex(p=>p.client === client);
             console.log("onLeave foundUserIndex:", foundUserIndex,"  foundPlayerIndex:", foundPlayerIndex);
 
-            if(foundUserIndex >= 0) this.state.users.splice(foundUserIndex, 1);
-            if(foundPlayerIndex >= 0 || this.state.players.length < 2){
+            if(foundUserIndex >= 0){
+                console.log("user leaving displayName", this.state.users[foundUserIndex].user.displayName)
+                this.state.users.splice(foundUserIndex, 1);
+            }
+            if(foundPlayerIndex >= 0){
+                //TODO when a player leaves, if connected player was winning, he should win the track
                 this.state.players.splice(foundPlayerIndex, 1);
                 this.screenRunners[foundPlayerIndex]?.runtime?.destroy();
                 this.state.gameStage = GAME_STAGE.IDLE;
@@ -394,6 +406,7 @@ export class GameRoom extends Room<GameState> {
 
         }
         this.broadcastPatch();
+        console.log("onLeave state", this.state.toJSON());
     }
 
     onDispose(): void | Promise<any> {
