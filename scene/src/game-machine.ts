@@ -178,13 +178,28 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
     const roomOnStateChange = () => {
         console.log("roomOnStateChange.");
         logStates();
-        handleLobbyScreenState();
+
         handlePlayersSendingReady();
+        handleStageChange( GAME_STAGE.IDLE, handleLobbyScreenState);
         handleStageChange( GAME_STAGE.SHOWING_INSTRUCTIONS, showInstructions, hideInstructions);
         handleStageChange( GAME_STAGE.PLAYING_MINIGAME, startMiniGame);
         handleStageChange( GAME_STAGE.TIE_BREAKER, showTieBreaker);
         handleStageChange( GAME_STAGE.SHOWING_SCORE_TRANSITION, handleScoreTransition)
         handleStageChange( GAME_STAGE.SHOWING_END, handleEndTrack);
+        if(room.state.players.filter((p:any)=>p.instructionsReady).length === 1){
+            instructionsPanel.setTimeout(INSTRUCTION_READY_TIMEOUT);
+            if(getPlayerIndex() >= 0 && !room.state.players[getPlayerIndex()].instructionsReady){
+                timers.setTimeout(() => {
+                    if(!state.sentInstructionsReady){
+                        state.sentInstructionsReady = true;
+                        room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: 2 });
+                    }
+                }, INSTRUCTION_READY_TIMEOUT);
+            }
+        }
+
+        state.gameStage = room.state.gameStage;
+        handleLobbyScreenState();
 
         function handleEndTrack(){
             const trackWinnerIndex = getGlobalWinner();
@@ -209,19 +224,6 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             }
         }
 
-        if(room.state.players.filter((p:any)=>p.instructionsReady).length === 1){
-            instructionsPanel.setTimeout(INSTRUCTION_READY_TIMEOUT);
-            if(getPlayerIndex() >= 0 && !room.state.players[getPlayerIndex()].instructionsReady){
-                timers.setTimeout(() => {
-                    if(!state.sentInstructionsReady){
-                        state.sentInstructionsReady = true;
-                        room.send("INSTRUCTIONS_READY", { playerIndex: getPlayerIndex(), foo: 2 });
-                    }
-                }, INSTRUCTION_READY_TIMEOUT);
-            }
-        }
-
-        state.gameStage = room.state.gameStage;
 
         function handlePlayersSendingReady(){
             const playerIndex = getPlayerIndex();
@@ -276,7 +278,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
                 gameInstructions: getGame(nextGameId).definition.instructions,
                 playerIndex:getPlayerIndex()
             });
-            instructionsPanel.setTimeout(30000);
+            instructionsPanel.setTimeout(INSTRUCTION_TOTAL_TIMEOUT);
             timers.setTimeout(()=>{
                 if(!state.sentInstructionsReady){
                     state.sentInstructionsReady = true;
@@ -517,39 +519,57 @@ console.log("reconnectionToken",reconnectionToken);
     let disposeInputListener:any;
 
     function handleLobbyScreenState() {
-        console.log("handleLobbyScreenState", room.state.toJSON());
+        console.log("handleLobbyScreenState", room.state.toJSON(), cloneDeep(state));
         logStates();
+        handleWaitText();
+        handleDisconnectText();
+        handleCreateButtonVisibility();
+        handleJoinButtonVisibility();
 
-
-        if (inRoomStage(GAME_STAGE.IDLE)) {
-            hideWaitingText();
-            createButton.show();
-            joinButton.hide();
-        } else if (inRoomStage(GAME_STAGE.WAITING_PLAYER_JOIN)) {
-            createButton.hide();
-            joinButton.show();
-            showWaitingText(`<color=${NAME_COLOR}>${room.state.players[0]?.user?.displayName}</color> is waiting someone to join the game...`);
-        } else {
-            joinButton.hide();
-            createButton.hide();
-            hideWaitingText();
+        function handleWaitText(){
+            if (inRoomStage(GAME_STAGE.WAITING_PLAYER_JOIN)){
+                showWaitingText(`<color=${NAME_COLOR}>${room.state.players[0]?.user?.displayName}</color> is waiting someone to join the game...`);
+            }else{
+                hideWaitingText();
+            }
         }
 
-        if(room.state.players.some((p:any)=>p?.user.userId === user?.userId)){
-            joinButton.hide();
-            createButton.hide();
+        function handleDisconnectText(){
+            if(!state.connected){
+                disconnectionText.show()
+            }else{
+                disconnectionText.hide()
+            }
         }
 
-        if (inLocalStage(GAME_STAGE.SHOWING_END)) {
-            createButton.hide();
-            joinButton.hide();
+        function handleCreateButtonVisibility(){
+            if(inRoomStage(GAME_STAGE.IDLE)
+                && state.connected
+            ){
+                createButton.show();
+            }
+            if(!inRoomStage(GAME_STAGE.IDLE)
+                || !state.connected
+                || room.state.players.some((p:any)=>p?.user.userId === user?.userId)){
+                createButton.hide();
+            }
         }
-        if(!state.connected){
-            disconnectionText.show()
-        }else{
-            disconnectionText.hide()
+
+        function handleJoinButtonVisibility(){
+            if(inRoomStage(GAME_STAGE.WAITING_PLAYER_JOIN)
+                && state.connected
+            ){
+                joinButton.show();
+            }
+            if(!inRoomStage(GAME_STAGE.WAITING_PLAYER_JOIN)
+                || !state.connected
+                || room.state.players.some((p:any)=>p?.user.userId === user?.userId)
+            ){
+                joinButton.hide();
+            }
         }
     }
+
     function showWaitingText(str:string){
         Transform.getMutable(waitingTextEntity).position.y = -0.24;
         TextShape.getMutable(waitingTextEntity).text = str;
