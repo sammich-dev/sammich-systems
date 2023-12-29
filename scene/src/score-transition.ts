@@ -1,7 +1,7 @@
 import {TextAlignMode} from "@dcl/sdk/ecs";
 import {Color4} from "@dcl/sdk/math";
 import {sleep} from "../dcl-lib/sleep";
-import {DEFAULT_SPRITE_DEF} from "../../lib/sprite-constants";
+import {DEFAULT_SPRITE_DEF, SPRITE_SHEET_DIMENSION} from "../../lib/sprite-constants";
 const WINNER_POSITIONS = [
     [4,10],//player1
     [100,10]//player2
@@ -10,8 +10,9 @@ const SUM_SCORE_TEXT_POSITIONS =[
     [(192 / 4) , 128 / 4 - 16],//player1
     [(192 / 4) * 3 , 128 / 4 - 16]//player2
 ];
-
+const textColor = [1,1,1,1];
 export function createGlobalScoreTransition(screen:any){
+
     const winnerSprite = screen.addSprite({
         spriteDefinition:{
             ...DEFAULT_SPRITE_DEF,
@@ -32,7 +33,7 @@ export function createGlobalScoreTransition(screen:any){
         layer:3
     });
     //loserSprite.hide();
-    const textColor = [0,0,0,1];
+
     const player1GlobalScoreBig = screen.addText({
         pixelPosition:[192/4,128/4],
         textAlign:TextAlignMode.TAM_MIDDLE_CENTER,
@@ -84,29 +85,27 @@ export function createGlobalScoreTransition(screen:any){
 
         },
         hide,
-        showTransition:async ({winnerIndex, previousScore}:any)=>{
+        showTransition:async ({winnerIndex, previousScores}:any)=>{
             winnerSprite.show();
             loserSprite.show();
             player1GlobalScoreBig.show();
             player2GlobalScoreBig.show();
 
             await sleep(1000);
-
+            player1GlobalScoreBig.setText(previousScores[0])
+            player2GlobalScoreBig.setText(previousScores[1])
             if(winnerIndex === 0){
-                player1GlobalScoreBig.setText(previousScore)
                 winnerSumPointsText.setPixelPosition(...SUM_SCORE_TEXT_POSITIONS[0]);
-
                 winnerSumPointsText.show();
                 await sleep(1000);
                 winnerSumPointsText.hide();
-                player1GlobalScoreBig.setText((previousScore+1).toString());
+                player1GlobalScoreBig.setText((previousScores[winnerIndex]+1).toString());
             }else if(winnerIndex === 1){
-                player2GlobalScoreBig.setText(previousScore)
                 winnerSumPointsText.setPixelPosition(...SUM_SCORE_TEXT_POSITIONS[1]);
                 winnerSumPointsText.show();
                 await sleep(1000);
                 winnerSumPointsText.hide();
-                player2GlobalScoreBig.setText((previousScore+1).toString());
+                player2GlobalScoreBig.setText((previousScores[winnerIndex]+1).toString());
             }
             await sleep(2000);
         },

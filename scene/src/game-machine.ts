@@ -20,7 +20,13 @@ import {createScreenRunner} from "../../lib/game-runner";
 import {timers} from "@dcl-sdk/utils";
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
 import {createInstructionScreen} from "./instructions-screen";
-import {DEFAULT_SPRITE_DEF, NAME_COLOR, SHARED_SCREEN_SCALE, SPLIT_SCREEN_SCALE} from "../../lib/sprite-constants";
+import {
+    DEFAULT_SPRITE_DEF,
+    NAME_COLOR,
+    SHARED_SCREEN_SCALE,
+    SPLIT_SCREEN_SCALE,
+    SPRITE_SHEET_DIMENSION
+} from "../../lib/sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
 import {throttle} from "../dcl-lib/throttle";
 import {getGame, setupGameRepository} from "../../lib/game-repository";
@@ -36,8 +42,22 @@ const DEFAULT_SCREEN_SPRITE_DEFINITION = {
     ...DEFAULT_SPRITE_DEF,
     x: 576, y: 128, w: 192, h: 128,
 }
-
-
+const WAITING_TEXT_Y = 104;
+const FONT_SIZE = 0.35;
+const COVER_SPRITE_DEFINITION = {
+    ...DEFAULT_SPRITE_DEF,
+    x: 0,
+    y: 0,
+    w: 192,
+    h: 128,
+}
+const TRANSITION_SCREEN_SPRITE_DEFINITION = {
+    x:576,
+    y:128,
+    w:192,
+    h:128,
+    ...SPRITE_SHEET_DIMENSION
+}
 export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
     setupInputController();
     setupGameRepository();
@@ -56,21 +76,12 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
 
     const user: MinUserData = await getMinUserData();
     const entity = engine.addEntity();
-    const waitingTextEntity = engine.addEntity();
+
     Transform.create(entity, {
         parent,
         position,
         rotation,
         scale
-    });
-    Transform.create(waitingTextEntity, {
-        parent: entity,
-        position: Vector3.create(0, -10000, -0.01),
-    });
-    TextShape.create(waitingTextEntity, {
-        text: ``,
-        fontSize: 0.35,
-        textAlign: TextAlignMode.TAM_TOP_CENTER,
     });
 
     const spriteTexture = Material.Texture.Common({
@@ -92,20 +103,33 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
         position: Vector3.create(0, 0, 0),
         parent: entity
     };
+
     const lobbyScreen = createSpriteScreen({
         transform: lobbyScreenTransform,
         spriteMaterial,
+        spriteDefinition: COVER_SPRITE_DEFINITION
+    });
+    const waitingTextEntity = lobbyScreen.addText({
+        pixelPosition: [192/2, WAITING_TEXT_Y + 4],
+        textAlign:TextAlignMode.TAM_TOP_CENTER,
+        text:`    <color=${NAME_COLOR}>Gest</color> is waiting som`,
+        textColor:[1,1,1,1],
+        fontSize:FONT_SIZE,
+        layer:2
+    });
+    const waitingTextBackground = lobbyScreen.addSprite({
         spriteDefinition: {
             ...DEFAULT_SPRITE_DEF,
-            x: 384,
-            y: 128,
-            w: 192,
-            h: 128,
+            x: 384, y: 218, w: 192, h: 25,
+            metadata: {name: "text-background"}
+        },
+        pixelPosition: [0, WAITING_TEXT_Y],
+        layer: 1,
+        klass:"TextBackground"
+    })
+    waitingTextEntity.hide();
+    waitingTextBackground.hide();
 
-        }
-    });
-
-    console.log("lobbyScreen", lobbyScreen);
     const disconnectionText = lobbyScreen.addText({text:"DISCONNECTED", textColor:[1,0,0,1], pixelPosition:[192/2,4], layer:10, textAlign:TextAlignMode.TAM_TOP_CENTER, fontSize:1});
     const scoreTransition = createGlobalScoreTransition(lobbyScreen);
     const colyseusClient: Client = new Client(~(realmInfo?.realmName||"").toLowerCase().indexOf("local")?`ws://localhost:2567`:"wss://sammich.pro/colyseus");
@@ -267,6 +291,7 @@ export async function createMachineScreen(parent: Entity, {position, rotation, s
             const nextGameId = room.state.miniGameTrack[nextMiniGameIndex];
             console.log("showInstructions", nextMiniGameIndex, nextGameId, getGame(nextGameId).definition.alias)
             lobbyScreen.show();
+
             instructionsPanel = createInstructionScreen({
                 transform: {
                     parent: lobbyScreen.getEntity(),
@@ -306,7 +331,7 @@ console.log("reconnectionToken",reconnectionToken);
             metadata: {name: "createButton"}
         },
         pixelPosition: [-47, 80],
-        layer: 200,
+        layer: 1,
         onClick: onClickCreate,
         hoverText: "Start new game",
         klass:"CreateButton"
@@ -319,7 +344,7 @@ console.log("reconnectionToken",reconnectionToken);
             metadata: {name: "joinButton"}
         },
         pixelPosition: [192 , 80],
-        layer: 200,
+        layer: 1,
         onClick: onClickJoin,
         hoverText: "Join game",
         klass:"JoinButton"
@@ -344,10 +369,14 @@ console.log("reconnectionToken",reconnectionToken);
         screenRunners = [];
 
         lobbyScreen.show();
-
-        const previousScore = room.state.miniGameResults.reduce((acc:number, current:any)=>{
-            return acc + (current === winnerIndex ? 1:0);
-        },0) - 1;
+        lobbyScreen.setBackgroundSprite({
+            spriteDefinition:TRANSITION_SCREEN_SPRITE_DEFINITION
+        });
+        const previousScores = room.state.miniGameResults.reduce((acc:number[], winnerIndex:number)=>{
+            acc[winnerIndex]++;
+            return acc;
+        },[0,0]);
+        previousScores[winnerIndex] -= 1;
         const isFinal = !!finalize;
         const trackWinnerIndex = getTrackWinnerFromMiniGameResults(miniGameResults);
         console.log("trackWinnerIndex",trackWinnerIndex)
@@ -355,7 +384,7 @@ console.log("reconnectionToken",reconnectionToken);
 
         await scoreTransition.showTransition({
             winnerIndex,
-            previousScore,
+            previousScores,
             isFinal,
             displayName1:room.state.players[0].displayName,
             displayName2:room.state.players[1].displayName,
@@ -528,9 +557,12 @@ console.log("reconnectionToken",reconnectionToken);
 
         function handleWaitText(){
             if (inRoomStage(GAME_STAGE.WAITING_PLAYER_JOIN)){
-                showWaitingText(`<color=${NAME_COLOR}>${room.state.players[0]?.user?.displayName}</color> is waiting someone to join the game...`);
+                waitingTextBackground.show();
+                waitingTextEntity.show();
+                waitingTextEntity.setText(`<color=${NAME_COLOR}>${room.state.players[0]?.user?.displayName}</color> is waiting someone to join the game...`);
             }else{
-                hideWaitingText();
+                waitingTextBackground.hide();
+                waitingTextEntity.hide();
             }
         }
 
@@ -547,6 +579,9 @@ console.log("reconnectionToken",reconnectionToken);
                 && state.connected
             ){
                 createButton.show();
+                lobbyScreen.setBackgroundSprite({
+                    spriteDefinition: COVER_SPRITE_DEFINITION
+                });
             }
             if(!inRoomStage(GAME_STAGE.IDLE)
                 || !state.connected
@@ -570,15 +605,6 @@ console.log("reconnectionToken",reconnectionToken);
         }
     }
 
-    function showWaitingText(str:string){
-        Transform.getMutable(waitingTextEntity).position.y = -0.24;
-        TextShape.getMutable(waitingTextEntity).text = str;
-    }
-
-    function hideWaitingText(){
-        Transform.getMutable(waitingTextEntity).position.y = -10000;
-        TextShape.getMutable(waitingTextEntity).text = ``;
-    }
     function getPlayerIndex() {
         return room.state.players.findIndex((p: any) => p?.user?.userId === user?.userId);
     }

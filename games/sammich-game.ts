@@ -52,7 +52,7 @@ export const SammichGame = {
             layer:2,
             network:true
         });
-        const scoreText = game.addText({text:"--"})
+
         const spawner = game.createSpawner(
             BaseSpriteEntity,
             {
@@ -146,11 +146,6 @@ export const SammichGame = {
                     spriteEntity.setPixelPosition(px+PIXELS_MOVEMENT,py);
                 });
             }
-        });
-
-        game.onFrame((frameNumber:number, dt:number, frame:any)=>{
-            scoreText.setText((game.getPlayerScore() || ("--" + Math.random())) + `            ${frameNumber} ${game.runtime.getState().lastReproducedFrame}`);
-            //   frame && console.log("frame-->--->-->", frameNumber, dt, frame);
         });
     }
 }
