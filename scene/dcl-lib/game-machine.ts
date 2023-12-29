@@ -12,10 +12,10 @@ import {
 
 import {Color3, Quaternion, Vector3} from "@dcl/sdk/math";
 import {Client} from "colyseus.js";
-import {createSpriteScreen} from "../dcl-lib/sprite-screen";
-import {getInputState, onInputKeyEvent, setupInputController} from "../dcl-lib/input-controller";
-import {getDebugPanel} from "../dcl-lib/debug-panel";
-import {getMinUserData, MinUserData} from "../dcl-lib/min-user-data";
+import {createSpriteScreen} from "./sprite-screen";
+import {getInputState, onInputKeyEvent, setupInputController} from "./input-controller";
+import {getDebugPanel} from "./debug-panel";
+import {getMinUserData, MinUserData} from "./min-user-data";
 import {createScreenRunner} from "../../lib/game-runner";
 import {timers} from "@dcl-sdk/utils";
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
@@ -28,10 +28,10 @@ import {
     SPRITE_SHEET_DIMENSION
 } from "../../lib/sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
-import {throttle} from "../dcl-lib/throttle";
+import {throttle} from "./throttle";
 import {getGame, setupGameRepository} from "../../lib/game-repository";
 import {getRealm} from '~system/Runtime'
-import {sleep} from "../dcl-lib/sleep";
+import {sleep} from "./sleep";
 import {GAME_STAGE} from "../../lib/game-stages";
 import {cloneDeep} from "../../lib/lib-util";
 import {EVENT} from "./events";
@@ -58,7 +58,7 @@ const TRANSITION_SCREEN_SPRITE_DEFINITION = {
     h:128,
     ...SPRITE_SHEET_DIMENSION
 }
-export async function createMachineScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
+export async function createSammichScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
     setupInputController();
     setupGameRepository();
     let reconnectionToken:any;

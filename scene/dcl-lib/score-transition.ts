@@ -1,11 +1,7 @@
 import {TextAlignMode} from "@dcl/sdk/ecs";
-import {Color4} from "@dcl/sdk/math";
-import {sleep} from "../dcl-lib/sleep";
-import {DEFAULT_SPRITE_DEF, SPRITE_SHEET_DIMENSION} from "../../lib/sprite-constants";
-const WINNER_POSITIONS = [
-    [4,10],//player1
-    [100,10]//player2
-];
+import {sleep} from "./sleep";
+import {DEFAULT_SPRITE_DEF} from "../../lib/sprite-constants";
+
 const SUM_SCORE_TEXT_POSITIONS =[
     [(192 / 4) , 128 / 4 - 16],//player1
     [(192 / 4) * 3 , 128 / 4 - 16]//player2
