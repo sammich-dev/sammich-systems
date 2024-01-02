@@ -1,7 +1,7 @@
 {
-  "name": "@dcl-dao/sammich-machine",
+  "name": "dcl-sammich-screen",
   "version": "0.0.1",
-  "description": "A collection of helpers to make it easier to build a Decentraland scene using the SDK 7.",
+  "description": "A sammich game screen component to integrate in other games or scenes",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
@@ -16,7 +16,11 @@
     "sdk7",
     "sdk 7",
     "sdk utils",
-    "sdk library"
+    "sdk library",
+    "sammich",
+    "platform",
+    "multiplayer",
+    "game"
   ],
   "author": "Decentraland",
   "license": "Apache-2.0",
