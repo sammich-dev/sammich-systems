@@ -1,5 +1,4 @@
 import {SpriteEntity, SpriteKlass, SpriteKlassParams} from "./game-entities";
-import {getDebugPanel} from "../scene/dcl-lib/debug-panel";
 
 export enum SpawnerFrameSpawnMethod {
     SAME,

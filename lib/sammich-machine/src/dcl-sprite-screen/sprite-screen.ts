@@ -23,7 +23,7 @@ import {
     Sprite,
     SpriteDefinition,
     UVS_BACK
-} from "../../lib/sprite-util";
+} from "./sprite-util";
 
 export type SpriteScreenOptions = {
     transform: TransformTypeWithOptionals,
@@ -36,6 +36,7 @@ export function createSpriteScreen({
                                        spriteMaterial,
                                        spriteDefinition//will also define screen resolution, which will affect zoom and click event info with coords
                                    }: SpriteScreenOptions) {
+    console.log("createSpriteScreen__1");
     const screenEntity = createSpritePlane({spriteMaterial, spriteDefinition, transform})
     const state:{spriteDefinition:SpriteDefinition} = {
         spriteDefinition
@@ -110,8 +111,8 @@ export function createSpriteScreen({
                     if(!spriteAnimationUVS) return;
                     state.frame = n;
                     if(state.destroyed) return;
-                   const mutablePlane:any = MeshRenderer.getMutable(spriteEntity);
-                   if(mutablePlane.mesh) mutablePlane.mesh[mutablePlane.mesh.$case].uvs = spriteAnimationUVS(n);
+                    const mutablePlane:any = MeshRenderer.getMutable(spriteEntity);
+                    if(mutablePlane.mesh) mutablePlane.mesh[mutablePlane.mesh.$case].uvs = spriteAnimationUVS(n);
                 },
                 getFrame:()=>state.frame,
                 getLayer:()=>state.layer,
@@ -184,9 +185,9 @@ export function createSpriteScreen({
 
             function normalizePixelPositionForText(xPixels: number, yPixels: number, layer: number) {
                 return [
-                   (xPixels - (screenSpriteDefinition.w/2)) * (1 / screenSpriteDefinition.w) ,
-                   -(yPixels + (screenSpriteDefinition.h/2)) * (1 / screenSpriteDefinition.h) + 1,
-                   -layer * 0.001
+                    (xPixels - (screenSpriteDefinition.w/2)) * (1 / screenSpriteDefinition.w) ,
+                    -(yPixels + (screenSpriteDefinition.h/2)) * (1 / screenSpriteDefinition.h) + 1,
+                    -layer * 0.001
                 ];
             }
         },

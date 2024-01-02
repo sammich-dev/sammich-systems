@@ -3,7 +3,7 @@
 import {Client, Room} from "colyseus";
 import {FrameEventSchema, GameState, InputFrameSchema, MiniGameResult, PlayerState} from "./GameState";
 import { PrismaClient } from '@prisma/client';
-import {createScreenRunner} from "../../../lib/game-runner";
+import {createScreenRunner} from "../../../lib/sammich-machine/src/dcl-sprite-screen/game-runner";
 import {createServerSpriteScreen} from "../../../lib/server-sprite-screen";
 import {getGame, getGameKeys, setupGameRepository} from "../../../lib/game-repository";
 import {sleep} from "../../../lib/functional";

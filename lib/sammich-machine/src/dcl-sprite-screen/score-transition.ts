@@ -1,6 +1,6 @@
 import {TextAlignMode} from "@dcl/sdk/ecs";
-import {sleep} from "./sleep";
-import {DEFAULT_SPRITE_DEF} from "../../lib/sprite-constants";
+import {dclSleep} from "./dcl-sleep";
+import {DEFAULT_SPRITE_DEF} from "../../../sprite-constants";
 
 const SUM_SCORE_TEXT_POSITIONS =[
     [(192 / 4) , 128 / 4 - 16],//player1
@@ -87,28 +87,28 @@ export function createGlobalScoreTransition(screen:any){
             player1GlobalScoreBig.show();
             player2GlobalScoreBig.show();
 
-            await sleep(1000);
+            await dclSleep(1000);
             player1GlobalScoreBig.setText(previousScores[0])
             player2GlobalScoreBig.setText(previousScores[1])
             if(winnerIndex === 0){
                 winnerSumPointsText.setPixelPosition(...SUM_SCORE_TEXT_POSITIONS[0]);
                 winnerSumPointsText.show();
-                await sleep(1000);
+                await dclSleep(1000);
                 winnerSumPointsText.hide();
                 player1GlobalScoreBig.setText((previousScores[winnerIndex]+1).toString());
             }else if(winnerIndex === 1){
                 winnerSumPointsText.setPixelPosition(...SUM_SCORE_TEXT_POSITIONS[1]);
                 winnerSumPointsText.show();
-                await sleep(1000);
+                await dclSleep(1000);
                 winnerSumPointsText.hide();
                 player2GlobalScoreBig.setText((previousScores[winnerIndex]+1).toString());
             }
-            await sleep(2000);
+            await dclSleep(2000);
         },
         showFinalSprite:async (trackWinnerIndex:number)=>{
             finalSprite.show();
             finalSprite.setZoom([trackWinnerIndex?-1:1,1]);
-            await sleep(5000);
+            await dclSleep(5000);
             finalSprite.hide();
         },
         reset:()=>{

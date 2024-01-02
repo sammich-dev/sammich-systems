@@ -84,17 +84,3 @@ export function createSpriteAnimationUVSGetter({spriteDefinition, back = UVS_BAC
         });
     }
 }
-
-
-export function getPixelPositionNormalizer({screenSpriteDefinition, spriteDefinition}:{screenSpriteDefinition:SpriteDefinition, spriteDefinition:SpriteDefinition}){
-    return function normalizePixelPosition(xPixels: number, yPixels: number, layer: number) {
-        const offsetX = (spriteDefinition.w / screenSpriteDefinition.w) / 2 - 0.5;
-        const offsetY = 0.5 - (spriteDefinition.h / screenSpriteDefinition.h) / 2
-
-        return [
-            offsetX + (xPixels / screenSpriteDefinition.w),
-            offsetY - (yPixels / screenSpriteDefinition.h),
-            -layer * 0.001
-        ];
-    }
-}

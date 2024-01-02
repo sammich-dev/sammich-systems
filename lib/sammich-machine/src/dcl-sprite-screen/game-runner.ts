@@ -1,12 +1,12 @@
-import {createSpawner, SpawnerOptions} from "./spawner";
-import {seedGen} from "./seed-gen";
-import {SpriteEntity, SpriteKlass, SpriteKlassParams} from "./game-entities";
-import {createSpriteEntityFactory} from "./sprite-entity-factory";
-import {Frame, FrameEvent, FrameEventType, InputEventRepresentation} from "./frame-util";
+import {createSpawner, SpawnerOptions} from "../../../spawner";
+import {seedGen} from "../../../seed-gen";
+import {SpriteEntity, SpriteKlass, SpriteKlassParams} from "../../../game-entities";
+import {createSpriteEntityFactory} from "../../../sprite-entity-factory";
+import {Frame, FrameEvent, FrameEventType, InputEventRepresentation} from "../../../frame-util";
 import {InputAction, TextAlignMode} from "@dcl/sdk/ecs";
 import {SpriteDefinitionParams} from "./sprite-util";
-import {sleep} from "../scene/dcl-lib/sleep";
-import {SPRITE_SHEET_DIMENSION} from "./sprite-constants";
+import {dclSleep} from "./dcl-sleep";
+import {SPRITE_SHEET_DIMENSION} from "../../../sprite-constants";
 
 let _rollbackDone = false; //TODO delete, only dev
 export type GameRunnerCallback = {
@@ -527,7 +527,7 @@ export const createScreenRunner = ({
             const frame = findFrame(state.lastReproducedFrame);
 
             if (triggerFrame(state.lastReproducedFrame, frame)) {
-                await sleep(0);
+                await dclSleep(0);
             }
         }
         if (serverRoom  && serverRoom.state.players[playerIndex]) serverRoom.state.players[playerIndex].lastReproducedFrame = frameNumber;

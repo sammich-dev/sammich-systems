@@ -1,4 +1,4 @@
-import {Sprite, SpriteDefinition} from "./sprite-util";
+import {Sprite, SpriteDefinition} from "./sammich-machine/src/dcl-sprite-screen/sprite-util";
 
 export type SpriteKlassParams ={
     klass:string,//TODO rename to klassAlias

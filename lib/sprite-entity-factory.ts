@@ -1,5 +1,5 @@
 import {SpriteEntity, SpriteEntityCreationParams, SpriteKlass, SpriteKlassParams} from "./game-entities";
-import {Sprite} from "./sprite-util";
+import {Sprite} from "./sammich-machine/src/dcl-sprite-screen/sprite-util";
 import {checkBoxesContact, getAbsoluteCollisionBoxFromSprite} from "./math-util";
 import {SpriteState} from "../server/src/rooms/GameState";
 type KlassAlias = string;

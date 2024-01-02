@@ -153,11 +153,9 @@ export class GameState extends Schema {
             //this.miniGameTrack.push(2);
         }
 
-        console.log("miniGameIds", miniGameIDs);
-        console.log("miniGameTrack", this.miniGameTrack.toJSON())
 
         this.gameStage = GAME_STAGE.SHOWING_INSTRUCTIONS;
-        console.log("state", this.toJSON());
+
         return {seed, miniGameTrack:this.miniGameTrack};
     }
 

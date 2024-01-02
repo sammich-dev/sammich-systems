@@ -14,9 +14,8 @@ import {Color3, Quaternion, Vector3} from "@dcl/sdk/math";
 import {Client} from "colyseus.js";
 import {createSpriteScreen} from "./sprite-screen";
 import {getInputState, onInputKeyEvent, setupInputController} from "./input-controller";
-import {getDebugPanel} from "./debug-panel";
 import {getMinUserData, MinUserData} from "./min-user-data";
-import {createScreenRunner} from "../../lib/game-runner";
+import {createScreenRunner} from "./game-runner";
 import {timers} from "@dcl-sdk/utils";
 import {TransformTypeWithOptionals} from "@dcl/ecs/dist/components/manual/Transform";
 import {createInstructionScreen} from "./instructions-screen";
@@ -26,14 +25,14 @@ import {
     SHARED_SCREEN_SCALE,
     SPLIT_SCREEN_SCALE,
     SPRITE_SHEET_DIMENSION
-} from "../../lib/sprite-constants";
+} from "../../../sprite-constants";
 import {createGlobalScoreTransition} from "./score-transition";
 import {throttle} from "./throttle";
-import {getGame, setupGameRepository} from "../../lib/game-repository";
+import {getGame, setupGameRepository} from "../../../game-repository";
 import {getRealm} from '~system/Runtime'
-import {sleep} from "./sleep";
-import {GAME_STAGE} from "../../lib/game-stages";
-import {cloneDeep} from "../../lib/lib-util";
+import {dclSleep} from "./dcl-sleep";
+import {GAME_STAGE} from "../../../game-stages";
+import {cloneDeep} from "../../../lib-util";
 import {EVENT} from "./events";
 
 const INSTRUCTION_READY_TIMEOUT = 7000;
@@ -58,9 +57,14 @@ const TRANSITION_SCREEN_SPRITE_DEFINITION = {
     h:128,
     ...SPRITE_SHEET_DIMENSION
 }
-export async function createSammichScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, gameInstanceId:string) {
+
+export async function createSammichScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, _gameInstanceId?:string) {
+    const gameInstanceId = _gameInstanceId || "default";
+
     setupInputController();
     setupGameRepository();
+
+    console.log("SAMMICH_SCREEN")
     let reconnectionToken:any;
     const callbacks: { onEvent: Function[] } = {
         onEvent: []
@@ -89,7 +93,7 @@ export async function createSammichScreen(parent: Entity, {position, rotation, s
         wrapMode: TextureWrapMode.TWM_REPEAT,
         filterMode: TextureFilterMode.TFM_POINT
     });
-    const spriteMaterial = {
+    const spriteMaterial:any = {
         texture: spriteTexture,
         emissiveTexture: spriteTexture,
         emissiveIntensity: 0.6,
@@ -147,7 +151,7 @@ export async function createSammichScreen(parent: Entity, {position, rotation, s
                 state.connected = true;
             }catch(error:any){
                 console.log("error connecting", error?.message);
-                await sleep(3000);
+                await dclSleep(3000);
                 state.connected = false;
             }
         }
@@ -188,7 +192,7 @@ export async function createSammichScreen(parent: Entity, {position, rotation, s
                 handleLobbyScreenState();
             }catch(error:any){
 
-                await sleep(3000);
+                await dclSleep(3000);
                 if(error?.code === 4212){
                     error4212 = true;
                 }
@@ -445,7 +449,7 @@ console.log("reconnectionToken",reconnectionToken);
             }));
             screenRunners.forEach((runner, playerIndex)=>{
                 if(playerIndex === getPlayerIndex()){
-                    runner.runtime.attachDebugPanel(getDebugPanel());
+                    //runner.runtime.attachDebugPanel(getDebugPanel());
                     startPlayerRunner(runner);
                 }else{
                     runner.runtime.start(false);
@@ -527,7 +531,7 @@ console.log("reconnectionToken",reconnectionToken);
                     room.send("INSTRUCTIONS_READY", {playerIndex, foo:1});
                     instructionsPanel.showWaitingForOtherPlayer({timeout:INSTRUCTION_READY_TIMEOUT});
                 }else if(inRoomStage(GAME_STAGE.PLAYING_MINIGAME)){
-                    getDebugPanel().setState(getInputState());
+                    //getDebugPanel().setState(getInputState());
                     const gameId = room.state.miniGameTrack[room.state.miniGameResults.length];
                     const split = getGame(gameId).definition.split;
                     const runner = screenRunners[split?playerIndex:0];

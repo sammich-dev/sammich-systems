@@ -1,5 +1,5 @@
 import {PlayerState, SpriteState} from "../server/src/rooms/GameState";
-import {SpriteDefinition, SpriteDefinitionParams} from "./sprite-util";
+import {SpriteDefinition, SpriteDefinitionParams} from "./sammich-machine/src/dcl-sprite-screen/sprite-util";
 
 export function createServerSpriteScreen(playerState:PlayerState) {
     const state:{spriteDefinition:SpriteDefinition} = {

@@ -4,20 +4,19 @@ import {
 } from '@dcl/sdk/ecs';
 
 import {Vector3, Quaternion, Color4} from "@dcl/sdk/math";
-import {getDebugPanel} from "../dcl-lib/debug-panel";
-import "../dcl-lib/decorate-console";
 import "./polyfill";
-import {createSammichScreen} from "../dcl-lib/game-machine";
-import {EVENT} from "../dcl-lib/events";
-import {getMinUserData, MinUserData} from "../dcl-lib/min-user-data";
+
+import {createSammichScreen} from "@dcl-dao/sammich-machine";
+import { getSceneInformation } from '~system/Runtime'
 
 export const init = async () => {
-    getDebugPanel();
+    //we use scene base coords as server room id but can be any string, instances with same id will share server room
+    const sammichScreenInstanceRoomId = JSON.parse((await getSceneInformation({})).metadataJson).scene.base;
 
     const rootEntity = engine.addEntity();
     await createSammichScreen(rootEntity, {
-        position:Vector3.create(4,1,4),
+        position:Vector3.create(8,2,8),
         rotation:Quaternion.Zero(),
-        scale: Vector3.create(2, 1.5, 1)
-    }, "test");
+        scale: Vector3.create(3, 2, 1),
+    },  sammichScreenInstanceRoomId);
 }
