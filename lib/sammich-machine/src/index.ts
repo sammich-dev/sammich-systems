@@ -1,4 +1,4 @@
-
+import "./dcl-sprite-screen/polyfill";
 export {
     createSpriteScreen,
     SpriteScreenOptions

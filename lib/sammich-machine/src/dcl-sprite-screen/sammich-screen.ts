@@ -9,6 +9,7 @@ import {
     TextureWrapMode,
     Transform
 } from "@dcl/sdk/ecs";
+import "./polyfill";
 
 import {Color3, Quaternion, Vector3} from "@dcl/sdk/math";
 import {Client} from "colyseus.js";

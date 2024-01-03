@@ -1,6 +1,6 @@
 {
   "name": "dcl-sammich-screen",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A sammich game screen component to integrate in other games or scenes",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/decentraland/sdk7-utils.git"
+    "url": "https://github.com/sammich-dev/sammich-systems.git"
   },
   "keywords": [
     "decentraland",
@@ -22,12 +22,12 @@
     "multiplayer",
     "game"
   ],
-  "author": "Decentraland",
+  "author": "Decentraland DAO",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/decentraland/sdk7-utils/issues"
+    "url": "https://github.com/sammich-dev/sammich-systems"
   },
-  "homepage": "https://github.com/decentraland/sdk7-utils#readme",
+  "homepage": "https://github.com/sammich-dev/sammich-systems#readme",
   "devDependencies": {
     "@dcl/sdk": "^7.1.6",
     "typescript": "^5.0.2"
@@ -36,7 +36,9 @@
     "dist"
   ],
   "dependencies": {
-    "colyseus.js": "^0.15.14"
+    "colyseus.js": "^0.15.14",
+    "whatwg-url-without-unicode": "^8.0.0-3",
+    "xmlhttprequest-polyfill": "^1.0.1"
   },
   "bundleDependencies": [
     "colyseus.js"

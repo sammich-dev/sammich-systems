@@ -1,5 +1,4 @@
-import {createSpriteScreen, createBox} from "@dcl-dao/sammich-machine";
-import "./polyfill";
+import {createSpriteScreen, createBox} from "dcl-sammich-screen";
 import {Vector3, Color3} from "@dcl/sdk/math";
 import {
     engine,
@@ -12,7 +11,7 @@ import {
     Transform,
     Entity,
 } from '@dcl/sdk/ecs';
-import {DEFAULT_SPRITE_DEF} from "@dcl-dao/sammich-machine/dist/lib/sprite-constants";
+import {DEFAULT_SPRITE_DEF} from "dcl-sammich-screen/dist/lib/sprite-constants";
 
 
 export const init = () => {

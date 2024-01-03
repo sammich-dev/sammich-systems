@@ -4,9 +4,8 @@ import {
 } from '@dcl/sdk/ecs';
 
 import {Vector3, Quaternion, Color4} from "@dcl/sdk/math";
-import "./polyfill";
 
-import {createSammichScreen} from "@dcl-dao/sammich-machine";
+import {createSammichScreen} from "dcl-sammich-screen";
 import { getSceneInformation } from '~system/Runtime'
 
 export const init = async () => {
