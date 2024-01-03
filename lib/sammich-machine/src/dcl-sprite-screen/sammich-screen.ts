@@ -30,7 +30,6 @@ import {
 import {createGlobalScoreTransition} from "./score-transition";
 import {throttle} from "./throttle";
 import {getGame, setupGameRepository} from "../../../game-repository";
-import {getRealm} from '~system/Runtime'
 import {dclSleep} from "./dcl-sleep";
 import {GAME_STAGE} from "../../../game-stages";
 import {cloneDeep} from "../../../lib-util";
@@ -60,15 +59,17 @@ const TRANSITION_SCREEN_SPRITE_DEFINITION = {
     ...SPRITE_SHEET_DIMENSION
 }
 export type SammichScreenOptions = {
-    defaultTextureSrc:string,
-    baseInstructionVideoURL:string
+    defaultTextureSrc?:string,
+    baseInstructionVideoURL?:string,
+    colyseusServerURL?:string
 }
 export async function createSammichScreen(parent: Entity, {
     position,
     rotation,
     scale,
     defaultTextureSrc = "https://sammich.pro/images/spritesheet.png",
-    baseInstructionVideoURL = "https://sammich.pro/instruction-videos"
+    baseInstructionVideoURL = "https://sammich.pro/instruction-videos",
+    colyseusServerURL = "wss://sammich.pro/colyseus"
 }: TransformTypeWithOptionals & SammichScreenOptions, _gameInstanceId?:string) {
     const gameInstanceId = _gameInstanceId || "default";
 
@@ -86,8 +87,6 @@ export async function createSammichScreen(parent: Entity, {
         sentInstructionsReady:false,
         sentReady:false
     };
-    const {realmInfo} = await getRealm({});
-    console.log("realmInfo",realmInfo);
 
     const user: MinUserData = await getMinUserData();
     const entity = engine.addEntity();
@@ -143,7 +142,7 @@ export async function createSammichScreen(parent: Entity, {
 
     const disconnectionText = lobbyScreen.addText({text:"DISCONNECTED", textColor:[1,0,0,1], pixelPosition:[192/2,4], layer:10, textAlign:TextAlignMode.TAM_TOP_CENTER, fontSize:1});
     const scoreTransition = createGlobalScoreTransition(lobbyScreen);
-    const colyseusClient: Client = new Client(~(realmInfo?.realmName||"").toLowerCase().indexOf("local")?`ws://localhost:2567`:"wss://sammich.pro/colyseus");
+    const colyseusClient: Client = new Client(colyseusServerURL);
 
     const connectRoom = async ()=>{
         console.log("connectRoom");
