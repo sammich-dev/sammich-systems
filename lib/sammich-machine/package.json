@@ -1,6 +1,6 @@
 {
   "name": "dcl-sammich-screen",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A sammich game screen component to integrate in other games or scenes",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",

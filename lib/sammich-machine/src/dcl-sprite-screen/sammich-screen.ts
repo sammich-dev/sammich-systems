@@ -35,6 +35,7 @@ import {dclSleep} from "./dcl-sleep";
 import {GAME_STAGE} from "../../../game-stages";
 import {cloneDeep} from "../../../lib-util";
 import {EVENT} from "./events";
+import {getTexture} from "./texture-repository";
 
 const INSTRUCTION_READY_TIMEOUT = 7000;
 const INSTRUCTION_TOTAL_TIMEOUT = 30000;
@@ -58,8 +59,17 @@ const TRANSITION_SCREEN_SPRITE_DEFINITION = {
     h:128,
     ...SPRITE_SHEET_DIMENSION
 }
-
-export async function createSammichScreen(parent: Entity, {position, rotation, scale}: TransformTypeWithOptionals, _gameInstanceId?:string) {
+export type SammichScreenOptions = {
+    defaultTextureSrc:string,
+    baseInstructionVideoURL:string
+}
+export async function createSammichScreen(parent: Entity, {
+    position,
+    rotation,
+    scale,
+    defaultTextureSrc = "https://sammich.pro/images/spritesheet.png",
+    baseInstructionVideoURL = "https://sammich.pro/instruction-videos"
+}: TransformTypeWithOptionals & SammichScreenOptions, _gameInstanceId?:string) {
     const gameInstanceId = _gameInstanceId || "default";
 
     setupInputController();
@@ -89,11 +99,7 @@ export async function createSammichScreen(parent: Entity, {position, rotation, s
         scale
     });
 
-    const spriteTexture = Material.Texture.Common({
-        src: 'images/spritesheet.png',
-        wrapMode: TextureWrapMode.TWM_REPEAT,
-        filterMode: TextureFilterMode.TFM_POINT
-    });
+    const spriteTexture = getTexture(defaultTextureSrc);
     const spriteMaterial:any = {
         texture: spriteTexture,
         emissiveTexture: spriteTexture,
@@ -306,7 +312,8 @@ export async function createSammichScreen(parent: Entity, {position, rotation, s
                 },
                 gameAlias: getGame(nextGameId).definition.alias,
                 gameInstructions: getGame(nextGameId).definition.instructions,
-                playerIndex:getPlayerIndex()
+                playerIndex:getPlayerIndex(),
+                baseInstructionVideoURL
             });
             instructionsPanel.setTimeout(INSTRUCTION_TOTAL_TIMEOUT);
             timers.setTimeout(()=>{

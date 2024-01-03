@@ -8,12 +8,14 @@ export const createInstructionScreen = (
         transform,
         gameAlias,
         gameInstructions,
-        playerIndex
+        playerIndex,
+        baseInstructionVideoURL = "https://sammich.pro/instruction-videos"
     }: {
         transform: TransformType,
         gameAlias: string,
         gameInstructions: string,
-        playerIndex: number
+        playerIndex: number,
+        baseInstructionVideoURL:string
     }) => {
     console.log("createInstructionScreen", gameAlias);
     const state = {
@@ -32,7 +34,7 @@ export const createInstructionScreen = (
     Transform.create(screenEntity, {parent, position, rotation, scale});
 
     VideoPlayer.create(screenEntity, {
-        src: `instruction-videos/${gameAlias}.mp4`,
+        src: `${baseInstructionVideoURL}/${gameAlias}.mp4`,
         playing: true,
     });
     const videoTexture = Material.Texture.Video({videoPlayerEntity: screenEntity})
