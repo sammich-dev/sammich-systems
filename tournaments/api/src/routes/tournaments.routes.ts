@@ -42,7 +42,7 @@ router.post("/tournament", async (req, res) => {
         })
         req.body.participants;// ["0xA", "0xB"]
         const participantsLeft = [...req.body.participants].sort(() => Math.random() - 0.5);
-        const matchesParticipants:string[][] = [];
+        const matchesParticipants:any[][] = [];
         while(participantsLeft.length){
             matchesParticipants.push([
                 participantsLeft.pop(),
@@ -53,11 +53,11 @@ router.post("/tournament", async (req, res) => {
         for (let _match of matchesParticipants) {
             await prisma.tournamentsMatches.create({
                 data: {
-                    openDate: new Date(),
-                    resolutionDate: null,
-                    winnerIndex: null,
+                    openDate: new Date(req.body.startDate),
+                    resolutionDate: _match.filter(i=>i).length === 1?null:new Date(),
+                    winnerIndex: _match.filter(i=>i).length === 1?null:0,
                     tournamentId: newTournament.id,
-                    players: _match.toString(),
+                    players: _match.map(u=>u.address).join(","),
                     scores: null
                 }
             })
