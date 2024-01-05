@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { prisma } from "../db"
 
@@ -8,10 +9,10 @@ router.get("/matches", async (_req, res) => {
     res.json(matches)
 })
 
-router.get("/matches/:id", async (req, res) => {
+router.get("/match/:id", async (req, res) => {
     const match = await prisma.tournamentsMatches.findFirst({
         where: {
-            id: req.params.id
+            id: parseInt(req.params.id)
         }
     })
     if(!match){
@@ -25,6 +26,19 @@ router.post("/match", async (req, res) => {
         data: req.body
     })
     res.json(newMatch);
+})
+
+router.put("/match/:id", async (req, res) => {
+    const updatedTournament = await prisma.tournamentsMatches.update({
+        where: {
+            id: parseInt(req.params.id)
+        },
+        data: req.body
+    })
+    if (!updatedTournament) {
+        return res.status(404).json({ error: 'tournament not found' })
+    }
+    return res.json(updatedTournament)
 })
 
 export default router;

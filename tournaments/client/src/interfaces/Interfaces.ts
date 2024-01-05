@@ -14,13 +14,14 @@ export interface InitialState {
 
 export interface TournamentsInterface {
   id: number
-  tournament_title: string
+  tournament_title?: string
   tournament_description?: string
   description?: string
   createdBy: any
-  startDate: any
-  endDate: any
-  participants: any
+  startDate: any | undefined
+  endDate?: any
+  finished: boolean
+  participants: any | []
   matches: any
 }
 

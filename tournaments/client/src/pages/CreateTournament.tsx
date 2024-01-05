@@ -6,7 +6,7 @@ const CreateTournament = () => {
         <>
         <div className="flex justify-center">
             <h1 className="felx text-center text-3xl font-semibold text-gray-200 p-4">
-                Create your tournament
+                CREATE YOUR TOURNAMENT
             </h1>
             <GoBack />
         </div>

@@ -16,7 +16,8 @@ model Tournaments {
   createdBy String
   description String 
   startDate DateTime @default(now())
-  endDate DateTime @default(now())
+  endDate DateTime?
+  finished Boolean @default(false) 
   participants TournamentParticipants[]
   matches TournamentsMatches[]
 }
@@ -25,18 +26,18 @@ model TournamentParticipants {
   id String @id @default(uuid())
   address String 
   displayName String
-  tournament Tournaments @relation(fields: [tournamentId], references: [id])
+  tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int 
 }
 
 model TournamentsMatches {
-  id String @id @default(uuid())
-  openDate DateTime 
-  resolutionDate DateTime
-  winnerIndex Int 
+  id Int @id @default(autoincrement())
+  openDate DateTime?
+  resolutionDate DateTime?
+  winnerIndex Int?
   players String
-  scores Int
-  tournament Tournaments @relation(fields: [tournamentId], references: [id])
+  scores Int?
+  tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int 
 }
 
@@ -46,6 +47,56 @@ model TournamentsMatches {
 //    adress String
 //    displayName String
 // }
+
+
+// NEW MODELS TO CREATE MATCHES
+// model Tournaments {
+//   id Int @id @default(autoincrement())
+//   title String @unique
+//   createdBy String
+//   description String 
+//   startDate DateTime @default(now())
+//   endDate DateTime?
+//   finished Boolean @default(false) 
+//   participants TournamentParticipants[]
+//   matches TournamentsMatches[]
+// }
+
+// model TournamentParticipants {
+//   id String @id @default(uuid())
+//   address String 
+//   displayName String
+//   tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+//   tournamentId Int
+//   tournamentMatches TournamentMatchesPlayers[] 
+// }
+
+// model TournamentsMatches {
+//   id Int @id @default(autoincrement())
+//   openDate DateTime?
+//   resolutionDate DateTime?
+//   winnerIndex Int?
+//   tournamentParticipants TournamentMatchesPlayers[]
+//   scores Int?
+//   tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+//   tournamentId Int 
+// }
+
+// model TournamentMatchesPlayers { 
+//    id Int @id @default(autoincrement())
+//    tournamentMatchId Int
+//    tournamentMatches TournamentsMatches @relation(fields: [tournamentMatchId], references: [id])
+//    tournamentParticipantsId String
+//    tournamentParticipants TournamentParticipants @relation(fields: [tournamentParticipantsId], references: [id])
+//    adress String
+//    displayName String
+
+//   @@unique([tournamentMatchId, tournamentParticipantsId])
+// }
+
+ 
+
+
 
  
 

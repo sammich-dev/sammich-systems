@@ -6,15 +6,15 @@ const router = Router();
 router.get("/tournaments", async (_req, res) => {
     const tournaments = await prisma.tournaments.findMany({
         include: {
-            participants:true,
-            matches:true
+            participants: true,
+            matches: true
         }
     })
-    res.json(tournaments)
+    res.json(tournaments.sort((a, b) => b.id - a.id))
 })
 
-router.get("/tournaments/:id", async (req, res) => {
-    const tournament = await prisma.tournaments.findUnique({
+router.get("/tournament/:id", async (req, res) => {
+    const tournament = await prisma.tournaments.findFirst({
         where: {
             id: parseInt(req.params.id)
         },
@@ -23,8 +23,8 @@ router.get("/tournaments/:id", async (req, res) => {
             matches: true
         }
     })
-    if(!tournament){
-        return res.status(404).json({error: 'tournament not found'})
+    if (!tournament) {
+        return res.status(404).json({ error: 'tournament not found' })
     }
     return res.json(tournament)
 })
@@ -37,22 +37,51 @@ router.post("/tournament", async (req, res) => {
                 description: req.body.tournament_description,
                 createdBy: req.body.createdBy,
                 startDate: new Date(req.body.startDate),
-                endDate: new Date(req.body.endDate)
+                endDate: req.body.endDate ? new Date(req.body.endDate) : undefined
             }
         })
-        for (let participant of req.body.participants) {
-            await prisma.tournamentParticipants.create({
+        req.body.participants;// ["0xA", "0xB"]
+        const participantsLeft = [...req.body.participants].sort(() => Math.random() - 0.5);
+        const matchesParticipants:string[][] = [];
+        while(participantsLeft.length){
+            matchesParticipants.push([
+                participantsLeft.pop(),
+                participantsLeft.pop()
+            ])
+        }
+
+        for (let _match of matchesParticipants) {
+            await prisma.tournamentsMatches.create({
                 data: {
-                    ...participant,
-                    tournamentId: newTournament.id
+                    openDate: new Date(),
+                    resolutionDate: null,
+                    winnerIndex: null,
+                    tournamentId: newTournament.id,
+                    players: _match.toString(),
+                    scores: null
                 }
             })
         }
         res.json(true)
-    } catch (error:any) {
+
+        console.log(newTournament)
+    } catch (error: any) {
         console.log(error);
-        res.status(500).send({error:error?.message})
+        res.status(500).send({ error: error?.message })
     }
+})
+
+router.put("/tournament/:id", async (req, res) => {
+    const updatedTournament = await prisma.tournaments.update({
+        where: {
+            id: parseInt(req.params.id)
+        },
+        data: req.body
+    })
+    if (!updatedTournament) {
+        return res.status(404).json({ error: 'tournament not found' })
+    }
+    return res.json(updatedTournament)
 })
 
 router.delete("/tournament/:id", async (req, res) => {
@@ -61,8 +90,8 @@ router.delete("/tournament/:id", async (req, res) => {
             id: parseInt(req.params.id)
         }
     })
-    if(!deletedTournament){
-        return res.status(404).json({error: 'tournament not found'})
+    if (!deletedTournament) {
+        return res.status(404).json({ error: 'tournament not found' })
     }
     return res.json(deletedTournament)
 })

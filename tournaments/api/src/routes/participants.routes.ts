@@ -33,15 +33,15 @@ router.post("/participant", async (req, res) => {
 })
 
 router.delete("/participant/:id", async (req, res) => {
-    const deletedTournament = await prisma.tournamentParticipants.delete({
+    const deletedParticipant = await prisma.tournamentParticipants.delete({
         where: {
             id: req.params.id
         }
     })
-    if(!deletedTournament){
-        return res.status(404).json({error: 'tournament not found'})
+    if(!deletedParticipant){
+        return res.status(404).json({error: 'Participant not found'})
     }
-    return res.json(deletedTournament)
+    return res.json(deletedParticipant)
 })
 
 
