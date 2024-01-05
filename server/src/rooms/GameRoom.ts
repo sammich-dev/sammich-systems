@@ -164,9 +164,6 @@ export class GameRoom extends Room<GameState> {
         const inStage = (STATE:GAME_STAGE)=>this.state.gameStage === STATE;
     }
     patches:number = 0;
-    async onBeforePatch(state: GameState) {
-        console.log("patch gameStage",this.state.gameStage);
-    }
 
     checkWinnerFunction:Function;
     askedToCheckWinners = [0,0];
