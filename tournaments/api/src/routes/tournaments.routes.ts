@@ -51,15 +51,16 @@ router.post("/tournament", async (req, res) => {
         }
 
         for (let _match of matchesParticipants) {
+            const data = {
+                openDate: new Date(req.body.startDate),
+                resolutionDate: _match.filter(i=>i).length === 1?new Date():null,
+                winnerIndex: _match.filter(i=>i).length === 1?0:null,
+                tournamentId: newTournament.id,
+                players: _match.filter(i=>i).map(u=>u.address).join(","),
+                scores: null
+            };
             await prisma.tournamentsMatches.create({
-                data: {
-                    openDate: new Date(req.body.startDate),
-                    resolutionDate: _match.filter(i=>i).length === 1?null:new Date(),
-                    winnerIndex: _match.filter(i=>i).length === 1?null:0,
-                    tournamentId: newTournament.id,
-                    players: _match.map(u=>u.address).join(","),
-                    scores: null
-                }
+                data
             })
         }
         res.json(true)
