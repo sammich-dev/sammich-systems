@@ -98,7 +98,7 @@ export default config({
                 return acc;
             },{});
 
-            const result = users.reduce((acc:any, current:any)=>{
+            const result = Object.values(users).reduce((acc:any, current:any)=>{
                 acc[current.id] = Math.min(Object.keys(current.against).length, Object.keys(current.locations).length);
                 return acc;
             },{});
