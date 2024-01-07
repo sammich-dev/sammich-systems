@@ -52,6 +52,59 @@ export default config({
             }, getCatchResponseError(res));
         });
 
+        app.get("/colyseus/api/raffle/:from/:to", async (req, res)=>{
+            const {from, to} = req.params;
+            const fromDate = new Date(from);
+            const toDate = new Date(to);
+            const tickets = await getRaffleTickets(fromDate,toDate);
+
+            return res.send({
+                tickets
+            });
+        });
+
+        app.get("/colyseus/api/raffle-html/:from/:to", async (req, res)=>{
+            const {from, to} = req.params;
+            const fromDate = new Date(from);
+            const toDate = new Date(to);
+            const result = await getRaffleTickets(fromDate,toDate);
+
+            return res.send(Object.keys(result).map(address => {
+                return `${address} : ${result[address]}`;
+            }).join("<br/>"));
+        });
+
+        async function getRaffleTickets(fromDate:Date,toDate:Date){
+            const playedGames = await prisma.playedMatch.findMany({
+                where:{
+                    endDate:{
+                        gte:fromDate.getTime(),
+                        lte:toDate.getTime()
+                    }
+                }
+            });
+            const users = playedGames.reduce((acc:any, current:any)=>{
+                const [address1,address2] = current.playerUserIds.split(",");
+                const {parcel} = current;
+
+                acc[address1] = acc[address1] || {against:{}, locations:{}, id:address1};
+                acc[address1].against[address2] = true;
+                acc[address1].locations[parcel] = true;
+
+                acc[address2] = acc[address2] || {against:{}, locations:{}, id:address2};
+                acc[address2].against[address1] = true;
+                acc[address2].locations[parcel] = true;
+
+                return acc;
+            },{});
+
+            const result = users.reduce((acc:any, current:any)=>{
+                acc[current.id] = Math.min(Object.keys(current.against).length, Object.keys(current.locations).length);
+                return acc;
+            },{});
+            return result;
+        }
+
         app.get("/colyseus/api/last-played-game-id", async (req, res) => {
             const lastPlayedGameId = (await prisma.playedMatch.findFirst({orderBy:{ID:"desc"}})).ID;
             return res.send(lastPlayedGameId)
