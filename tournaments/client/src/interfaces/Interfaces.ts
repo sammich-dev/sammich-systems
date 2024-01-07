@@ -14,6 +14,7 @@ export interface InitialState {
 
 export interface TournamentsInterface {
   id: number
+  title?: string
   tournament_title?: string
   tournament_description?: string
   description?: string

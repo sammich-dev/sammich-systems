@@ -18,11 +18,9 @@ const TournamentDetails: React.FC = () => {
 
   const dispatch: AppDispatch = useDispatch();
   const { id } = useParams();
-  const tournaments: TournamentsInterface = useSelector(
+  const tournament: TournamentsInterface = useSelector(
     (state: RootState) => state.tournaments.tournamentDetails
   );
-  const [address, setAddress] = useState("");
-  const [winners, setWinners] = useState([""])
 
 
   const detectCurrentProvider = () => {
@@ -56,33 +54,6 @@ const TournamentDetails: React.FC = () => {
     }
   }
 
-  const deletedSuccessAlert = (id:any) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#111827",
-      cancelButtonColor: "#b91c1c",
-      confirmButtonText: "Yes, delete it!"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your tournament has been deleted.",
-          icon: "success"
-        });
-        dispatch(deleteTournamentThunk(id))
-        window.location.href = "http://localhost:5173/";
-      }
-    })
-    
-  };
-
-  const handleWinnersButton = () => {
-
-  }
-
 
   useEffect(() => {
     dispatch(getTournament(id as string));
@@ -92,16 +63,6 @@ const TournamentDetails: React.FC = () => {
     };
   }, [dispatch, id]);
 
-  // PLAYERS RECEIVED FROM THE BACKEND WITH RANDOM SORT TO THE MATCHES.
-  // Separate the players 
-  const mitad = Math.floor(tournaments?.participants?.length / 2);
-  // Get all players
-  const allPlayers = tournaments.matches?.slice(1,2)
-  const players = allPlayers?.[0].players.split(',');
-  const players1 = players?.slice(0, mitad);
-  const players2 = players?.slice(mitad);
-
-  console.log(players)
   return (
     <div key={id}>
       <div className="flex justify-center">
@@ -112,96 +73,63 @@ const TournamentDetails: React.FC = () => {
       </div>
       <section className="mt-10">
         <div className="text-gray-200 font-medium text-lg px-8">
-          Title: <span className="text-lime-300 font-normal">{tournaments.title}</span>
+          Title: <span className="text-lime-300 font-normal">{tournament.title}</span>
         </div>
         <div className="text-gray-200 font-medium text-lg px-8">
-          Created By: <span className="text-lime-300 font-normal">{tournaments.createdBy}</span>
+          Created By: <span className="text-lime-300 font-normal">{tournament.createdBy}</span>
         </div>
         <div className="text-gray-200 font-medium text-lg px-8">
-          Description: <span className="text-lime-300 font-normal">{tournaments.description}</span>
+          Description: <span className="text-lime-300 font-normal">{tournament.description}</span>
         </div>
-        {tournaments.createdBy === address ?
-          <div className="text-red-700 font-medium text-base p-8">
-            <button onClick={() => deletedSuccessAlert(id)} className="p-2 bg-gray-900 rounded hover:bg-gray-800 hover:text-red-500 hover:scale-105 ease-in-out transition duration-500"> Delete </button>
-          </div>
-          : null}
+        <div className="text-gray-200 font-medium text-lg px-8">
+          Winner: <span className="text-lime-300 font-normal">pending...</span>
+        </div>
       </section>
-      <h3 className="text-gray-200 font-bold text-xl p-8">Pendent Matches</h3>
-      <div className="flex p-4">
-        <section className="w-[27%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 1</h5>
-          <ul className="w-full p-2 text-center font-normal">
-            {
-              players1 ? players1.map((pla: any, i: any) =>
-                <button className="focus:outline-none focus:border-2 focus:border-yellow-400 border border-gray-200 my-1 p-1 hover:cursor-pointer">
-                  <li key={i} className="my-2 text-sm text-gray-200">{pla}</li>
-                </button>
-              ) : null
-            }
-          </ul>
-        </section>
-        <div className="w-[4%] text-center font-medium text-lg p-4">vs</div>
-        <section className="w-[27%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 2</h5>
-          <ul className="w-full p-2 text-center font-normal">
-            {
-              players2 ? players2.map((pla: any, i: any) =>
-              <button className="focus:outline-none focus:border-2 focus:border-yellow-400 border border-gray-200 my-1 p-1 hover:cursor-pointer">
-                  <li key={i} className="my-2 text-sm text-gray-200">{pla}</li>
-                </button>
-              ) : null
-            }
-          </ul>
-        </section>
-        {/* <section className="w-[20%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Open Date</h5>
-          <aside className="w-full p-2 text-center font-medium">{tournaments?.startDate?.slice(0, 19)} </aside>
-        </section>
-        <section className="w-[20%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">End Date</h5>
-          <aside className="w-full p-2 text-center font-medium">{tournaments?.endDate?.slice(0, 19)} </aside>
-        </section> */}
-      </div>
-      <h3 className="text-gray-200 font-bold text-xl p-8">Resolved Matches</h3>
-      <div className="flex p-4">
-        <section className="w-[27%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 1</h5>
-          <ul className="w-full p-2 text-center font-normal">
-            {
-              players1 ? players1.map((pla: any, i: any) =>
-                <div className="border border-gray-200 p-1 my-1">
-                  <li key={i} className="my-2 text-sm text-gray-200">{pla}</li>
-                </div>
-              ) : null
-            }
-          </ul>
-        </section>
-        <div className="w-[4%] text-center font-medium text-lg p-4">vs</div>
-        <section className="w-[27%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Player 2</h5>
-          <ul className="w-full p-2 text-center font-normal">
-            {
-              players2 ? players2.map((pla: any, i: any) =>
-                <div className="border border-gray-200 p-1 my-1">
-                  <li key={i} className="my-2 text-sm text-gray-200">{pla}</li>
-                </div>
-              ) : null
-            }
-          </ul>
-        </section>
-        <section className="w-[20%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Resolution Date</h5>
-          <aside className="w-full p-2 text-center font-medium">{tournaments?.startDate?.slice(0, 19)} </aside>
-        </section>
-        {/* <section className="w-[20%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">End Date</h5>
-          <aside className="w-full p-2 text-center font-medium">{tournaments?.endDate?.slice(0, 19)} </aside>
-        </section>
-        <section className="w-[20%]">
-          <h5 className="text-center font-medium text-lg p-4 border border-gray-400">Score Results</h5>
-          <aside className="w-full p-2 text-center font-medium"> 20 - 20 </aside>
-        </section> */}
-      </div>
+      <div className="text-gray-200 font-bold text-xl pl-8">Pendent Matches</div>
+      <section className="p-8">
+        <table className="table-auto text-white">
+          <thead>
+          <tr>
+            <th>Player</th>
+            <th>Player</th>
+          </tr>
+          </thead>
+          <tbody>
+          {tournament?.matches?.filter(i => !i.resolutionDate).map((match: any) => {
+            return <tr>
+              <td>{match.players.split(",")[0]}</td>
+              <td>{match.players.split(",")[1]}</td>
+            </tr>;
+          })}
+
+          </tbody>
+        </table>
+      </section>
+
+
+      <div className="text-gray-200 font-bold text-xl pl-8">Resolved Matches</div>
+      <section className="p-8">
+        <table className="table-auto text-white">
+          <thead>
+          <tr>
+            <th>Player&nbsp;&nbsp;</th>
+            <th>Player</th>
+            <th>Date</th>
+          </tr>
+          </thead>
+          <tbody>
+          {tournament?.matches?.filter(i => i.resolutionDate).map((match: any) => {
+            return <tr>
+              <td className={match.winnerIndex === 0?"bg-yellow-100 text-black":""}>{match.players.split(",")[0]}</td>
+              <td className={match.winnerIndex === 1?"bg-yellow-100 text-black":""}>{match.players.split(",")[1] || " - none - "}</td>
+              <td className={match.winnerIndex === 1?"bg-yellow-100 text-black":""}>{new Date(match.resolutionDate).toLocaleDateString()} {new Date(match.resolutionDate).toLocaleTimeString()}</td>
+            </tr>;
+          })}
+
+          </tbody>
+        </table>
+      </section>
+
     </div>
   )
 }
