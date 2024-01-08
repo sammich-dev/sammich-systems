@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,93 +8,35 @@ datasource db {
 }
 
 model Tournaments {
-  id Int @id @default(autoincrement())
-  title String @unique
-  createdBy String
-  description String 
-  startDate DateTime @default(now())
-  endDate DateTime?
-  finished Boolean @default(false) 
-  participants TournamentParticipants[]
-  matches TournamentsMatches[]
+  id                   Int                      @id @default(autoincrement())
+  title                String                   @unique
+  createdBy            String
+  description          String
+  startDate            DateTime                 @default(now())
+  endDate              DateTime?
+  finished             Boolean                  @default(false)
+  participantAddresses String?
+  winner               String?
+  participants         TournamentParticipants[]
+  matches              TournamentsMatches[]
 }
 
 model TournamentParticipants {
-  id String @id @default(uuid())
-  address String 
-  displayName String
-  tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  tournamentId Int 
+  id           String      @id @default(uuid())
+  address      String
+  displayName  String
+  tournamentId Int
+  tournament   Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model TournamentsMatches {
-  id Int @id @default(autoincrement())
-  openDate DateTime?
+  id             Int         @id @default(autoincrement())
+  openDate       DateTime?
   resolutionDate DateTime?
-  winnerIndex Int?
-  players String
-  scores Int?
-  tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  tournamentId Int 
+  winnerIndex    Int?
+  players        String
+  scores         Int?
+  tournamentId   Int
+  round          Int?
+  tournament     Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
-
-// model TournamentMatchesPlayers { 
-//    id Int @id @default(autoincrement())
-//    tournamentMatchId Int
-//    adress String
-//    displayName String
-// }
-
-
-// NEW MODELS TO CREATE MATCHES
-// model Tournaments {
-//   id Int @id @default(autoincrement())
-//   title String @unique
-//   createdBy String
-//   description String 
-//   startDate DateTime @default(now())
-//   endDate DateTime?
-//   finished Boolean @default(false) 
-//   participants TournamentParticipants[]
-//   matches TournamentsMatches[]
-// }
-
-// model TournamentParticipants {
-//   id String @id @default(uuid())
-//   address String 
-//   displayName String
-//   tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-//   tournamentId Int
-//   tournamentMatches TournamentMatchesPlayers[] 
-// }
-
-// model TournamentsMatches {
-//   id Int @id @default(autoincrement())
-//   openDate DateTime?
-//   resolutionDate DateTime?
-//   winnerIndex Int?
-//   tournamentParticipants TournamentMatchesPlayers[]
-//   scores Int?
-//   tournament Tournaments @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-//   tournamentId Int 
-// }
-
-// model TournamentMatchesPlayers { 
-//    id Int @id @default(autoincrement())
-//    tournamentMatchId Int
-//    tournamentMatches TournamentsMatches @relation(fields: [tournamentMatchId], references: [id])
-//    tournamentParticipantsId String
-//    tournamentParticipants TournamentParticipants @relation(fields: [tournamentParticipantsId], references: [id])
-//    adress String
-//    displayName String
-
-//   @@unique([tournamentMatchId, tournamentParticipantsId])
-// }
-
- 
-
-
-
- 
-
-

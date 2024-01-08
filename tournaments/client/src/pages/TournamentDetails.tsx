@@ -61,7 +61,7 @@ const TournamentDetails: React.FC = () => {
     return () => {
       dispatch(clearDetails());
     };
-  }, [dispatch, id]);
+  }, [ id]);
   const [resolving, setResolving] = useState();
   const [resolvingMatchPlayer, setResolvingMatchPlayer] = useState(false);
   const [sendingRsolution, setSendingResolution] = useState(false);
@@ -72,9 +72,9 @@ const TournamentDetails: React.FC = () => {
     await axios.post(`/api/manual-match-resolution`, {
       match, winnerIndex:match.players.split(",").indexOf(player)
     });
-    dispatch(getTournament(id as string));
     setSendingResolution(false);
     setResolving(undefined);
+    dispatch(getTournament(id as string));
   }
 
   return (
@@ -96,48 +96,56 @@ const TournamentDetails: React.FC = () => {
           Description: <span className="text-lime-300 font-normal">{tournament.description}</span>
         </div>
         <div className="text-gray-200 font-medium text-lg px-8">
-          Winner: <span className="text-lime-300 font-normal">pending...</span>
+          Winner: {tournament.finished ? <span className="bg-yellow-100 text-black p-1">{tournament.winner}</span> :  <span className="text-lime-300 font-normal">pending...</span> }
+        </div>
+        <div className="text-gray-200 font-medium text-lg px-8">
+          Participants: {tournament.participantAddresses?.toString()}
         </div>
       </section>
       <div className="text-gray-200 font-bold text-xl pl-8">Pendent Matches</div>
-      <section className="p-8">
-        <table className="table-auto text-white">
-          <thead>
-          <tr>
-            <th>Player</th>
-            <th>Player</th>
-            <th>Action</th>
-          </tr>
-          </thead>
-          <tbody>
-          {tournament?.matches?.filter(i => !i.resolutionDate).map((match: any) => {
-            return <tr>
-              <td className="p-4">{match.players.split(",")[0]}</td>
-              <td className="p-4">{match.players.split(",")[1]}</td>
-              <td className="p-4" >
-                {
-                  (resolving === match)
-                      ? <>
-                      {!!resolvingMatchPlayer}
-                      {!resolvingMatchPlayer && <Select className="w-96" options={match.players.split(",").map(a=>({value:a,label:a}))} value={resolvingMatchPlayer} onChange={(newValue)=>setResolvingMatchPlayer(newValue.value)} styles={{
-                          menu: (baseStyles, state) => ({
-                           color:"black",
-                            backgroundColor:"white"
-                          }),
-                        }}></Select>}
-                      {resolvingMatchPlayer && <div>{resolvingMatchPlayer}</div>}
-                      {resolvingMatchPlayer && <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" key={1} onClick={()=>sendResolution(match, resolvingMatchPlayer)}>OK</button> }
-                        <button className="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded" key={2} onClick={()=>setResolving(false)}>CANCEL</button>
-                      </>
-                      : <div onClick={()=>(setResolving(match),setResolvingMatchPlayer(undefined))}>Resolve</div>
-                }
-              </td>
-            </tr>;
-          })}
+      {tournament?.matches?.filter(i => !i.resolutionDate).length > 0 ?<section className="p-8">
+            <table className="table-auto text-white">
+              <thead>
+              <tr>
+                <th className="p-2">Round</th>
+                <th className="p-2">Player</th>
+                <th className="p-2">Player</th>
+                <th className="p-2">Action</th>
+              </tr>
+              </thead>
+              <tbody>
+              {tournament?.matches?.filter(i => !i.resolutionDate).map((match: any) => {
+                return <tr key={match.id}>
+                  <td className="p-4">{match.round}</td>
+                  <td className="p-4">{match.players.split(",")[0]}</td>
+                  <td className="p-4">{match.players.split(",")[1]}</td>
+                  <td className="p-4" >
+                    {
+                      (resolving === match)
+                          ? <>
+                            {!!resolvingMatchPlayer}
+                            {!resolvingMatchPlayer && <Select className="w-96" options={match.players.split(",").map(a=>({value:a,label:a}))} value={resolvingMatchPlayer} onChange={(newValue)=>setResolvingMatchPlayer(newValue.value)} styles={{
+                              menu: (baseStyles, state) => ({
+                                color:"black",
+                                backgroundColor:"white"
+                              }),
+                            }}></Select>}
+                            {resolvingMatchPlayer && <div>{resolvingMatchPlayer}</div>}
+                            {resolvingMatchPlayer && <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" key={1} onClick={()=>sendResolution(match, resolvingMatchPlayer)}>OK</button> }
+                            <button className="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded" key={2} onClick={()=>setResolving(false)}>CANCEL</button>
+                          </>
+                          : <div onClick={()=>(setResolving(match),setResolvingMatchPlayer(undefined))}>Resolve</div>
+                    }
+                  </td>
+                </tr>;
+              })}
 
-          </tbody>
-        </table>
-      </section>
+              </tbody>
+            </table>
+          </section>
+          :<section className="text-white pl-10"> - No pendent Matches -</section>
+      }
+
 
 
       <div className="text-gray-200 font-bold text-xl pl-8">Resolved Matches</div>
@@ -145,17 +153,19 @@ const TournamentDetails: React.FC = () => {
         <table className="table-auto text-white">
           <thead>
           <tr>
-            <th>Player&nbsp;&nbsp;</th>
-            <th>Player</th>
-            <th>Date</th>
+            <th className="p-2">Round</th>
+            <th className="p-2">Player&nbsp;&nbsp;</th>
+            <th className="p-2">Player</th>
+            <th className="p-2">Date</th>
           </tr>
           </thead>
           <tbody>
-          {tournament?.matches?.filter(i => i.resolutionDate).map((match: any) => {
-            return <tr>
+          {tournament?.matches?.filter(i => i.resolutionDate).sort((a,b)=>b.resolutionDate - a.resolutionDate).map((match: any) => {
+            return <tr key={match.id}>
+              <td className="p-4">{match.round}</td>
               <td className={match.winnerIndex === 0?"p-4 bg-yellow-100 text-black":"p-4"}>{match.players.split(",")[0]}</td>
               <td className={match.winnerIndex === 1?"p-4 bg-yellow-100 text-black":"p-4"}>{match.players.split(",")[1] || " - none - "}</td>
-              <td className={match.winnerIndex === 1?"p-4 bg-yellow-100 text-black":"p-4"}>{new Date(match.resolutionDate).toLocaleDateString()} {new Date(match.resolutionDate).toLocaleTimeString()}</td>
+              <td className="p-4">{new Date(match.resolutionDate).toLocaleDateString()} {new Date(match.resolutionDate).toLocaleTimeString()}</td>
             </tr>;
           })}
 
@@ -168,3 +178,5 @@ const TournamentDetails: React.FC = () => {
 }
 
 export default TournamentDetails;
+
+function getTotalNumberOfRounds (numParticipants:number){return Math.ceil(Math.log2(numParticipants))}

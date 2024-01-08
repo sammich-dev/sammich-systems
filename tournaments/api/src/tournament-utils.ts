@@ -1,0 +1,1 @@
+export function getTotalNumberOfRounds (numParticipants:number){return Math.ceil(Math.log2(numParticipants))}
