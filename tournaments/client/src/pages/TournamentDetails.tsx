@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-
+import Select from 'react-select'
 import { AppDispatch, RootState } from "../store/store";
-import { deleteTournamentThunk, getTournament } from "../store/slices/tournaments/thunk";
+import { getTournament } from "../store/slices/tournaments/thunk";
 import { clearDetails } from "../store/slices/tournaments/tournamentsSlice"
 
 import { TournamentsInterface } from "../interfaces/Interfaces";
 import GoBack from "../components/GoBack";
 import Web3 from "web3";
-import Swal from "sweetalert2";
+import axios from "axios";
 
 
 const TournamentDetails: React.FC = () => {
@@ -38,7 +38,7 @@ const TournamentDetails: React.FC = () => {
     }
     return provider;
   };
-
+  const [address, setAddress] = useState("");
   const onConnect = async () => {
     try {
       const currentProvider = detectCurrentProvider();
@@ -62,6 +62,20 @@ const TournamentDetails: React.FC = () => {
       dispatch(clearDetails());
     };
   }, [dispatch, id]);
+  const [resolving, setResolving] = useState();
+  const [resolvingMatchPlayer, setResolvingMatchPlayer] = useState(false);
+  const [sendingRsolution, setSendingResolution] = useState(false);
+
+  const sendResolution = async (match, player) => {
+    setSendingResolution(true);
+    console.log(match.players, player);
+    await axios.post(`/api/manual-match-resolution`, {
+      match, winnerIndex:match.players.split(",").indexOf(player)
+    });
+    dispatch(getTournament(id as string));
+    setSendingResolution(false);
+    setResolving(undefined);
+  }
 
   return (
     <div key={id}>
@@ -92,13 +106,32 @@ const TournamentDetails: React.FC = () => {
           <tr>
             <th>Player</th>
             <th>Player</th>
+            <th>Action</th>
           </tr>
           </thead>
           <tbody>
           {tournament?.matches?.filter(i => !i.resolutionDate).map((match: any) => {
             return <tr>
-              <td>{match.players.split(",")[0]}</td>
-              <td>{match.players.split(",")[1]}</td>
+              <td className="p-4">{match.players.split(",")[0]}</td>
+              <td className="p-4">{match.players.split(",")[1]}</td>
+              <td className="p-4" >
+                {
+                  (resolving === match)
+                      ? <>
+                      {!!resolvingMatchPlayer}
+                      {!resolvingMatchPlayer && <Select className="w-96" options={match.players.split(",").map(a=>({value:a,label:a}))} value={resolvingMatchPlayer} onChange={(newValue)=>setResolvingMatchPlayer(newValue.value)} styles={{
+                          menu: (baseStyles, state) => ({
+                           color:"black",
+                            backgroundColor:"white"
+                          }),
+                        }}></Select>}
+                      {resolvingMatchPlayer && <div>{resolvingMatchPlayer}</div>}
+                      {resolvingMatchPlayer && <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" key={1} onClick={()=>sendResolution(match, resolvingMatchPlayer)}>OK</button> }
+                        <button className="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded" key={2} onClick={()=>setResolving(false)}>CANCEL</button>
+                      </>
+                      : <div onClick={()=>(setResolving(match),setResolvingMatchPlayer(undefined))}>Resolve</div>
+                }
+              </td>
             </tr>;
           })}
 
@@ -120,9 +153,9 @@ const TournamentDetails: React.FC = () => {
           <tbody>
           {tournament?.matches?.filter(i => i.resolutionDate).map((match: any) => {
             return <tr>
-              <td className={match.winnerIndex === 0?"bg-yellow-100 text-black":""}>{match.players.split(",")[0]}</td>
-              <td className={match.winnerIndex === 1?"bg-yellow-100 text-black":""}>{match.players.split(",")[1] || " - none - "}</td>
-              <td className={match.winnerIndex === 1?"bg-yellow-100 text-black":""}>{new Date(match.resolutionDate).toLocaleDateString()} {new Date(match.resolutionDate).toLocaleTimeString()}</td>
+              <td className={match.winnerIndex === 0?"p-4 bg-yellow-100 text-black":"p-4"}>{match.players.split(",")[0]}</td>
+              <td className={match.winnerIndex === 1?"p-4 bg-yellow-100 text-black":"p-4"}>{match.players.split(",")[1] || " - none - "}</td>
+              <td className={match.winnerIndex === 1?"p-4 bg-yellow-100 text-black":"p-4"}>{new Date(match.resolutionDate).toLocaleDateString()} {new Date(match.resolutionDate).toLocaleTimeString()}</td>
             </tr>;
           })}
 

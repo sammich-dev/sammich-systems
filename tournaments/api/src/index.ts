@@ -25,6 +25,10 @@ app.use(
             ],
         })
     )
+app.use((req,_,next)=>{
+    console.log(new Date().toLocaleTimeString(), req.url);
+    next();
+})
 app.use(express.json());
 app.use("/api", matchesRoute);
 app.use("/api", participantsRoute);

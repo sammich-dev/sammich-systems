@@ -1,5 +1,6 @@
 # todo.txt specs: https://github.com/todotxt/todo.txt ; http://todotxt.org/
 
+
 handling when a player leaves on any gameStage
 handling spectator entering on any track gameStage
 
@@ -46,7 +47,7 @@ when a user creates a match, if waiting time is higher than 60 seconds, reset th
 
 tournaments: chess swiss system
 
-
++tournament: success popup when creating popup should be should once request is resolved, before it should show "sending data..."
 report dcl-sdk7 pointer issues
 2023-11-14 Refactor REVIEW if to make Spectator-Screen-Runner ? simpler version without interval auto-run
 Option to set if Only players can hear the sound (e.g. in a concert or conference)
@@ -67,3 +68,4 @@ x (A) allow reconnection when connection is lost
 x (A) when server is down when scene is loading, try to connect on intervals
 x (A) instructions countdown, if no-one perss any key during instructions, advance game
 x (A) avoid any way of block waiting for spectators or people wanting to play, e.g. track never ends
+x tournament-app: pagination

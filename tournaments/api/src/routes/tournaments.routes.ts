@@ -14,6 +14,7 @@ router.get("/tournaments", async (_req, res) => {
 })
 
 router.get("/tournament/:id", async (req, res) => {
+    console.log("/tournament/:id", req.params.id)
     const tournament = await prisma.tournaments.findFirst({
         where: {
             id: parseInt(req.params.id)
@@ -95,6 +96,26 @@ router.delete("/tournament/:id", async (req, res) => {
         return res.status(404).json({ error: 'tournament not found' })
     }
     return res.json(deletedTournament)
+});
+
+router.post("/manual-match-resolution", async (req,res)=>{
+    try{
+        const {match, winnerIndex} = req.body;
+        const updated = await prisma.tournamentsMatches.update({
+            where:{id:match.id},
+            data:{
+                winnerIndex,
+                resolutionDate: new Date()
+            }
+        });
+        res.send(updated);
+    }catch(error:any){
+        return res.status(500).send({
+            error,
+            message: error?.message||undefined
+        })
+    }
+
 })
 
 export default router
