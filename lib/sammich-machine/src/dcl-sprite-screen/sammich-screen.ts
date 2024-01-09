@@ -140,7 +140,7 @@ export async function createSammichScreen(parent: Entity, {
     waitingTextEntity.hide();
     waitingTextBackground.hide();
 
-    const disconnectionText = lobbyScreen.addText({text:"DISCONNECTED", textColor:[1,0,0,1], pixelPosition:[192/2,4], layer:10, textAlign:TextAlignMode.TAM_TOP_CENTER, fontSize:1});
+    const disconnectionText = lobbyScreen.addText({text:"DISCONNECTED", textColor:[1,0,0,1], pixelPosition:[192/2,110], layer:10, textAlign:TextAlignMode.TAM_TOP_CENTER, fontSize:1});
     const scoreTransition = createGlobalScoreTransition(lobbyScreen);
     const colyseusClient: Client = new Client(colyseusServerURL);
 
