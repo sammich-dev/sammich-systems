@@ -53,25 +53,30 @@ export default config({
         });
 
         app.get("/colyseus/api/raffle/:from/:to", async (req, res)=>{
-            const {from, to} = req.params;
-            const fromDate = new Date(from);
-            const toDate = new Date(to);
-            const tickets = await getRaffleTickets(fromDate,toDate);
+            tryFn(async ()=>{
+                const {from, to} = req.params;
+                const fromDate = new Date(from);
+                const toDate = new Date(to);
+                const tickets = await getRaffleTickets(fromDate,toDate);
 
-            return res.send({
-                tickets
-            });
+                return res.send({
+                    tickets
+                });
+            }, getCatchResponseError(res));
         });
 
         app.get("/colyseus/api/raffle-html/:from/:to", async (req, res)=>{
-            const {from, to} = req.params;
-            const fromDate = new Date(from);
-            const toDate = new Date(to);
-            const result:any = await getRaffleTickets(fromDate,toDate);
-            console.log("/colyseus/api/raffle-html/:from/:to result",from, to, JSON.stringify(result));
-            return res.send(Object.keys(result).map(address => {
-                return `${address} : ${result[address]}`;
-            }).join("<br/>"));
+            tryFn(async ()=>{
+                const {from, to} = req.params;
+                console.log("/colyseus/api/raffle-html/:from/:to result",from, to);
+                const fromDate = new Date(from);
+                const toDate = new Date(to);
+                const result:any = await getRaffleTickets(fromDate,toDate);
+                console.log("Object.keys(result)", Object.keys(result));
+                return res.send(Object.keys(result).map(address => {
+                    return `${address} : ${result[address]}`;
+                }).join("<br/>"));
+            }, getCatchResponseError(res));
         });
 
         async function getRaffleTickets(fromDate:Date,toDate:Date){
