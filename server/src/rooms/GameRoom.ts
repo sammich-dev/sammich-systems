@@ -28,6 +28,7 @@ setupGameRepository();
 const seed = 1;
 
 export class GameRoom extends Room<GameState> {
+    gameInstanceId:string = "0,0";
     screenRunners:any[] = [];
     //TODO when creating a game
     currentGameDefinition:{
@@ -36,8 +37,8 @@ export class GameRoom extends Room<GameState> {
         fps:number,
         instructions:string
     };
-    onCreate(...args:any[]) {
-        console.log("onCreate", args);
+    onCreate({gameInstanceId, user}:any) {
+        console.log("onCreate", gameInstanceId, user);
         this.checkWinners = this.checkWinners.bind(this);
         this.forceWinner = this.forceWinner.bind(this);
         this.handleWinner = this.handleWinner.bind(this);
@@ -45,7 +46,7 @@ export class GameRoom extends Room<GameState> {
         this.getPlayerGlobalScore = this.getPlayerGlobalScore.bind(this);
         this.autoDispose = false;
 
-        this.setState(new GameState());
+        this.setState(new GameState(gameInstanceId));
 
         this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
 
@@ -238,9 +239,9 @@ export class GameRoom extends Room<GameState> {
                         miniGameCollection: gameIds.join(","),
                         //TODO gameTrackHash: null, //TODO: a hash of the mini-games and their versions
                         seed,
-                        parcel:"0,0",//TODO
+                        parcel:this.state.gameInstanceId,//TODO
                         miniGameIds:this.state.miniGameTrack.join(","),
-                        gameInstanceId:null,
+                        gameInstanceId:this.state.gameInstanceId,
                         playerUserIds:this.state.players.map(p=>p.user.userId).join(","),//TODO
                         playerDisplayNames:this.state.players.map(p=>p.user.displayName).join(","),
                         scores: `${this.getPlayerGlobalScore(0)},${this.getPlayerGlobalScore(1)}`,
@@ -370,6 +371,7 @@ export class GameRoom extends Room<GameState> {
             this.resetGame();
         }
         console.log("onJoin", user);
+        console.log("onJoin gameInstanceId", this.state.gameInstanceId);
         console.log("onJoin state", this.state.toJSON());
         this.state.users.push(new PlayerState({user, client, playerIndex:-1}));
         this.broadcastPatch();

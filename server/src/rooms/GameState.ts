@@ -133,11 +133,17 @@ export class GameState extends Schema {
     @type(["int8"])
     miniGameResults:number[] = new ArraySchema<number>();
 
+    @type("string")
+    gameInstanceId:string = "0,0";
+
     @type([PlayerFrameCollection])
     screenFrames = new ArraySchema<PlayerFrameCollection>();
 
-    constructor() {
+    constructor(gameInstanceId:string) {
         super();
+        console.log("GameState constructor", gameInstanceId)
+        this.gameInstanceId = gameInstanceId;
+        console.log("state gameInstanceId", this.gameInstanceId)
         this.screenFrames[0] = new PlayerFrameCollection();
         this.screenFrames[1] = new PlayerFrameCollection();
     }

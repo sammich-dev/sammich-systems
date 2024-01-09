@@ -30,8 +30,8 @@ export default config({
         /**
          * Define your room handlers:
          */
-        const room = gameServer.define('GameRoom', GameRoom);
-        matchMaker.createRoom("GameRoom", {});
+        const room = gameServer.define('GameRoom', GameRoom).filterBy(["gameInstanceId"]);
+
     },
 
     initializeExpress: (app) => {
@@ -106,8 +106,11 @@ export default config({
         }
 
         app.get("/colyseus/api/last-played-game-id", async (req, res) => {
-            const lastPlayedGameId = (await prisma.playedMatch.findFirst({orderBy:{ID:"desc"}})).ID;
-            return res.send(lastPlayedGameId)
+            tryFn(async ()=>{
+                const lastPlayedGameId = (await prisma.playedMatch.findFirst({orderBy:{ID:"desc"}})).ID;
+                return res.send({lastPlayedGameId})
+            }, getCatchResponseError(res));
+
         });
 
         /**
