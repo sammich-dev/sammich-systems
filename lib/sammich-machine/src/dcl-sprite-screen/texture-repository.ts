@@ -1,6 +1,6 @@
 import {Material, TextureFilterMode, TextureWrapMode} from "@dcl/sdk/ecs";
 
-const textures = {};
+const textures:any = {};
 
 export const getTexture = (src:string) => {
     textures[src] =  textures[src] || Material.Texture.Common({

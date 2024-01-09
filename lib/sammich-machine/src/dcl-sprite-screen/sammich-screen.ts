@@ -301,7 +301,7 @@ export async function createSammichScreen(parent: Entity, {
             const nextGameId = room.state.miniGameTrack[nextMiniGameIndex];
             console.log("showInstructions", nextMiniGameIndex, nextGameId, getGame(nextGameId).definition.alias)
             lobbyScreen.show();
-
+            state.sentInstructionsReady = false
             instructionsPanel = createInstructionScreen({
                 transform: {
                     parent: lobbyScreen.getEntity(),

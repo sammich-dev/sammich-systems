@@ -1,6 +1,6 @@
 {
   "name": "dcl-sammich-screen",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A sammich game screen component to integrate in other games or scenes",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
@@ -36,6 +36,7 @@
     "dist"
   ],
   "dependencies": {
+    "@dcl-sdk/utils": "^1.2.1",
     "colyseus.js": "^0.15.14",
     "whatwg-url-without-unicode": "^8.0.0-3",
     "xmlhttprequest-polyfill": "^1.0.1"

@@ -363,18 +363,10 @@ export const createScreenRunner = ({
             reproduce:(autoPlay = true)=>{
                 state.running = true;
                 timers.clearInterval(frameInterval);
-                frameInterval = timers.setInterval(() => {
-                    let currentFrame = getFrameNumber(Date.now() - state.startTime);
-
-                    reproduceFramesUntil(currentFrame);
-                    _debugPanel?.setState({
-                        spriteEntities: "\n" + getSpriteEntities().map((s: SpriteEntity) => `${s.klassParams.klass}-${s.ID}-${s.getPixelPosition()[1]}`).join("\n")
-                    });
-
-                }, frameMs);
+                frameInterval = timers.setInterval(() => reproduceFramesUntil(getFrameNumber(Date.now() - state.startTime)),Math.floor(frameMs));
             },
             start: (autoPlay: boolean = true) => {
-                console.log("START__", playerIndex);
+                console.log("reproduce START__",autoPlay, playerIndex);
                 state.running = true;
                 state.startTime = Date.now();
                 state.frames.push({index: 0, events: [{type: "start", time: 0}]});
