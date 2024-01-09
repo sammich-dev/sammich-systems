@@ -67,8 +67,8 @@ export default config({
             const {from, to} = req.params;
             const fromDate = new Date(from);
             const toDate = new Date(to);
-            const result = await getRaffleTickets(fromDate,toDate);
-
+            const result:any = await getRaffleTickets(fromDate,toDate);
+            console.log("/colyseus/api/raffle-html/:from/:to result",from, to, JSON.stringify(result));
             return res.send(Object.keys(result).map(address => {
                 return `${address} : ${result[address]}`;
             }).join("<br/>"));
