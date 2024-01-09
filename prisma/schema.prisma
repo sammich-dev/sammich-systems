@@ -42,7 +42,7 @@ model PlayedMatch {
   playerUserIds      String?
   miniGameIds        String?
   parcel             String?
-  gameInstanceId     Int?
+  gameInstanceId     String?
   playerDisplayNames String?
   leaderboard        String?
 }

@@ -71,8 +71,9 @@ export declare class GameState extends Schema {
     users: ArraySchema<PlayerState>;
     miniGameTrack: ArraySchema<number>;
     miniGameResults: number[];
+    gameInstanceId: string;
     screenFrames: ArraySchema<PlayerFrameCollection>;
-    constructor();
+    constructor(gameInstanceId: string);
     setupNewTrack(seed?: number): Promise<{
         seed: number;
         miniGameTrack: ArraySchema<number>;

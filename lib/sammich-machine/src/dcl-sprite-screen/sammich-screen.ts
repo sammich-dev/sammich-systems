@@ -149,7 +149,7 @@ export async function createSammichScreen(parent: Entity, {
         let _room;
         while(!state.connected){
             try{
-                _room = await colyseusClient.join(`GameRoom`, {
+                _room = await colyseusClient.joinOrCreate(`GameRoom`, {
                     user,
                     gameInstanceId
                 });
