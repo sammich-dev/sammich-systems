@@ -137,7 +137,6 @@ export class GameRoom extends Room<GameState> {
             if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
 
             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
-            console.log("INPUT_FRAME previous state",this.state?.toJSON())
 
             this.state.screenFrames[this.currentGameDefinition.split?playerIndex:0].frames.push(new InputFrameSchema(frame));
 
