@@ -452,7 +452,8 @@ console.log("reconnectionToken",reconnectionToken);
                 serverRoom: undefined,
                 clientRoom: room,
                 isClientPlayer: playerIndex === getPlayerIndex(),
-                velocityMultiplier:1
+                velocityMultiplier:1,
+                seed:room.state.seed
             }));
             screenRunners.forEach((runner, playerIndex)=>{
                 if(playerIndex === getPlayerIndex()){

@@ -124,14 +124,16 @@ class PlayerFrameCollection extends Schema {
 }
 
 export class GameState extends Schema {
-    @type("int8") gameStage:number = 1;
-    @type("int8") tieBreakerWinner:number = -1;
+    @type("uint8") gameStage:number = 1;
+    @type("uint8") tieBreakerWinner:number = -1;
     @type("uint64") created = Date.now();
     @type([PlayerState]) players = new ArraySchema<PlayerState>();
     @type([PlayerState]) users = new ArraySchema<PlayerState>();
     @type(["int8"]) miniGameTrack = new ArraySchema<number>();
     @type(["int8"])
     miniGameResults:number[] = new ArraySchema<number>();
+    @type("uint64")
+    seed:number = 1;
 
     @type("string")
     gameInstanceId:string = "0,0";
@@ -150,6 +152,7 @@ export class GameState extends Schema {
 
     async setupNewTrack(seed = Math.random()){
         this.resetTrack(false);
+        this.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         //TODO Don't load minigames from database for now, because for now we have mini-games code in local, later we will need to filter by state, etc. later, maybe we need to add new GAME_STAGE.DEFINING_TRACK or use WAITING_READY && !this.miniTrack.length
        // const miniGameIDs = (await prisma.game.findMany({select:{id:true}})).map(i=>i.id);
         const miniGameIDs = getGameKeys();

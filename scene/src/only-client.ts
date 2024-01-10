@@ -12,10 +12,13 @@ import {
     Entity,
 } from '@dcl/sdk/ecs';
 import {DEFAULT_SPRITE_DEF} from "dcl-sammich-screen/dist/lib/sprite-constants";
+import {timers} from "@dcl-sdk/utils";
+
 
 
 export const init = () => {
-    createBox();
+    //createBox();
+
     const rootEntity = engine.addEntity();
     const spriteScreenTransform = {
         position: Vector3.create(4, 2, 8),
@@ -49,5 +52,25 @@ export const init = () => {
 
         }
     });
+
+    const createButton = lobbyScreen.addSprite({
+        spriteDefinition: {
+            ...DEFAULT_SPRITE_DEF,
+            x: 0, y: 387, w: 47, h: 25
+        },
+        pixelPosition: [10, 100],
+        layer: 1,
+    });
+
+    console.log("TIME_0")
+    timers.setTimeout(()=>{
+        console.log("TIME_1")
+        createButton.setPixelPosition(20,100);
+    },5000)
+    timers.setTimeout(()=>{
+        console.log("TIME_2")
+        createButton.setPixelPosition(30,100);
+
+    },10000)
 }
 

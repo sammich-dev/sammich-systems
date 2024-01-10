@@ -11,11 +11,11 @@
     "upgrade-sdk": "npm install --save-dev @dcl/sdk@latest",
     "upgrade-sdk:next": "npm install --save-dev @dcl/sdk@next",
     "backoffice:dev": "ts-node ../backoffice/index.ts",
-    "link-sdk": "cd node_modules/@dcl/sdk && npm link && cd ../js-runtime && npm link"
+    "link-sdk": "cd node_modules/@dcl/sdk && npm link && cd ../js-runtime && npm link && cd ../@dcl-sdk/utils && npm link"
   },
   "devDependencies": {
-    "@dcl/js-runtime": "7.3.35",
-    "@dcl/sdk": "^7.3.35",
+    "@dcl/js-runtime": "7.3.36-7450530864.commit-456ae24",
+    "@dcl/sdk": "^7.3.36-7450530864.commit-456ae24",
     "@types/node": "^20.7.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"

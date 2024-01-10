@@ -11,11 +11,15 @@ import { getSceneInformation } from '~system/Runtime'
 export const init = async () => {
     //we use scene base coords as server room id but can be any string, instances with same id will share server room
     const sammichScreenInstanceRoomId = JSON.parse((await getSceneInformation({})).metadataJson).scene.base;
-
+    console.log("sammichScreenInstanceRoomId",sammichScreenInstanceRoomId);
     const rootEntity = engine.addEntity();
     await createSammichScreen(rootEntity, {
         position:Vector3.create(8,2,8),
         rotation:Quaternion.Zero(),
         scale: Vector3.create(3, 2, 1),
+        defaultTextureSrc:"https://sammich.pro/images/spritesheet.png",
+        baseInstructionVideoURL:"https://sammich.pro/instruction-videos",
+       // colyseusServerURL:"ws://localhost:2567/colyseus"
+        colyseusServerURL:"wss://sammich.pro/colyseus"
     },  sammichScreenInstanceRoomId);
 }

@@ -25,8 +25,6 @@ const timers = {
 
 setupGameRepository();
 
-const seed = 1;
-
 export class GameRoom extends Room<GameState> {
     gameInstanceId:string = "0,0";
     screenRunners:any[] = [];
@@ -68,7 +66,7 @@ export class GameRoom extends Room<GameState> {
                 if(GameFactory.definition.split){
                     this.screenRunners[0] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[0]),
-                        seed,
+                        seed:this.state.seed,
                         timers,
                         GameFactory,
                         playerIndex:0,
@@ -77,7 +75,7 @@ export class GameRoom extends Room<GameState> {
                     });
                     this.screenRunners[1] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[1]),
-                        seed,
+                        seed:this.state.seed,
                         timers,
                         GameFactory,
                         playerIndex:1,
@@ -87,7 +85,7 @@ export class GameRoom extends Room<GameState> {
                 } else {
                     this.screenRunners[0] = createScreenRunner({
                         screen: createServerSpriteScreen(this.state.players[0]),
-                        seed,
+                        seed:this.state.seed,
                         timers,
                         GameFactory,
                         playerIndex:0,
@@ -238,7 +236,7 @@ export class GameRoom extends Room<GameState> {
                         endDate: Date.now(),
                         miniGameCollection: gameIds.join(","),
                         //TODO gameTrackHash: null, //TODO: a hash of the mini-games and their versions
-                        seed,
+                        seed:this.state.seed,
                         parcel:this.state.gameInstanceId,//TODO
                         miniGameIds:this.state.miniGameTrack.join(","),
                         gameInstanceId:this.state.gameInstanceId,
