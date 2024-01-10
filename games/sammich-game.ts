@@ -24,7 +24,7 @@ export const SammichGame = {
             ingredientsToFall:3,
             sammichCompleted:false
         };
-        console.log("SammichGame", game.runtime.getPlayerIndex() ,game.runtime.getState().lastReproducedFrame);
+
         game.setScreenSprite({
             spriteDefinition:{
                 x:0,
@@ -68,7 +68,6 @@ export const SammichGame = {
         const FRAMES_PER_SECOND = game.runtime.getFps();
 
         game.setWinnerFn((player1Score:number, player2Score:number) => {
-            console.log("winnerFn", state.level, player1Score, player2Score);
             if( state.level > 0 && player1Score > player2Score) return {winnerIndex:0};
             if( state.level > 0 && player1Score < player2Score) return {winnerIndex:1};
         });
@@ -100,7 +99,6 @@ export const SammichGame = {
 
 
             if(lockedIngredients > (state.ingredientsToFall + 1)){
-                console.log("SAMMICH COMPLETED");
                 await game.waitFrames(FRAMES_PER_SECOND );//TODO dont use await, it should be synchronous?
                 spawner.cleanSprites();
                 baseSprite.sprite.hide();
