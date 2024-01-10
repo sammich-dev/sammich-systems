@@ -47,7 +47,7 @@ export class GameRoom extends Room<GameState> {
         this.setState(new GameState(gameInstanceId));
 
         this.onMessage("INSTRUCTIONS_READY", (client, {playerIndex})=>{
-
+            if(this.state.gameStage !== GAME_STAGE.SHOWING_INSTRUCTIONS) return;
             console.log("INSTRUCTIONS_READY", {playerIndex});
             if(!this.state.players[playerIndex]){
                 //TODO
@@ -104,6 +104,7 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("CREATE_GAME", (client, {user})=>{
             console.log("CREATE_GAME", user);
+            if(this.state.gameStage !== GAME_STAGE.IDLE) return;
             if(this.state.players.length) return;
             this.state.gameStage = GAME_STAGE.WAITING_PLAYER_JOIN;
             this.state.players.push(new PlayerState({user, client, playerIndex:0}));
@@ -112,6 +113,7 @@ export class GameRoom extends Room<GameState> {
 
         this.onMessage("JOIN_GAME", (client, {user})=>{
             console.log("JOIN_GAME", user);
+            if(this.state.gameStage !== GAME_STAGE.WAITING_PLAYER_JOIN) return;
             if(!this.state.players.length || this.state.players.length === 2) return;
             if(this.state.players[0].user.userId === user.userId) return;
             this.state.gameStage = GAME_STAGE.WAITING_PLAYERS_READY;
@@ -121,6 +123,7 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("PLAYER_FRAME", async (client, {playerIndex, n})=>{
+            if(this.state.gameStage !== GAME_STAGE.PLAYING_MINIGAME) return;
             await waitFor(()=>this.currentGameDefinition);//TODO review if still necessary
             const screenRunnerIndex =this.currentGameDefinition?.split?playerIndex:0;
 
@@ -134,6 +137,7 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("INPUT_FRAME", (client, {frame, playerIndex})=>{
+            if(this.state.gameStage !== GAME_STAGE.PLAYING_MINIGAME) return;
             if(!this.currentGameDefinition.split) this.broadcast("INPUT_FRAME", {frame, playerIndex})
 
             this.screenRunners[this.currentGameDefinition.split?playerIndex:0]?.runtime.pushFrame(frame);
@@ -144,6 +148,7 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("READY", async (client, {playerIndex})=>{
+            if(this.state.gameStage !== GAME_STAGE.WAITING_PLAYERS_READY) return;
             console.log("READY", playerIndex);
             if(this.state.players[playerIndex].ready) return;
             this.state.players[playerIndex].ready = true;
