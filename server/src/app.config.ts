@@ -2,6 +2,8 @@ import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
 import { matchMaker } from "colyseus"
+require("dotenv").config();
+import basicAuth = require("express-basic-auth");
 
 /**
  * Import your Room files
@@ -131,7 +133,18 @@ export default config({
          * It is recommended to protect this route with a password
          * //TODO Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
          */
-        app.use("/colyseus/monitor", monitor());
+        //TODO add basic auth
+        const basicAuthMiddleware = basicAuth({
+                // list of users and passwords
+                users: {
+                    [process.env.MONITOR_USER]: process.env.MONITOR_PASS,
+                },
+
+                // sends WWW-Authenticate header, which will prompt the user to fill
+                // credentials in
+                challenge: true
+            });
+        app.use("/colyseus/monitor", basicAuthMiddleware, monitor());
     },
 
 
