@@ -71,6 +71,7 @@ export declare class GameState extends Schema {
     users: ArraySchema<PlayerState>;
     miniGameTrack: ArraySchema<number>;
     miniGameResults: number[];
+    seed: number;
     gameInstanceId: string;
     screenFrames: ArraySchema<PlayerFrameCollection>;
     constructor(gameInstanceId: string);
