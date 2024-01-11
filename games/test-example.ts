@@ -52,9 +52,7 @@ async function run({game}:any){
         network:true
     });
     /**
-     * lets wait 1 second
-     * how many frames? each frame, lasts 17ms
-     * 1000/17
+     * lets wait 1 second = FRAMES_PER_SECOND
      */
     const FRAMES_PER_SECOND = game.runtime.getFps();
     console.log(game.randomInt(0,100));

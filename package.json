@@ -6,6 +6,7 @@
   "scripts": {
     "pm2:backoffice": "pm2 start npm --time --name \"backoffice\" -- run backoffice",
     "backoffice": "cross-env PORT=3001 tsx ./backoffice/index.ts",
+    "tournaments-web": "cd tournaments && npm run start",
     "scene": "cd scene && npm run start",
     "scene:web3": "cd scene && npm run start -- --web3",
     "prisma:db-push": "prisma db push",

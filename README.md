@@ -35,16 +35,22 @@ export async function main() {
 ```
 
 ## Game API docs
-TBD
+TBD: All the minigames has a new custom multiplayer SDK, documentation and implementation tool is pendent.
+meanwhile you can find example of using the sammich system game SDK here: https://github.com/sammich-dev/sammich-systems/blob/main/games/test-example.ts
+
 ## Docker setup
 on root folder `docker compose up` will build the images and put up the game server and the tournament server 
 
-## How to run colyseus server (local port 2567)
+## Running outconained services 
+### How to run colyseus server (local port 2567)
 `npm run ws`
 
-## How to run demo scene
+### How to run tournaments (local port 2569)
+`npm run tournaments-web`
+
+### How to run demo scene
 `npm run scene`
 
-## How to run backoffice (local port 2569)
+### How to run backoffice (local port 2569)
 `npm run backoffice`
 
