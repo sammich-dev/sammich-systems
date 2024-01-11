@@ -36,13 +36,15 @@ export async function main() {
 
 ## Game API docs
 TBD
+## Docker setup
+on root folder `docker compose up` will build the images and put up the game server and the tournament server 
 
-### How to run colyseus server (local port 2567)
+## How to run colyseus server (local port 2567)
 `npm run ws`
 
-### How to run demo scene
+## How to run demo scene
 `npm run scene`
 
-### How to run backoffice (local port 2569)
+## How to run backoffice (local port 2569)
 `npm run backoffice`
 
