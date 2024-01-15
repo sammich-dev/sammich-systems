@@ -4,7 +4,14 @@ import { playground } from "@colyseus/playground";
 import { matchMaker } from "colyseus"
 require("dotenv").config();
 import basicAuth = require("express-basic-auth");
-
+const EthDater = require('ethereum-block-by-date');
+const { Web3 } = require('web3');
+const web3 = new Web3(new Web3.providers.HttpProvider(process.env.WEB3_HTTP_PROVIDER));
+const dater = new EthDater(
+    web3 // Web3 object, required.
+);
+const FIVE_MINUTES_MS = 5 * 60 * 60 * 100;
+var seedrandom = require('seedrandom');
 /**
  * Import your Room files
  */
@@ -14,6 +21,8 @@ import {PrismaClient} from "@prisma/client";
 import {Express} from "express";
 import {getCatchResponseError} from "./express-util";
 import {tryFn} from "../../lib/functional";
+import {promisify} from "util";
+import html = Mocha.reporters.html;
 const prisma = new PrismaClient();
 
 
@@ -70,14 +79,33 @@ export default config({
         app.get("/colyseus/api/raffle-html/:from/:to", async (req, res)=>{
             tryFn(async ()=>{
                 const {from, to} = req.params;
+                const {rafflePrizesString} = req.query;
+                const rafflePrizes = rafflePrizesString && (rafflePrizesString as string).split(",");
                 console.log("/colyseus/api/raffle-html/:from/:to result",from, to);
                 const fromDate = new Date(from);
                 const toDate = new Date(to);
                 const result:any = await getRaffleTickets(fromDate,toDate);
+
                 console.log("Object.keys(result)", Object.keys(result));
-                return res.send(Object.keys(result).map(address => {
+
+                let htmlTickets = Object.keys(result).map(address => {
                     return `${address} : ${result[address]}`;
-                }).join("<br/>"));
+                }).join("<br/>");
+
+                if(Date.now() > (toDate.getTime() + FIVE_MINUTES_MS) && rafflePrizes){
+                    const winnersMap = await getProceduralRaffleResult({
+                        list:result,
+                        prizes:rafflePrizes,
+                        seed:getBlockHashFromDateString(to)
+                    });
+                    htmlTickets += "<br/><br/><b>RAFFLE WINNERS:</b><br/>"
+                    htmlTickets +=  Object.keys(winnersMap).map(address => {
+                        return `${address} : ${winnersMap[address]}`;
+                    }).join("<br/>");
+                    console.log("winnersMap",winnersMap)
+                }
+
+                return res.send(htmlTickets);
             }, getCatchResponseError(res));
         });
 
@@ -119,6 +147,49 @@ export default config({
             }, getCatchResponseError(res));
 
         });
+
+        app.post("/colyseus/api/raffle-result", async (req, res)=>{
+                tryFn(async () => {
+                    const {list, prizes, dateString} = req.body;
+                    console.log("/colyseus/api/raffle", dateString, list, prizes);
+
+
+                    return res.send({result:await getProceduralRaffleResult({list, prizes, seed:getBlockHashFromDateString(dateString)})});
+                }, getCatchResponseError(res));
+        });
+
+        async function getProceduralRaffleResult({list, prizes, seed}:any){
+            const flatList = Object.keys(list).reduce((acc, current)=>{
+                return [...acc, ...new Array(list[current]).fill(current)];
+            },[]);
+            const random = seedrandom(seed, {});
+            let i = prizes.length;
+            const winners:string[] = [];
+            while(i--){
+                const flatListWithoutWinners = flatList.filter(i => winners.indexOf(i) === -1);
+                console.log("flatListWithoutWinners",flatListWithoutWinners);
+                const winnerIndex = Math.floor(random() * flatListWithoutWinners.length);
+                console.log("winnerIndex", winnerIndex);
+                winners.push(flatListWithoutWinners[winnerIndex]);
+            }
+            //TODO seed for raffle will be first block hash before date
+            const result = winners.reduce((acc:any, current, index)=>{
+                acc[current] = prizes[index];
+                return acc;
+            },{});
+            return result;
+        }
+
+        async function getBlockHashFromDateString(dateString:string){
+            let {block} = await dater.getDate(
+                dateString || undefined, // Date, required. Any valid moment.js value: string, milliseconds, Date() object, moment() object.
+                false, // Block after, optional. Search for the nearest block before or after the given date. By default true.
+                false // Refresh boundaries, optional. Recheck the latest block before request. By default false.
+            );
+            const blockInfo = await web3.eth.getBlock(block);
+            return blockInfo.hash;
+            //TODO6
+        }
 
         /**
          * Use @colyseus/playground
