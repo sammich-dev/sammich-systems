@@ -8,7 +8,6 @@ import { AppDispatch, RootState } from "../store/store";
 import { getTournament } from "../store/slices/tournaments/thunk";
 import { clearDetails } from "../store/slices/tournaments/tournamentsSlice"
 
-import { TournamentsInterface } from "../interfaces/Interfaces";
 import GoBack from "../components/GoBack";
 import Web3 from "web3";
 import axios from "axios";
@@ -18,7 +17,7 @@ const TournamentDetails: React.FC = () => {
 
   const dispatch: AppDispatch = useDispatch();
   const { id } = useParams();
-  const tournament: TournamentsInterface = useSelector(
+  const tournament: any = useSelector(
     (state: RootState) => state.tournaments.tournamentDetails
   );
 
@@ -62,9 +61,9 @@ const TournamentDetails: React.FC = () => {
       dispatch(clearDetails());
     };
   }, [ id]);
-  const [resolving, setResolving] = useState();
-  const [resolvingMatchPlayer, setResolvingMatchPlayer] = useState(false);
-  const [sendingRsolution, setSendingResolution] = useState(false);
+  const [resolving, setResolving]:any = useState();
+  const [resolvingMatchPlayer, setResolvingMatchPlayer]:any = useState(false);
+  const [__, setSendingResolution] = useState(false);
 
   const sendResolution = async (match, player) => {
     setSendingResolution(true);
@@ -98,20 +97,25 @@ const TournamentDetails: React.FC = () => {
         <div className="text-gray-200 font-medium text-lg px-8">
           Winner: {tournament.finished ? <span className="bg-yellow-100 text-black p-1">{tournament.winner}</span> :  <span className="text-lime-300 font-normal">pending...</span> }
         </div>
-        <div className="text-gray-200 font-medium text-lg px-8">
+{/*        <div className="text-gray-200 font-medium text-lg px-8">
           Participants: {tournament.participantAddresses?.toString()}
-        </div>
+        </div>*/}
       </section>
+      <br/>
       <div className="text-gray-200 font-bold text-xl pl-8">Pendent Matches</div>
       {tournament?.matches?.filter(i => !i.resolutionDate).length > 0 ?<section className="p-8">
             <table className="table-auto text-white">
               <thead>
-              <tr>
-                <th className="p-2">Round</th>
-                <th className="p-2">Player</th>
-                <th className="p-2">Player</th>
-                <th className="p-2">Action</th>
-              </tr>
+                <tr>
+                  <th className="p-2">Round</th>
+                  <th className="p-2">Player</th>
+                  <th className="p-2">Player</th>
+                  {
+                    address === tournament.createdBy ?
+                      <th className="p-2">Action</th>
+                      : null
+                  }
+                </tr>
               </thead>
               <tbody>
               {tournament?.matches?.filter(i => !i.resolutionDate).map((match: any) => {
@@ -119,24 +123,27 @@ const TournamentDetails: React.FC = () => {
                   <td className="p-4">{match.round}</td>
                   <td className="p-4">{match.players.split(",")[0]}</td>
                   <td className="p-4">{match.players.split(",")[1]}</td>
-                  <td className="p-4" >
-                    {
-                      (resolving === match)
-                          ? <>
-                            {!!resolvingMatchPlayer}
-                            {!resolvingMatchPlayer && <Select className="w-96" options={match.players.split(",").map(a=>({value:a,label:a}))} value={resolvingMatchPlayer} onChange={(newValue)=>setResolvingMatchPlayer(newValue.value)} styles={{
-                              menu: (baseStyles, state) => ({
-                                color:"black",
-                                backgroundColor:"white"
-                              }),
-                            }}></Select>}
-                            {resolvingMatchPlayer && <div>{resolvingMatchPlayer}</div>}
-                            {resolvingMatchPlayer && <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" key={1} onClick={()=>sendResolution(match, resolvingMatchPlayer)}>OK</button> }
-                            <button className="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded" key={2} onClick={()=>setResolving(false)}>CANCEL</button>
-                          </>
-                          : <div onClick={()=>(setResolving(match),setResolvingMatchPlayer(undefined))}>Resolve</div>
-                    }
-                  </td>
+                  {address === tournament.createdBy?
+                      <td className="p-4" >
+                        {
+                          (resolving === match)
+                              ? <>
+                                {!!resolvingMatchPlayer}
+                                {!resolvingMatchPlayer && <Select className="w-96" options={match.players.split(",").map(a=>({value:a,label:a}))} value={resolvingMatchPlayer} onChange={(newValue:any)=>setResolvingMatchPlayer(newValue.value)} styles={{
+                                  menu: (_, __) => ({
+                                    color:"black",
+                                    backgroundColor:"white"
+                                  }),
+                                }}></Select>}
+                                {resolvingMatchPlayer && <div>{resolvingMatchPlayer}</div>}
+                                {resolvingMatchPlayer && <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" key={1} onClick={()=>sendResolution(match, resolvingMatchPlayer)}>OK</button> }
+                                <button className="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded" key={2} onClick={()=>setResolving(false)}>CANCEL</button>
+                              </>
+                              : <div onClick={()=>(setResolving(match),setResolvingMatchPlayer(undefined))}>Resolve</div>
+                        }
+                      </td>
+                  :null}
+
                 </tr>;
               })}
 
@@ -179,4 +186,6 @@ const TournamentDetails: React.FC = () => {
 
 export default TournamentDetails;
 
-function getTotalNumberOfRounds (numParticipants:number){return Math.ceil(Math.log2(numParticipants))}
+function getTotalNumberOfRounds (numParticipants:number){
+  return Math.ceil(Math.log2(numParticipants))
+}

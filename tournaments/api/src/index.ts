@@ -6,7 +6,7 @@ import history from "connect-history-api-fallback"
 import matchesRoute from "./routes/matches.routes"
 import participantsRoute from "./routes/participants.routes"
 import tournamentsRoute from "./routes/tournaments.routes"
-
+import {initPlayedGamesChecker} from "./played-games-checker";
 
 // Server Port
 const PORT = process.env.PORT || 3000
@@ -33,8 +33,8 @@ app.use(express.json());
 app.use("/api", matchesRoute);
 app.use("/api", participantsRoute);
 app.use("/api", tournamentsRoute);
+app.use("/api", initPlayedGamesChecker());
 app.use(history());
-app.use('/', express.static("dist"));
-
+app.use('/', express.static("../client/dist"));
 app.listen(PORT);
 console.log(`App listening on port ${PORT}`);
