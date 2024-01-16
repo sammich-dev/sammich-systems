@@ -137,7 +137,7 @@ const CreationForm = () => {
             // const idTournament = tournaments.slice(0)[0]
             if (result.value) {
                 // window.location.href = `http://localhost:5173/tournament-details/${idTournament.id + 1}`;
-                window.location.href = "http://localhost:5173/";
+                window.location.href = "/";
             }
         });
     };
