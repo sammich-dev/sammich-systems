@@ -12,10 +12,6 @@ import {waitFor} from "../../../lib/lib-util";
 
 const prisma = new PrismaClient();
 
-(async ()=>{
-    console.log("Games:\n", (await prisma.game.findMany()).map((g:any)=>`- ${g.name}`).join("\n"));
-})();
-
 const timers = {
     setTimeout,
     setInterval,

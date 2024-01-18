@@ -3,20 +3,18 @@ services:
   game-server:
     container_name: game-server
     build:
-      context: .
-      dockerfile: ./server/Dockerfile
+      context: ./
+      dockerfile: docker-GameServer.Dockerfile
     ports:
       - "2567:2567"
     environment:
       - NODE_ENV=production
-    command: npm run start
-  tournament-web:
+  tournaments:
     container_name: tournament-web
     build:
-      context: .
-      dockerfile: ./tournaments/Dockerfile
+      context: ./tournaments
+      dockerfile: Dockerfile
     ports:
-      - "2567:2567"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-    command: npm run start
